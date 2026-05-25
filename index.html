@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,viewport-fit=cover"/>
+  <meta name="theme-color" content="#0D0D12"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="MedTrace"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="description" content="MedTrace — Gestione Apparecchiature Elettromedicali"/>
+  <link rel="manifest" href="manifest.json"/>
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png"/>
+  <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+  <title>MedTrace — DEMO</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0D0D12;font-family:'Segoe UI',system-ui,sans-serif;color:#F0F0F5}
+    #root:empty{display:flex;align-items:center;justify-content:center;height:100vh}
+    #root:empty::after{content:'';width:32px;height:32px;border:3px solid #2A2A38;border-top-color:#2DD4BF;border-radius:50%;animation:spin .6s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    ::-webkit-scrollbar{width:6px;height:6px}
+    ::-webkit-scrollbar-track{background:#141418}
+    ::-webkit-scrollbar-thumb{background:#2A2A38;border-radius:3px}
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="app.js"></script>
+  <script>
+    if('serviceWorker' in navigator){
+      window.addEventListener('load',()=>{ navigator.serviceWorker.register('sw.js').catch(()=>{}); });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,56 @@
+{
+  "name": "MedTrace Demo",
+  "short_name": "MedTrace Demo",
+  "description": "Gestione Apparecchiature Elettromedicali — CMMS per tecnici biomedicali",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0D0D12",
+  "theme_color": "#2DD4BF",
+  "orientation": "any",
+  "lang": "it",
+  "categories": [
+    "medical",
+    "productivity",
+    "business"
+  ],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nuovo Job",
+      "short_name": "Job",
+      "description": "Crea un nuovo intervento",
+      "url": "/?tab=jobs&action=new",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Verifiche",
+      "short_name": "Verifiche",
+      "url": "/?tab=iec",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
