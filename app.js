@@ -1,0 +1,11422 @@
+/* MedTrace v1.58 DEMO PUBBLICA (offline + dati esempio) */
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+return new (P || (P = Promise))(function (resolve, reject) {
+function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+step((generator = generator.apply(thisArg, _arguments || [])).next());
+});
+};
+var __rest = (this && this.__rest) || function (s, e) {
+var t = {};
+for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+t[p] = s[p];
+if (s != null && typeof Object.getOwnPropertySymbols === "function")
+for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+t[p[i]] = s[p[i]];
+}
+return t;
+};
+const SUPA_URL = 'https://gkkkcbwttkxecaacqvwp.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdra2tjYnd0dGt4ZWNhYWNxdndwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwNDIzMTksImV4cCI6MjA5NTYxODMxOX0.MkhQ-9XAeCGPNoqlKwygT5AQp6LBDhDEUSUXuhdhz9I';
+let _supa = null;
+function getSupa() {
+if (!_supa && window.supabase) {
+_supa = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
+auth: { autoRefreshToken: true, persistSession: true },
+});
+}
+return _supa;
+}
+const supaSignUp = (email, pw) => { var _a; return (_a = getSupa()) === null || _a === void 0 ? void 0 : _a.auth.signUp({ email, password: pw }); };
+const supaSignIn = (email, pw) => { var _a; return (_a = getSupa()) === null || _a === void 0 ? void 0 : _a.auth.signInWithPassword({ email, password: pw }); };
+const supaSignOut = () => { var _a; return (_a = getSupa()) === null || _a === void 0 ? void 0 : _a.auth.signOut(); };
+const supaGetUser = () => { var _a; return (_a = getSupa()) === null || _a === void 0 ? void 0 : _a.auth.getUser(); };
+const supaOnAuth = (cb) => { var _a; return (_a = getSupa()) === null || _a === void 0 ? void 0 : _a.auth.onAuthStateChange(cb); };
+const supaDB = {
+getAll(table) {
+return __awaiter(this, void 0, void 0, function* () {
+const { data, error } = yield getSupa().from(table).select('*').order('created_at', { ascending: false });
+if (error)
+throw error;
+return data || [];
+});
+},
+insert(table, record) {
+return __awaiter(this, void 0, void 0, function* () {
+const { data, error } = yield getSupa().from(table).insert(record).select().single();
+if (error)
+throw error;
+return data;
+});
+},
+update(table, id, updates) {
+return __awaiter(this, void 0, void 0, function* () {
+const { data, error } = yield getSupa().from(table).update(updates).eq('id', id).select().single();
+if (error)
+throw error;
+return data;
+});
+},
+delete(table, id) {
+return __awaiter(this, void 0, void 0, function* () {
+const { error } = yield getSupa().from(table).delete().eq('id', id);
+if (error)
+throw error;
+});
+},
+};
+const STATUS_COLOR = { "operativo": "#22c55e", "in manutenzione": "#f59e0b", "fuori servizio": "#ef4444", "aperto": "#2DD4BF", "in corso": "#f59e0b", "chiuso": "#22c55e", "in attesa": "#94a3b8", "confermato": "#2DD4BF", "spedito": "#a855f7", "ricevuto": "#22c55e", "annullato": "#ef4444", "emessa": "#2DD4BF", "pagata": "#22c55e", "scaduta": "#ef4444", "bozza": "#94a3b8" };
+const PRI_COLOR = { "urgente": "#ef4444", "alta": "#f97316", "normale": "#6366f1", "bassa": "#94a3b8" };
+const TIMELINE_ICON = { "diagnosi": "", "intervento": "", "ordine_parti": "", "attesa_parti": "·", "test": "✓", "sopralluogo": "·", "contatto": "", "nota": "·" };
+const TIMELINE_LABEL = { "diagnosi": "Diagnosi", "intervento": "Intervento", "ordine_parti": "Ordine parti", "attesa_parti": "Attesa parti", "test": "Test/Verifica", "sopralluogo": "Sopralluogo", "contatto": "Contatto cliente", "nota": "Nota generica" };
+const STORAGE_KEY = "medtrace-v1";
+const APP_VERSION = "1.58";
+const DEMO_LOCKED = true;
+const DEMO_SEED = {
+company: { name: "MedTrace Demo", subtitle: "Gestione Apparecchiature Elettromedicali", address: "Via Esempio 10, 34100 Trieste", vat: "IT00000000000", iban: "IT00 X000 0000 0000 0000 0000 000", invoicePrefix: "F", phone: "040 0000000", email: "demo@medtrace.example" },
+customers: [
+{ id: "C001", name: "Casa di Cura San Marco", vat: "IT01234560321", fiscalCode: "01234560321", address: "Via della Salute 12, 34100 Trieste", contact: "Dott.ssa Elena Russo", email: "tecnico@csanmarco.example", phone: "040 1234567", notes: "", createdAt: "2025-09-01T09:00:00.000Z", updatedAt: "2025-09-01T09:00:00.000Z" },
+{ id: "C002", name: "Poliambulatorio Aurora", vat: "IT02345670322", fiscalCode: "02345670322", address: "Largo Aurora 5, 34170 Gorizia", contact: "Marco Vidal", email: "info@aurora.example", phone: "0481 234567", notes: "", createdAt: "2025-09-02T09:00:00.000Z", updatedAt: "2025-09-02T09:00:00.000Z" },
+{ id: "C003", name: "Studio Dentistico Bianchi", vat: "IT03456780323", fiscalCode: "03456780323", address: "Corso Italia 88, 34074 Monfalcone", contact: "Dr. Luca Bianchi", email: "studio@bianchi.example", phone: "0481 765432", notes: "", createdAt: "2025-09-03T09:00:00.000Z", updatedAt: "2025-09-03T09:00:00.000Z" },
+],
+assets: [
+{ id: "a01", assetCode: "SMA-001", name: "Defibrillatore", brand: "Philips", model: "HeartStart XL+", serial: "DM-XLP-44821", location: "Pronto Soccorso", customerId: "C001", status: "operativo", lastService: "2026-02-10", nextService: "2026-08-10", serviceInterval: 6, intervalIec: 12, intervalFunc: 12, notes: "", lastSeenAt: "2026-05-20T10:15:00.000Z", createdAt: "2025-09-10T09:00:00.000Z", updatedAt: "2026-02-10T09:00:00.000Z" },
+{ id: "a02", assetCode: "SMA-002", name: "Ventilatore polmonare", brand: "Dräger", model: "Evita V300", serial: "DR-EV300-10277", location: "Terapia Intensiva", customerId: "C001", status: "operativo", lastService: "2026-03-05", nextService: "2026-06-05", serviceInterval: 3, intervalIec: 12, intervalFunc: 12, notes: "Apparecchio critico", createdAt: "2025-09-10T09:00:00.000Z", updatedAt: "2026-03-05T09:00:00.000Z" },
+{ id: "a03", assetCode: "SMA-003", name: "Monitor multiparametrico", brand: "GE Healthcare", model: "B450", serial: "GE-B450-78110", location: "Terapia Intensiva", customerId: "C001", status: "operativo", lastService: "2026-01-20", nextService: "2026-07-20", serviceInterval: 6, intervalIec: 12, intervalFunc: 12, notes: "", createdAt: "2025-09-10T09:00:00.000Z", updatedAt: "2026-01-20T09:00:00.000Z" },
+{ id: "a04", assetCode: "SMA-004", name: "Pompa infusionale", brand: "B.Braun", model: "Infusomat Space", serial: "BB-INF-55190", location: "Reparto Medicina", customerId: "C001", status: "operativo", lastService: "2026-04-12", nextService: "2026-10-12", serviceInterval: 6, intervalIec: 12, intervalFunc: 12, notes: "", createdAt: "2025-09-12T09:00:00.000Z", updatedAt: "2026-04-12T09:00:00.000Z" },
+{ id: "a05", assetCode: "SMA-005", name: "Elettrobisturi", brand: "Erbe", model: "VIO 300 D", serial: "ER-VIO-30021", location: "Sala Operatoria 1", customerId: "C001", status: "operativo", lastService: "2026-02-28", nextService: "2026-05-28", serviceInterval: 3, intervalIec: 12, intervalFunc: 12, notes: "", createdAt: "2025-09-12T09:00:00.000Z", updatedAt: "2026-02-28T09:00:00.000Z" },
+{ id: "a06", assetCode: "SMA-006", name: "Elettrocardiografo", brand: "Mortara", model: "ELI 250c", serial: "MO-ELI-33402", location: "Cardiologia", customerId: "C001", status: "operativo", lastService: "2026-03-18", nextService: "2026-09-18", serviceInterval: 6, intervalIec: 12, intervalFunc: 12, notes: "", createdAt: "2025-09-15T09:00:00.000Z", updatedAt: "2026-03-18T09:00:00.000Z" },
+{ id: "a07", assetCode: "SMA-007", name: "Aspiratore chirurgico", brand: "Medela", model: "Dominant Flex", serial: "ME-DOM-12098", location: "Sala Operatoria 2", customerId: "C001", status: "operativo", lastService: "2026-01-09", nextService: "2026-07-09", serviceInterval: 6, intervalIec: 12, intervalFunc: 12, notes: "", createdAt: "2025-09-15T09:00:00.000Z", updatedAt: "2026-01-09T09:00:00.000Z" },
+{ id: "a08", assetCode: "SMA-008", name: "Tavolo operatorio", brand: "Maquet", model: "Alphamaxx", serial: "MQ-ALP-77310", location: "Sala Operatoria 1", customerId: "C001", status: "operativo", lastService: "2025-12-15", nextService: "2026-06-15", serviceInterval: 6, intervalIec: 24, intervalFunc: 12, notes: "", createdAt: "2025-09-18T09:00:00.000Z", updatedAt: "2025-12-15T09:00:00.000Z" },
+{ id: "a09", assetCode: "AUR-001", name: "Ecografo", brand: "Esaote", model: "MyLab X8", serial: "ES-MLX8-90412", location: "Ambulatorio Ecografia", customerId: "C002", status: "operativo", lastService: "2026-03-30", nextService: "2026-09-30", serviceInterval: 6, intervalIec: 24, intervalFunc: 12, notes: "", createdAt: "2025-10-01T09:00:00.000Z", updatedAt: "2026-03-30T09:00:00.000Z" },
+{ id: "a10", assetCode: "AUR-002", name: "Elettrocardiografo", brand: "Cardioline", model: "ar2100view", serial: "CL-AR21-44890", location: "Ambulatorio Cardiologia", customerId: "C002", status: "operativo", lastService: "2026-02-14", nextService: "2026-05-14", serviceInterval: 3, intervalIec: 12, intervalFunc: 12, notes: "", createdAt: "2025-10-01T09:00:00.000Z", updatedAt: "2026-02-14T09:00:00.000Z" },
+{ id: "a11", assetCode: "AUR-003", name: "Sfigmomanometro elettronico", brand: "Welch Allyn", model: "Connex ProBP 3400", serial: "WA-CPB-22015", location: "Ambulatorio 3", customerId: "C002", status: "operativo", lastService: "2026-04-02", nextService: "2026-10-02", serviceInterval: 6, intervalIec: 12, intervalFunc: 12, notes: "", createdAt: "2025-10-03T09:00:00.000Z", updatedAt: "2026-04-02T09:00:00.000Z" },
+{ id: "a12", assetCode: "AUR-004", name: "Autoclave a vapore", brand: "Cominox", model: "Sterilclave 18 B", serial: "CO-SC18-67400", location: "Sterilizzazione", customerId: "C002", status: "operativo", lastService: "2026-03-01", nextService: "2026-06-01", serviceInterval: 3, intervalIec: 12, intervalFunc: 6, notes: "", createdAt: "2025-10-03T09:00:00.000Z", updatedAt: "2026-03-01T09:00:00.000Z" },
+{ id: "a13", assetCode: "BIA-001", name: "Riunito odontoiatrico", brand: "Castellini", model: "Skema 6", serial: "CA-SK6-31188", location: "Studio 1", customerId: "C003", status: "operativo", lastService: "2026-02-20", nextService: "2026-08-20", serviceInterval: 6, intervalIec: 12, intervalFunc: 12, notes: "", createdAt: "2025-10-10T09:00:00.000Z", updatedAt: "2026-02-20T09:00:00.000Z" },
+{ id: "a14", assetCode: "BIA-002", name: "Riunito odontoiatrico", brand: "KaVo", model: "Estetica E70", serial: "KV-E70-50922", location: "Studio 2", customerId: "C003", status: "operativo", lastService: "2026-01-15", nextService: "2026-07-15", serviceInterval: 6, intervalIec: 12, intervalFunc: 12, notes: "", createdAt: "2025-10-10T09:00:00.000Z", updatedAt: "2026-01-15T09:00:00.000Z" },
+{ id: "a15", assetCode: "BIA-003", name: "Autoclave a vapore", brand: "Mocom", model: "Exacta 22", serial: "MC-EX22-18733", location: "Sterilizzazione", customerId: "C003", status: "operativo", lastService: "2026-04-20", nextService: "2026-07-20", serviceInterval: 3, intervalIec: 12, intervalFunc: 6, notes: "", createdAt: "2025-10-12T09:00:00.000Z", updatedAt: "2026-04-20T09:00:00.000Z" },
+{ id: "a16", assetCode: "SMA-009", name: "Pompa infusionale", brand: "Fresenius", model: "Volumat MC Agilia", serial: "FR-VMA-09001", location: "Magazzino", customerId: "C001", status: "dismesso", lastService: "2025-06-10", nextService: "", serviceInterval: 6, intervalIec: 12, intervalFunc: 12, notes: "Dismessa per obsolescenza, in attesa di smaltimento", createdAt: "2024-05-10T09:00:00.000Z", updatedAt: "2025-06-10T09:00:00.000Z" },
+],
+parts: [
+{ id: "p01", code: "SEN-O2-FLOW", name: "Sensore di flusso O2", brand: "Dräger", compatible: ["Evita V300"], qty: 4, minQty: 2, unitPrice: 120, sellPrice: 185, markupPct: 35, location: "Magazzino A1", notes: "", createdAt: "2025-09-20T09:00:00.000Z", updatedAt: "2026-03-05T09:00:00.000Z" },
+{ id: "p02", code: "BAT-DEFIB-XL", name: "Batteria defibrillatore", brand: "Philips", compatible: ["HeartStart XL+"], qty: 2, minQty: 1, unitPrice: 210, sellPrice: 299, markupPct: 30, location: "Magazzino A2", notes: "", createdAt: "2025-09-20T09:00:00.000Z", updatedAt: "2026-02-10T09:00:00.000Z" },
+{ id: "p03", code: "PIA-ADULTO", name: "Piastre adulto monouso (coppia)", brand: "Philips", compatible: ["HeartStart XL+"], qty: 1, minQty: 3, unitPrice: 38, sellPrice: 59, markupPct: 40, location: "Magazzino A2", notes: "Sotto scorta", createdAt: "2025-09-20T09:00:00.000Z", updatedAt: "2026-05-01T09:00:00.000Z" },
+{ id: "p04", code: "KIT-INF-SPACE", name: "Kit manutenzione pompa", brand: "B.Braun", compatible: ["Infusomat Space"], qty: 6, minQty: 2, unitPrice: 45, sellPrice: 69, markupPct: 30, location: "Magazzino B1", notes: "", createdAt: "2025-09-22T09:00:00.000Z", updatedAt: "2026-04-12T09:00:00.000Z" },
+{ id: "p05", code: "GUARN-AUTO", name: "Guarnizione portello autoclave", brand: "Cominox", compatible: ["Sterilclave 18 B"], qty: 5, minQty: 2, unitPrice: 22, sellPrice: 35, markupPct: 35, location: "Magazzino B2", notes: "", createdAt: "2025-09-22T09:00:00.000Z", updatedAt: "2026-03-01T09:00:00.000Z" },
+{ id: "p06", code: "LED-POLIM", name: "LED lampada polimerizzante", brand: "Castellini", compatible: ["Skema 6"], qty: 3, minQty: 1, unitPrice: 60, sellPrice: 95, markupPct: 40, location: "Magazzino C1", notes: "", createdAt: "2025-09-25T09:00:00.000Z", updatedAt: "2026-02-20T09:00:00.000Z" },
+{ id: "p07", code: "ELE-ECG-10", name: "Elettrodi ECG (conf. 50)", brand: "Ambu", compatible: ["ELI 250c", "ar2100view"], qty: 8, minQty: 3, unitPrice: 12, sellPrice: 19, markupPct: 40, location: "Magazzino A1", notes: "", createdAt: "2025-09-25T09:00:00.000Z", updatedAt: "2026-03-18T09:00:00.000Z" },
+{ id: "p08", code: "FIL-ASP", name: "Filtro antibatterico aspiratore", brand: "Medela", compatible: ["Dominant Flex"], qty: 0, minQty: 4, unitPrice: 9, sellPrice: 15, markupPct: 45, location: "Magazzino A1", notes: "Esaurito, da riordinare", createdAt: "2025-09-28T09:00:00.000Z", updatedAt: "2026-05-05T09:00:00.000Z" },
+],
+jobs: [
+{ id: "j01", assetId: "a01", customerId: "C001", type: "preventiva", priority: "normale", status: "chiuso", assignee: "Luca Tanteri", openDate: "2026-02-10", closeDate: "2026-02-10", description: "Manutenzione preventiva semestrale: test autodiagnostico, controllo batteria e piastre, prova di scarica.", parts: [], laborHours: 1.5, laborRate: 55, travelCost: 25, notes: "Tutto regolare.", timeline: [], photos: [], createdAt: "2026-02-10T09:00:00.000Z", updatedAt: "2026-02-10T11:00:00.000Z" },
+{ id: "j02", assetId: "a02", customerId: "C001", type: "correttiva", priority: "urgente", status: "chiuso", assignee: "Luca Tanteri", openDate: "2026-03-04", closeDate: "2026-03-05", description: "Allarme sensore di flusso. Sostituito sensore O2 e ricalibrato.", parts: [{ partId: "p01", qty: 1 }], laborHours: 2, laborRate: 55, travelCost: 25, notes: "Sostituito sensore di flusso.", timeline: [], photos: [], createdAt: "2026-03-04T08:00:00.000Z", updatedAt: "2026-03-05T16:00:00.000Z" },
+{ id: "j03", assetId: "a04", customerId: "C001", type: "correttiva", priority: "alta", status: "aperto", assignee: "Marco Rossi", openDate: "2026-05-28", closeDate: "", description: "Allarme occlusione intermittente segnalato dal reparto. Da verificare meccanismo di spinta.", parts: [], laborHours: 0, laborRate: 55, travelCost: 0, notes: "", timeline: [], photos: [], createdAt: "2026-05-28T09:00:00.000Z", updatedAt: "2026-05-28T09:00:00.000Z" },
+{ id: "j04", assetId: "a12", customerId: "C002", type: "preventiva", priority: "normale", status: "in corso", assignee: "Giulia Conti", openDate: "2026-06-01", closeDate: "", description: "Manutenzione trimestrale autoclave: ciclo di prova, controllo guarnizione, verifica parametri di sterilizzazione.", parts: [{ partId: "p05", qty: 1 }], laborHours: 1, laborRate: 55, travelCost: 30, notes: "", timeline: [], photos: [], createdAt: "2026-06-01T09:00:00.000Z", updatedAt: "2026-06-02T09:00:00.000Z" },
+{ id: "j05", assetId: "a13", customerId: "C003", type: "straordinaria", priority: "normale", status: "aperto", assignee: "Luca Tanteri", openDate: "2026-06-03", closeDate: "", description: "Perdita d'acqua dal cordone del manipolo. Da ispezionare raccordi e guarnizioni.", parts: [], laborHours: 0, laborRate: 55, travelCost: 0, notes: "", timeline: [], photos: [], createdAt: "2026-06-03T09:00:00.000Z", updatedAt: "2026-06-03T09:00:00.000Z" },
+{ id: "j06", assetId: "a05", customerId: "C001", type: "preventiva", priority: "normale", status: "chiuso", assignee: "Marco Rossi", openDate: "2026-02-28", closeDate: "2026-02-28", description: "Manutenzione preventiva elettrobisturi e verifica di sicurezza elettrica.", parts: [], laborHours: 1.5, laborRate: 55, travelCost: 25, notes: "", timeline: [], photos: [], createdAt: "2026-02-28T09:00:00.000Z", updatedAt: "2026-02-28T12:00:00.000Z" },
+{ id: "j07", assetId: "a09", customerId: "C002", type: "preventiva", priority: "bassa", status: "chiuso", assignee: "Giulia Conti", openDate: "2026-03-30", closeDate: "2026-03-30", description: "Controllo annuale ecografo: pulizia sonde, verifica immagine, sicurezza elettrica.", parts: [], laborHours: 2, laborRate: 55, travelCost: 30, notes: "", timeline: [], photos: [], createdAt: "2026-03-30T09:00:00.000Z", updatedAt: "2026-03-30T13:00:00.000Z" },
+{ id: "j08", assetId: "a07", customerId: "C001", type: "correttiva", priority: "normale", status: "chiuso", assignee: "Luca Tanteri", openDate: "2026-01-09", closeDate: "2026-01-10", description: "Aspirazione insufficiente. Sostituito filtro e controllata tenuta.", parts: [{ partId: "p08", qty: 1 }], laborHours: 1, laborRate: 55, travelCost: 25, notes: "", timeline: [], photos: [], createdAt: "2026-01-09T09:00:00.000Z", updatedAt: "2026-01-10T10:00:00.000Z" },
+{ id: "j09", assetId: "a14", customerId: "C003", type: "preventiva", priority: "normale", status: "chiuso", assignee: "Luca Tanteri", openDate: "2026-01-15", closeDate: "2026-01-15", description: "Manutenzione preventiva riunito e verifica function stop.", parts: [], laborHours: 1.5, laborRate: 55, travelCost: 30, notes: "", timeline: [], photos: [], createdAt: "2026-01-15T09:00:00.000Z", updatedAt: "2026-01-15T12:00:00.000Z" },
+{ id: "j10", assetId: "a03", customerId: "C001", type: "preventiva", priority: "normale", status: "chiuso", assignee: "Marco Rossi", openDate: "2026-01-20", closeDate: "2026-01-20", description: "Controllo monitor multiparametrico: parametri, allarmi, sicurezza elettrica (tipo CF).", parts: [], laborHours: 1.5, laborRate: 55, travelCost: 25, notes: "", timeline: [], photos: [], createdAt: "2026-01-20T09:00:00.000Z", updatedAt: "2026-01-20T12:00:00.000Z" },
+{ id: "j11", assetId: "a10", customerId: "C002", type: "correttiva", priority: "alta", status: "aperto", assignee: "Giulia Conti", openDate: "2026-05-14", closeDate: "", description: "Tracciato ECG disturbato su alcune derivazioni. Da controllare cavo paziente.", parts: [{ partId: "p07", qty: 1 }], laborHours: 0, laborRate: 55, travelCost: 0, notes: "", timeline: [], photos: [], createdAt: "2026-05-14T09:00:00.000Z", updatedAt: "2026-05-14T09:00:00.000Z" },
+{ id: "j12", assetId: "a15", customerId: "C003", type: "preventiva", priority: "normale", status: "chiuso", assignee: "Luca Tanteri", openDate: "2026-04-20", closeDate: "2026-04-20", description: "Manutenzione trimestrale autoclave studio dentistico.", parts: [{ partId: "p05", qty: 1 }], laborHours: 1, laborRate: 55, travelCost: 30, notes: "", timeline: [], photos: [], createdAt: "2026-04-20T09:00:00.000Z", updatedAt: "2026-04-20T11:00:00.000Z" },
+],
+instruments: [
+{ id: "i01", brand: "Fluke Biomedical", model: "ESA612", serial: "FB-ESA-220041", internalCode: "STR-001", category: "Tester IEC/Sicurezza elettrica", calDate: "2025-11-15", calExpiry: "2026-11-15", calLab: "Accredia Lab 0000", certNumber: "CAL-2025-1180", calInterval: 12, notes: "", createdAt: "2025-11-15T09:00:00.000Z", updatedAt: "2025-11-15T09:00:00.000Z" },
+{ id: "i02", brand: "Fluke Biomedical", model: "Impulse 7000DP", serial: "FB-IMP-330078", internalCode: "STR-002", category: "Analizzatore defibrillatori", calDate: "2026-02-01", calExpiry: "2027-02-01", calLab: "Accredia Lab 0000", certNumber: "CAL-2026-0205", calInterval: 12, notes: "", createdAt: "2026-02-01T09:00:00.000Z", updatedAt: "2026-02-01T09:00:00.000Z" },
+],
+iecReports: [
+{ id: "e01", reportNumber: "VSE-2026-001", norm: "62353", date: "2026-02-10", technician: "Luca Tanteri", instrument: "Fluke Biomedical ESA612", instrumentSerial: "FB-ESA-220041", instrumentCalExpiry: "2026-11-15", calNumber: "CAL-2025-1180", verifyType: "periodica", equipClass: "I", patientType: "BF", equipType: "Defibrillatore", assetId: "a01", leakageMethod: "diretto", sfc: false, visual: { housing: true, cable: true, connectors: true, labels: true, docs: true }, measures: [
+{ id: "pe", name: "Resistenza conduttore di protezione (PE)", unit: "Ω", limit: "≤ 0.3", limitVal: 0.3, value: "0.09" },
+{ id: "ins_main", name: "Resistenza isolamento — rete vs PE (500 Vdc)", unit: "MΩ", limit: "≥ 2", limitVal: 2, value: "58", invertPass: true },
+{ id: "ins_pa", name: "Resistenza isolamento parte applicata — rete (500 Vdc)", unit: "MΩ", limit: "≥ 2", limitVal: 2, value: "130", invertPass: true },
+{ id: "id_eq", name: "Equipment Leakage Cl.I (metodo diretto)", unit: "µA", limit: "≤ 500", limitVal: 500, value: "165" },
+{ id: "id_pa", name: "Dispersione parte applicata BF (metodo diretto)", unit: "µA", limit: "≤ 5000", limitVal: 5000, value: "310" }
+], notes: "", overallPass: true, verifyStatus: "completata", notAvailableReason: "", departmentName: "Pronto Soccorso", departmentContact: "", technicianSignature: "", departmentSignature: "", createdAt: "2026-02-10T10:00:00.000Z", updatedAt: "2026-02-10T10:00:00.000Z" },
+{ id: "e02", reportNumber: "VSE-2026-002", norm: "62353", date: "2026-02-28", technician: "Marco Rossi", instrument: "Fluke Biomedical ESA612", instrumentSerial: "FB-ESA-220041", instrumentCalExpiry: "2026-11-15", calNumber: "CAL-2025-1180", verifyType: "periodica", equipClass: "I", patientType: "BF", equipType: "Elettrobisturi", assetId: "a05", leakageMethod: "diretto", sfc: false, visual: { housing: true, cable: true, connectors: true, labels: true, docs: true }, measures: [
+{ id: "pe", name: "Resistenza conduttore di protezione (PE)", unit: "Ω", limit: "≤ 0.3", limitVal: 0.3, value: "0.12" },
+{ id: "ins_main", name: "Resistenza isolamento — rete vs PE (500 Vdc)", unit: "MΩ", limit: "≥ 2", limitVal: 2, value: "40", invertPass: true },
+{ id: "ins_pa", name: "Resistenza isolamento parte applicata — rete (500 Vdc)", unit: "MΩ", limit: "≥ 2", limitVal: 2, value: "95", invertPass: true },
+{ id: "id_eq", name: "Equipment Leakage Cl.I (metodo diretto)", unit: "µA", limit: "≤ 500", limitVal: 500, value: "220" },
+{ id: "id_pa", name: "Dispersione parte applicata BF (metodo diretto)", unit: "µA", limit: "≤ 5000", limitVal: 5000, value: "410" }
+], notes: "", overallPass: true, verifyStatus: "completata", notAvailableReason: "", departmentName: "Sala Operatoria 1", departmentContact: "", technicianSignature: "", departmentSignature: "", createdAt: "2026-02-28T10:00:00.000Z", updatedAt: "2026-02-28T10:00:00.000Z" },
+{ id: "e03", reportNumber: "VSE-2026-003", norm: "62353", date: "2026-01-20", technician: "Marco Rossi", instrument: "Fluke Biomedical ESA612", instrumentSerial: "FB-ESA-220041", instrumentCalExpiry: "2026-11-15", calNumber: "CAL-2025-1180", verifyType: "periodica", equipClass: "I", patientType: "CF", equipType: "Monitor multiparametrico", assetId: "a03", leakageMethod: "differenziale", sfc: false, visual: { housing: true, cable: true, connectors: true, labels: true, docs: true }, measures: [
+{ id: "pe", name: "Resistenza conduttore di protezione (PE)", unit: "Ω", limit: "≤ 0.3", limitVal: 0.3, value: "0.07" },
+{ id: "ins_main", name: "Resistenza isolamento — rete vs PE (500 Vdc)", unit: "MΩ", limit: "≥ 2", limitVal: 2, value: "75", invertPass: true },
+{ id: "ins_pa", name: "Resistenza isolamento parte applicata — rete (500 Vdc)", unit: "MΩ", limit: "≥ 2", limitVal: 2, value: "200", invertPass: true },
+{ id: "id_eq", name: "Equipment Leakage Cl.I (metodo differenziale)", unit: "µA", limit: "≤ 500", limitVal: 500, value: "140" },
+{ id: "id_pa", name: "Dispersione parte applicata CF (metodo differenziale)", unit: "µA", limit: "≤ 50", limitVal: 50, value: "18" }
+], notes: "Applicazione cardiaca (CF), limiti severi rispettati.", overallPass: true, verifyStatus: "completata", notAvailableReason: "", departmentName: "Terapia Intensiva", departmentContact: "", technicianSignature: "", departmentSignature: "", createdAt: "2026-01-20T10:00:00.000Z", updatedAt: "2026-01-20T10:00:00.000Z" },
+{ id: "e04", reportNumber: "VSE-2026-004", norm: "62353", date: "2026-03-30", technician: "Giulia Conti", instrument: "Fluke Biomedical ESA612", instrumentSerial: "FB-ESA-220041", instrumentCalExpiry: "2026-11-15", calNumber: "CAL-2025-1180", verifyType: "periodica", equipClass: "I", patientType: "BF", equipType: "Ecografo", assetId: "a09", leakageMethod: "diretto", sfc: false, visual: { housing: true, cable: true, connectors: true, labels: true, docs: true }, measures: [
+{ id: "pe", name: "Resistenza conduttore di protezione (PE)", unit: "Ω", limit: "≤ 0.3", limitVal: 0.3, value: "0.10" },
+{ id: "ins_main", name: "Resistenza isolamento — rete vs PE (500 Vdc)", unit: "MΩ", limit: "≥ 2", limitVal: 2, value: "52", invertPass: true },
+{ id: "ins_pa", name: "Resistenza isolamento parte applicata — rete (500 Vdc)", unit: "MΩ", limit: "≥ 2", limitVal: 2, value: "110", invertPass: true },
+{ id: "id_eq", name: "Equipment Leakage Cl.I (metodo diretto)", unit: "µA", limit: "≤ 500", limitVal: 500, value: "190" },
+{ id: "id_pa", name: "Dispersione parte applicata BF (metodo diretto)", unit: "µA", limit: "≤ 5000", limitVal: 5000, value: "260" }
+], notes: "", overallPass: true, verifyStatus: "completata", notAvailableReason: "", departmentName: "Ambulatorio Ecografia", departmentContact: "", technicianSignature: "", departmentSignature: "", createdAt: "2026-03-30T10:00:00.000Z", updatedAt: "2026-03-30T10:00:00.000Z" },
+{ id: "e05", reportNumber: "VSE-2026-005", norm: "60601", date: "2026-04-15", technician: "Luca Tanteri", instrument: "Fluke Biomedical ESA612", instrumentSerial: "FB-ESA-220041", instrumentCalExpiry: "2026-11-15", calNumber: "CAL-2025-1180", verifyType: "straordinaria", equipClass: "I", patientType: "BF", equipType: "Ventilatore polmonare", assetId: "a02", leakageMethod: "diretto", sfc: true, visual: { housing: true, cable: true, connectors: true, labels: true, docs: true }, measures: [
+{ id: "pe", name: "Resistenza conduttore di protezione (PE)", unit: "Ω", limit: "≤ 0.1", limitVal: 0.1, value: "0.07" },
+{ id: "earth_nc", name: "Dispersione verso terra (earth) — NC", unit: "µA", limit: "≤ 5000", limitVal: 5000, value: "210" },
+{ id: "encl_nc", name: "Dispersione involucro (touch) — NC", unit: "µA", limit: "≤ 100", limitVal: 100, value: "34" },
+{ id: "pat_nc", name: "Dispersione paziente BF — NC", unit: "µA", limit: "≤ 100", limitVal: 100, value: "26" },
+{ id: "aux_nc", name: "Corrente ausiliaria paziente BF — NC", unit: "µA", limit: "≤ 100", limitVal: 100, value: "15" },
+{ id: "earth_sfc", name: "Dispersione verso terra (earth) — SFC", unit: "µA", limit: "≤ 10000", limitVal: 10000, value: "450" },
+{ id: "encl_sfc", name: "Dispersione involucro (touch) — SFC", unit: "µA", limit: "≤ 500", limitVal: 500, value: "92" },
+{ id: "pat_sfc", name: "Dispersione paziente BF — SFC", unit: "µA", limit: "≤ 500", limitVal: 500, value: "130" },
+{ id: "aux_sfc", name: "Corrente ausiliaria paziente BF — SFC", unit: "µA", limit: "≤ 500", limitVal: 500, value: "85" },
+{ id: "map_sfc", name: "Dispersione paziente — rete su PA (MAP) BF — SFC", unit: "µA", limit: "≤ 5000", limitVal: 5000, value: "58" }
+], notes: "Prova approfondita IEC 60601-1 con condizioni di primo guasto, eseguita dopo intervento correttivo.", overallPass: true, verifyStatus: "completata", notAvailableReason: "", departmentName: "Terapia Intensiva", departmentContact: "", technicianSignature: "", departmentSignature: "", createdAt: "2026-04-15T10:00:00.000Z", updatedAt: "2026-04-15T10:00:00.000Z" },
+],
+funcReports: [
+{ id: "f01", reportNumber: "VF-2026-001", assetId: "a01", date: "2026-02-10", technician: "Luca Tanteri", instrument: "Fluke Biomedical Impulse 7000DP", instrumentSerial: "FB-IMP-330078", instrumentCalExpiry: "2027-02-01", templateId: "defibrillatore", verifyType: "periodica", sections: {}, notes: "Verifica funzionale completata, energia erogata nei limiti.", overallPass: true, verifyStatus: "completata", notAvailableReason: "", departmentName: "Pronto Soccorso", departmentContact: "", technicianSignature: "", departmentSignature: "", createdAt: "2026-02-10T10:30:00.000Z", updatedAt: "2026-02-10T10:30:00.000Z" },
+{ id: "f02", reportNumber: "VF-2026-002", assetId: "a02", date: "2026-03-05", technician: "Luca Tanteri", instrument: "", instrumentSerial: "", instrumentCalExpiry: "", templateId: "ventilatore", verifyType: "periodica", sections: {}, notes: "Verifica funzionale dopo sostituzione sensore di flusso.", overallPass: true, verifyStatus: "completata", notAvailableReason: "", departmentName: "Terapia Intensiva", departmentContact: "", technicianSignature: "", departmentSignature: "", createdAt: "2026-03-05T16:30:00.000Z", updatedAt: "2026-03-05T16:30:00.000Z" },
+{ id: "f03", reportNumber: "VF-2026-003", assetId: "a12", date: "2026-03-01", technician: "Giulia Conti", instrument: "", instrumentSerial: "", instrumentCalExpiry: "", templateId: "autoclave", verifyType: "periodica", sections: {}, notes: "Ciclo di prova e parametri di sterilizzazione verificati.", overallPass: true, verifyStatus: "completata", notAvailableReason: "", departmentName: "Sterilizzazione", departmentContact: "", technicianSignature: "", departmentSignature: "", createdAt: "2026-03-01T10:30:00.000Z", updatedAt: "2026-03-01T10:30:00.000Z" },
+{ id: "f04", reportNumber: "VF-2026-004", assetId: "a13", date: "2026-02-20", technician: "Luca Tanteri", instrument: "", instrumentSerial: "", instrumentCalExpiry: "", templateId: "riunito_odontoiatrico", verifyType: "periodica", sections: {}, notes: "Function stop e strumenti verificati.", overallPass: true, verifyStatus: "completata", notAvailableReason: "", departmentName: "Studio 1", departmentContact: "", technicianSignature: "", departmentSignature: "", createdAt: "2026-02-20T10:30:00.000Z", updatedAt: "2026-02-20T10:30:00.000Z" },
+],
+orders: [], withdrawals: [], invoices: [], quotes: [], procedures: [],
+cestino: { assets: [], parts: [], jobs: [], orders: [], withdrawals: [], customers: [], invoices: [], quotes: [], instruments: [], procedures: [], iecReports: [], funcReports: [] },
+};
+const OFFLINE_MODE = true;
+const IVA_DEFAULT = 22;
+const ROLES = [
+{ id: "superuser", label: "Superuser", desc: "Proprietario: vede e fa tutto, gestisce utenti e dati fiscali" },
+{ id: "admin", label: "Admin", desc: "Gestione operativa completa (no utenti, no dati fiscali)" },
+{ id: "finance", label: "Finance", desc: "Parte economica: preventivi, fatture, job in lettura" },
+{ id: "tecnico", label: "Tecnico", desc: "Campo: verifiche, job, apparecchi, magazzino" },
+];
+const PERM_SECTIONS = [
+{ id: "dashboard", label: "Dashboard" },
+{ id: "jobs", label: "Job / Interventi" },
+{ id: "richieste", label: "Richieste clienti" },
+{ id: "iec", label: "Sicurezza Elettrica" },
+{ id: "func", label: "Verif. Funzionale" },
+{ id: "agenda", label: "Agenda & Pianificazione" },
+{ id: "scadenze", label: "Scadenze & Promemoria" },
+{ id: "assets", label: "Apparecchi" },
+{ id: "instruments", label: "Strumenti" },
+{ id: "customers", label: "Clienti" },
+{ id: "parts", label: "Magazzino" },
+{ id: "invoices", label: "Preventivi" },
+{ id: "procedures", label: "Procedure" },
+{ id: "help", label: "Guida / Help" },
+];
+const DEFAULT_ROLE_PERMS = {
+superuser: PERM_SECTIONS.map(s => s.id),
+admin: ["dashboard", "jobs", "richieste", "iec", "func", "agenda", "scadenze", "assets", "instruments", "customers", "parts", "invoices", "procedures", "help"],
+finance: ["dashboard", "jobs", "assets", "customers", "invoices", "procedures", "help"],
+tecnico: ["dashboard", "jobs", "richieste", "iec", "func", "agenda", "scadenze", "assets", "instruments", "customers", "parts", "procedures", "help"],
+};
+const FORM_INP = { width: "100%", background: "#0F0F14", border: "1px solid #2a3040", borderRadius: 9, padding: "11px 13px", color: "#e2e8f0", fontSize: 14, outline: "none", fontFamily: "inherit", boxSizing: "border-box", transition: "border-color .15s" };
+const FORM_LBL = { fontSize: 10, color: "#94a3b8", textTransform: "uppercase", letterSpacing: .7, fontWeight: 700, display: "block", marginBottom: 6 };
+const FORM_FLD = { display: "flex", flexDirection: "column", marginBottom: 0 };
+const FORM_ROW = { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 14, marginBottom: 14 };
+const FORM_COL = { display: "flex", flexDirection: "column", minWidth: 0 };
+const FORM_SECTION = { fontSize: 11, color: "#2DD4BF", fontWeight: 800, marginBottom: 12, marginTop: 4, textTransform: "uppercase", letterSpacing: .8, display: "flex", alignItems: "center", gap: 6 };
+const FORM_BTN_PRIMARY = { background: "linear-gradient(135deg,#2DD4BF,#0D9488)", color: "#06251f", border: "none", borderRadius: 9, padding: "11px 22px", cursor: "pointer", fontWeight: 800, fontSize: 14, boxShadow: "0 2px 10px #2DD4BF33" };
+const FORM_BTN_GHOST = { background: "#1a1a22", border: "1px solid #2a3040", borderRadius: 9, color: "#94a3b8", padding: "11px 20px", cursor: "pointer", fontWeight: 700, fontSize: 14 };
+const FORM_FOOTER = { display: "flex", gap: 10, justifyContent: "flex-end", paddingTop: 16, marginTop: 16, borderTop: "1px solid #1e2a3a" };
+const QRGen = (function () {
+const EXP = new Array(256), LOG = new Array(256);
+(function () { let x = 1; for (let i = 0; i < 255; i++) {
+EXP[i] = x;
+LOG[x] = i;
+x <<= 1;
+if (x & 0x100)
+x ^= 0x11d;
+} EXP[255] = EXP[0]; })();
+function gmul(a, b) { if (a === 0 || b === 0)
+return 0; return EXP[(LOG[a] + LOG[b]) % 255]; }
+function genPoly(n) {
+let poly = [1];
+for (let i = 0; i < n; i++) {
+const np = new Array(poly.length + 1).fill(0);
+for (let j = 0; j < poly.length; j++) {
+np[j] ^= poly[j];
+np[j + 1] ^= gmul(poly[j], EXP[i]);
+}
+poly = np;
+}
+return poly;
+}
+function rsEncode(data, ecLen) {
+const res = new Array(ecLen).fill(0);
+const poly = genPoly(ecLen);
+for (let i = 0; i < data.length; i++) {
+const factor = data[i] ^ res[0];
+res.shift();
+res.push(0);
+for (let j = 0; j < ecLen; j++)
+res[j] ^= gmul(poly[j + 1] || 0, factor);
+}
+return res;
+}
+const VER = [
+null,
+{ size: 21, ec: 7, data: 19, blocks: [[1, 19]] },
+{ size: 25, ec: 10, data: 34, blocks: [[1, 34]] },
+{ size: 29, ec: 15, data: 55, blocks: [[1, 55]] },
+{ size: 33, ec: 20, data: 80, blocks: [[1, 80]] },
+{ size: 37, ec: 26, data: 108, blocks: [[1, 108]] },
+{ size: 41, ec: 18, data: 136, blocks: [[2, 68]] },
+{ size: 45, ec: 20, data: 156, blocks: [[2, 78]] },
+{ size: 49, ec: 24, data: 194, blocks: [[2, 97]] },
+{ size: 53, ec: 30, data: 232, blocks: [[2, 116]] },
+{ size: 57, ec: 18, data: 274, blocks: [[2, 68], [2, 69]] },
+];
+function chooseVersion(len) {
+for (let v = 1; v <= 6; v++) {
+const cci = 8;
+const cap = VER[v].data;
+const needed = Math.ceil((4 + cci + len * 8) / 8);
+if (needed <= cap)
+return v;
+}
+return -1;
+}
+function encode(text) {
+const bytes = [];
+for (let i = 0; i < text.length; i++) {
+const c = text.charCodeAt(i);
+if (c < 128)
+bytes.push(c);
+else {
+const enc = unescape(encodeURIComponent(text.charAt(i)));
+for (let j = 0; j < enc.length; j++)
+bytes.push(enc.charCodeAt(j));
+}
+}
+const v = chooseVersion(bytes.length);
+if (v < 0)
+return null;
+const info = VER[v];
+const cci = v < 10 ? 8 : 16;
+let bits = [];
+const push = (val, n) => { for (let i = n - 1; i >= 0; i--)
+bits.push((val >> i) & 1); };
+push(0b0100, 4);
+push(bytes.length, cci);
+bytes.forEach(b => push(b, 8));
+push(0, 4);
+while (bits.length % 8 !== 0)
+bits.push(0);
+const dataBytes = [];
+for (let i = 0; i < bits.length; i += 8) {
+let b = 0;
+for (let j = 0; j < 8; j++)
+b = (b << 1) | bits[i + j];
+dataBytes.push(b);
+}
+const pad = [0xEC, 0x11];
+let pi = 0;
+while (dataBytes.length < info.data) {
+dataBytes.push(pad[pi % 2]);
+pi++;
+}
+const blocks = [];
+let idx = 0;
+info.blocks.forEach(([count, dlen]) => {
+for (let b = 0; b < count; b++) {
+const d = dataBytes.slice(idx, idx + dlen);
+idx += dlen;
+blocks.push({ d, ec: rsEncode(d, info.ec) });
+}
+});
+const finalBytes = [];
+const maxD = Math.max(...blocks.map(b => b.d.length));
+for (let i = 0; i < maxD; i++)
+blocks.forEach(b => { if (i < b.d.length)
+finalBytes.push(b.d[i]); });
+for (let i = 0; i < info.ec; i++)
+blocks.forEach(b => finalBytes.push(b.ec[i]));
+const size = info.size;
+const mat = Array.from({ length: size }, () => new Array(size).fill(null));
+const set = (r, c, v) => { if (r >= 0 && r < size && c >= 0 && c < size)
+mat[r][c] = v; };
+function finder(r, c) {
+for (let i = -1; i <= 7; i++)
+for (let j = -1; j <= 7; j++) {
+const rr = r + i, cc = c + j;
+if (rr < 0 || rr >= size || cc < 0 || cc >= size)
+continue;
+const inSq = (i >= 0 && i <= 6 && (j === 0 || j === 6)) || (j >= 0 && j <= 6 && (i === 0 || i === 6)) || (i >= 2 && i <= 4 && j >= 2 && j <= 4);
+mat[rr][cc] = inSq;
+}
+}
+finder(0, 0);
+finder(0, size - 7);
+finder(size - 7, 0);
+for (let i = 8; i < size - 8; i++) {
+if (mat[6][i] === null)
+mat[6][i] = (i % 2 === 0);
+if (mat[i][6] === null)
+mat[i][6] = (i % 2 === 0);
+}
+set(size - 8, 8, true);
+const ALIGN = [[], [], [6, 18], [6, 22], [6, 26], [6, 30], [6, 34], [6, 22, 38], [6, 24, 42], [6, 26, 46], [6, 28, 50]];
+const aps = ALIGN[v] || [];
+aps.forEach(r => aps.forEach(c => {
+if ((r <= 8 && c <= 8) || (r <= 8 && c >= size - 9) || (r >= size - 9 && c <= 8))
+return;
+for (let i = -2; i <= 2; i++)
+for (let j = -2; j <= 2; j++) {
+const isDark = Math.max(Math.abs(i), Math.abs(j)) !== 1;
+set(r + i, c + j, isDark);
+}
+}));
+function reserveFormat() {
+for (let i = 0; i < 9; i++) {
+if (mat[8][i] === null)
+mat[8][i] = 'R';
+if (mat[i][8] === null)
+mat[i][8] = 'R';
+}
+for (let i = 0; i < 8; i++) {
+if (mat[8][size - 1 - i] === null)
+mat[8][size - 1 - i] = 'R';
+if (mat[size - 1 - i][8] === null)
+mat[size - 1 - i][8] = 'R';
+}
+}
+reserveFormat();
+let dirUp = true, bitIdx = 0;
+const allBits = [];
+finalBytes.forEach(b => { for (let i = 7; i >= 0; i--)
+allBits.push((b >> i) & 1); });
+for (let col = size - 1; col > 0; col -= 2) {
+if (col === 6)
+col--;
+for (let row = 0; row < size; row++) {
+const r = dirUp ? size - 1 - row : row;
+for (let cc = 0; cc < 2; cc++) {
+const c = col - cc;
+if (mat[r][c] === null) {
+let bit = bitIdx < allBits.length ? allBits[bitIdx] : 0;
+bitIdx++;
+if ((r + c) % 2 === 0)
+bit ^= 1;
+mat[r][c] = !!bit;
+}
+}
+}
+dirUp = !dirUp;
+}
+const fmt = 0b01000;
+let bch = fmt << 10;
+const g = 0b10100110111;
+for (let i = 14; i >= 10; i--) {
+if ((bch >> i) & 1)
+bch ^= g << (i - 10);
+}
+let format = ((fmt << 10) | bch) ^ 0b101010000010010;
+const fbits = [];
+for (let i = 14; i >= 0; i--)
+fbits.push((format >> i) & 1);
+const fmtPos1 = [[8, 0], [8, 1], [8, 2], [8, 3], [8, 4], [8, 5], [8, 7], [8, 8], [7, 8], [5, 8], [4, 8], [3, 8], [2, 8], [1, 8], [0, 8]];
+fmtPos1.forEach(([r, c], i) => mat[r][c] = !!fbits[i]);
+const fmtPos2 = [[size - 1, 8], [size - 2, 8], [size - 3, 8], [size - 4, 8], [size - 5, 8], [size - 6, 8], [size - 7, 8], [8, size - 8], [8, size - 7], [8, size - 6], [8, size - 5], [8, size - 4], [8, size - 3], [8, size - 2], [8, size - 1]];
+fmtPos2.forEach(([r, c], i) => mat[r][c] = !!fbits[i]);
+for (let r = 0; r < size; r++)
+for (let c = 0; c < size; c++) {
+if (mat[r][c] === 'R' || mat[r][c] === null)
+mat[r][c] = false;
+}
+return mat;
+}
+function toSVG(text, opts) {
+opts = opts || {};
+const mat = encode(text);
+if (!mat)
+return null;
+const size = mat.length;
+const margin = opts.margin != null ? opts.margin : 2;
+const total = size + margin * 2;
+const px = opts.scale || 4;
+const fg = opts.color || "#000000";
+const bg = opts.bg || "#ffffff";
+let rects = "";
+for (let r = 0; r < size; r++)
+for (let c = 0; c < size; c++) {
+if (mat[r][c])
+rects += `<rect x="${(c + margin) * px}" y="${(r + margin) * px}" width="${px}" height="${px}"/>`;
+}
+return `<svg xmlns="http://www.w3.org/2000/svg" width="${total * px}" height="${total * px}" viewBox="0 0 ${total * px} ${total * px}"><rect width="100%" height="100%" fill="${bg}"/><g fill="${fg}">${rects}</g></svg>`;
+}
+return { toSVG, encode };
+})();
+function loadData() { try {
+const r = localStorage.getItem(STORAGE_KEY);
+return r ? JSON.parse(r) : null;
+}
+catch (_a) {
+return null;
+} }
+function saveData(d) {
+try {
+localStorage.setItem(STORAGE_KEY, JSON.stringify(d));
+return true;
+}
+catch (e) {
+if (e.name === "QuotaExceededError") {
+alert("⚠ Memoria piena! Esporta un backup e cancella alcune foto pesanti.");
+}
+return false;
+}
+}
+function genUUID() {
+try {
+if (typeof crypto !== "undefined" && crypto.randomUUID)
+return crypto.randomUUID();
+}
+catch (e) { }
+return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+const r = Math.random() * 16 | 0;
+const v = c === "x" ? r : (r & 0x3 | 0x8);
+return v.toString(16);
+});
+}
+function withCreateMeta(record) {
+const now = new Date().toISOString();
+return Object.assign(Object.assign({}, record), { id: record.id || genUUID(), createdAt: record.createdAt || now, updatedAt: now });
+}
+function withUpdateMeta(record) {
+return Object.assign(Object.assign({}, record), { updatedAt: new Date().toISOString() });
+}
+function upsertInList(list, record) {
+const exists = list.some(x => x.id === record.id);
+if (exists)
+return list.map(x => x.id === record.id ? record : x);
+return [...list, record];
+}
+function customerPrefix(name) {
+if (!name)
+return "GEN";
+const clean = String(name).replace(/[^A-Za-z0-9]/g, "");
+if (clean.length === 0)
+return "GEN";
+return clean.slice(0, 3).toUpperCase();
+}
+function nextAssetCode(prefix, allAssets) {
+let max = 0;
+for (const a of (allAssets || [])) {
+if (!a.assetCode)
+continue;
+const m = String(a.assetCode).match(/^(.+)-(\d+)$/);
+if (m && m[1] === prefix) {
+const n = parseInt(m[2], 10);
+if (n > max)
+max = n;
+}
+}
+const num = String(max + 1).padStart(3, "0");
+return prefix + "-" + num;
+}
+function ensureAssetCodes(assets, customers) {
+const custName = id => {
+const c = (customers || []).find(x => x.id === id);
+return c ? c.name : null;
+};
+const ordered = [...(assets || [])].sort((a, b) => String(a.createdAt || "").localeCompare(String(b.createdAt || "")));
+let result = [...(assets || [])];
+for (const a of ordered) {
+if (a.assetCode)
+continue;
+const prefix = customerPrefix(custName(a.customerId));
+const code = nextAssetCode(prefix, result);
+result = result.map(x => x.id === a.id ? Object.assign(Object.assign({}, x), { assetCode: code }) : x);
+}
+return result;
+}
+function removeFromList(list, id) {
+return list.filter(x => x.id !== id);
+}
+function getSupabaseConfig() {
+try {
+const raw = localStorage.getItem("medtrace-supabase-config");
+if (raw) {
+const c = JSON.parse(raw);
+if (c.url && c.anonKey)
+return c;
+}
+}
+catch (e) { }
+return { url: "", anonKey: "" };
+}
+const SUPABASE_ENABLED = () => {
+const c = getSupabaseConfig();
+return !!(c.url && c.anonKey);
+};
+let _supabaseClient = null;
+let _supabaseLibPromise = null;
+function getSupabaseClient() {
+return __awaiter(this, void 0, void 0, function* () {
+if (typeof getSupa === "function") {
+const c = getSupa();
+if (c)
+return c;
+}
+const cfg = getSupabaseConfig();
+if (!cfg.url || !cfg.anonKey)
+return null;
+if (_supabaseClient)
+return _supabaseClient;
+if (!window.supabase) {
+if (!_supabaseLibPromise) {
+_supabaseLibPromise = new Promise((resolve, reject) => {
+const s = document.createElement("script");
+s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js";
+s.onload = resolve;
+s.onerror = () => reject(new Error("Impossibile connettersi al cloud (sei online?)"));
+document.head.appendChild(s);
+});
+}
+yield _supabaseLibPromise;
+}
+_supabaseClient = window.supabase.createClient(cfg.url, cfg.anonKey);
+return _supabaseClient;
+});
+}
+const SUPABASE_TABLES = {
+customers: "customers",
+assets: "assets",
+parts: "parts",
+jobs: "jobs",
+iecReports: "iec_reports",
+funcReports: "func_reports",
+invoices: "invoices",
+quotes: "quotes",
+orders: "orders",
+withdrawals: "withdrawals",
+instruments: "instruments",
+procedures: "procedures",
+};
+function toSnakeRecord(obj) {
+const out = {};
+for (const k in obj) {
+const sk = k.replace(/[A-Z]/g, m => "_" + m.toLowerCase());
+let v = obj[k];
+if ((sk === "id" || sk.endsWith("_id")) && v === "")
+v = null;
+if ((sk.endsWith("_date") || sk.endsWith("_expiry") || sk === "date" || sk === "last_service" || sk === "next_service") && v === "")
+v = null;
+if (["labor_hours", "labor_rate", "travel_cost", "purchase_cost", "markup_pct", "min_qty", "qty", "sell_price", "service_interval", "interval_iec", "interval_func", "total", "unit_price", "price", "cost"].includes(sk) && v === "")
+v = null;
+out[sk] = v;
+}
+return out;
+}
+function toCamelRecord(obj) {
+const out = {};
+for (const k in obj) {
+const ck = k.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+out[ck] = obj[k];
+}
+return out;
+}
+function supabaseSyncMerge(localData) {
+return __awaiter(this, void 0, void 0, function* () {
+const client = yield getSupabaseClient();
+if (!client)
+throw new Error("Cloud non disponibile");
+const orgId = yield supabaseGetOrgId();
+if (!orgId)
+throw new Error("Organizzazione non trovata: fai login e verifica di avere un ruolo assegnato.");
+const mergeById = (a, b) => {
+const map = new Map();
+(a || []).forEach(r => { if (r && r.id != null)
+map.set(r.id, r); });
+(b || []).forEach(r => {
+if (!r || r.id == null)
+return;
+const ex = map.get(r.id);
+if (!ex) {
+map.set(r.id, r);
+return;
+}
+const tEx = Date.parse(ex.updatedAt || ex.createdAt || 0) || 0;
+const tNew = Date.parse(r.updatedAt || r.createdAt || 0) || 0;
+map.set(r.id, tNew >= tEx ? r : ex);
+});
+return [...map.values()];
+};
+const merged = {};
+const mergedTrash = {};
+const results = {};
+const localTrash = localData.cestino || {};
+for (const [stateKey, table] of Object.entries(SUPABASE_TABLES)) {
+const { data: remoteRows, error: errDown } = yield client.from(table).select("*");
+if (errDown)
+throw new Error("Errore lettura " + table + ": " + errDown.message);
+const remote = (remoteRows || []).map(toCamelRecord);
+const localAll = [...(localData[stateKey] || []), ...((localTrash[stateKey]) || [])];
+const fused = mergeById(localAll, remote);
+const attivi = fused.filter(r => !r.deleted);
+const cestinati = fused.filter(r => r.deleted);
+merged[stateKey] = attivi;
+mergedTrash[stateKey] = cestinati;
+const rows = fused.map(r => { const s = toSnakeRecord(r); s.org_id = orgId; return s; });
+if (rows.length > 0) {
+const { error: errUp } = yield client.from(table).upsert(rows, { onConflict: "id" });
+if (errUp)
+throw new Error("Errore sync " + table + ": " + errUp.message);
+}
+results[table] = rows.length;
+}
+return { merged, mergedTrash, results };
+});
+}
+function supabaseSyncUp(localData) {
+return __awaiter(this, void 0, void 0, function* () {
+const client = yield getSupabaseClient();
+if (!client)
+throw new Error("Cloud non disponibile");
+const orgId = yield supabaseGetOrgId();
+if (!orgId)
+throw new Error("Organizzazione non trovata: assicurati di aver fatto login e di avere un ruolo assegnato.");
+const results = {};
+for (const [stateKey, table] of Object.entries(SUPABASE_TABLES)) {
+const rows = (localData[stateKey] || []).map(r => {
+const snake = toSnakeRecord(r);
+snake.org_id = orgId;
+return snake;
+});
+if (rows.length === 0) {
+results[table] = 0;
+continue;
+}
+const { error } = yield client.from(table).upsert(rows, { onConflict: "id" });
+if (error)
+throw new Error("Errore sync " + table + ": " + error.message);
+results[table] = rows.length;
+}
+return results;
+});
+}
+function supabaseSyncDown() {
+return __awaiter(this, void 0, void 0, function* () {
+const client = yield getSupabaseClient();
+if (!client)
+throw new Error("Cloud non disponibile");
+const out = {};
+for (const [stateKey, table] of Object.entries(SUPABASE_TABLES)) {
+const { data, error } = yield client.from(table).select("*");
+if (error)
+throw new Error("Errore lettura " + table + ": " + error.message);
+out[stateKey] = (data || []).map(toCamelRecord);
+}
+return out;
+});
+}
+function supabaseIsTecnico() {
+return __awaiter(this, void 0, void 0, function* () {
+const client = yield getSupabaseClient();
+if (!client)
+return false;
+const { data: udata } = yield client.auth.getUser();
+const user = udata === null || udata === void 0 ? void 0 : udata.user;
+if (!user)
+return false;
+const { data, error } = yield client.from("user_roles").select("role").eq("user_id", user.id).single();
+if (error)
+return false;
+return (data === null || data === void 0 ? void 0 : data.role) === "tecnico" || (data === null || data === void 0 ? void 0 : data.role) === "admin";
+});
+}
+function supabaseGetRole() {
+return __awaiter(this, void 0, void 0, function* () {
+const client = yield getSupabaseClient();
+if (!client)
+return null;
+try {
+const { data: udata } = yield client.auth.getUser();
+const user = udata === null || udata === void 0 ? void 0 : udata.user;
+if (!user)
+return null;
+const { data } = yield client.from("user_roles").select("role").eq("user_id", user.id).single();
+return (data === null || data === void 0 ? void 0 : data.role) || null;
+}
+catch (e) {
+return null;
+}
+});
+}
+function supabaseGetOrgId() {
+return __awaiter(this, void 0, void 0, function* () {
+const client = yield getSupabaseClient();
+if (!client)
+return null;
+try {
+const { data: udata } = yield client.auth.getUser();
+const user = udata === null || udata === void 0 ? void 0 : udata.user;
+if (!user)
+return null;
+const { data } = yield client.from("user_roles").select("org_id").eq("user_id", user.id).single();
+return (data === null || data === void 0 ? void 0 : data.org_id) || null;
+}
+catch (e) {
+return null;
+}
+});
+}
+function supabaseGetCompany() {
+return __awaiter(this, void 0, void 0, function* () {
+const client = yield getSupabaseClient();
+if (!client)
+return null;
+try {
+const { data, error } = yield client.rpc('get_org_company');
+if (error || !data)
+return null;
+return {
+name: data.name || "",
+subtitle: data.subtitle || "",
+address: data.address || "",
+vat: data.vat || "",
+iban: data.iban || "",
+phone: data.phone || "",
+email: data.email || "",
+invoicePrefix: data.invoice_prefix || "F",
+logo: data.logo || "",
+technicians: Array.isArray(data.technicians) ? data.technicians : [],
+};
+}
+catch (e) {
+return null;
+}
+});
+}
+function supabaseSaveCompany(c) {
+return __awaiter(this, void 0, void 0, function* () {
+const client = yield getSupabaseClient();
+if (!client)
+return false;
+try {
+const { data, error } = yield client.rpc('set_org_company', {
+p_name: c.name || "", p_subtitle: c.subtitle || "", p_address: c.address || "",
+p_vat: c.vat || "", p_iban: c.iban || "", p_phone: c.phone || "",
+p_email: c.email || "", p_invoice_prefix: c.invoicePrefix || "F", p_logo: c.logo || "",
+});
+if (error)
+return false;
+return data === 'OK';
+}
+catch (e) {
+return false;
+}
+});
+}
+function supabaseSaveTechnicians(arr) {
+return __awaiter(this, void 0, void 0, function* () {
+const client = yield getSupabaseClient();
+if (!client)
+return false;
+try {
+const { data, error } = yield client.rpc('set_org_technicians', { p_technicians: arr || [] });
+if (error)
+return false;
+return data === 'OK';
+}
+catch (e) {
+return false;
+}
+});
+}
+function useMedia(q) {
+const [m, setM] = React.useState(() => window.matchMedia(q).matches);
+React.useEffect(() => {
+const mq = window.matchMedia(q);
+const h = e => setM(e.matches);
+mq.addEventListener("change", h);
+return () => mq.removeEventListener("change", h);
+}, [q]);
+return m;
+}
+function compressImage(file, maxWidth = 1024, quality = 0.7) {
+return new Promise((resolve, reject) => {
+const reader = new FileReader();
+reader.onload = e => {
+const img = new Image();
+img.onload = () => {
+const canvas = document.createElement("canvas");
+let w = img.width, h = img.height;
+if (w > maxWidth) {
+h = h * (maxWidth / w);
+w = maxWidth;
+}
+canvas.width = w;
+canvas.height = h;
+const ctx = canvas.getContext("2d");
+ctx.drawImage(img, 0, 0, w, h);
+resolve(canvas.toDataURL("image/jpeg", quality));
+};
+img.onerror = reject;
+img.src = e.target.result;
+};
+reader.onerror = reject;
+reader.readAsDataURL(file);
+});
+}
+function buildCSV(rows, cols) {
+var keys = cols.map(function (c) { return typeof c === "string" ? c : c.key; });
+var hdrs = cols.map(function (c) { return typeof c === "string" ? c : (c.label || c.key); });
+function esc(v) {
+var s = (v === null || v === undefined) ? "" : v;
+if (Array.isArray(s))
+s = s.join(", ");
+if (typeof s === "object")
+s = JSON.stringify(s);
+s = String(s).split('"').join('""');
+return '"' + s + '"';
+}
+var lines = [hdrs.map(esc).join(";")].concat(rows.map(function (r) {
+return keys.map(function (k) { return esc(r[k]); }).join(";");
+}));
+return lines.join("\r\n");
+}
+function downloadCSV(filename, rows, cols) {
+var csvData = buildCSV(rows, cols);
+try {
+var blob = new Blob(['\ufeff' + csvData], { type: 'text/csv;charset=utf-8' });
+var url = URL.createObjectURL(blob);
+var a = document.createElement('a');
+a.href = url;
+a.download = filename;
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+window.dispatchEvent(new CustomEvent("toast", { detail: { msg: "Dati esportati: " + filename, color: "#22c55e" } }));
+}
+catch (err) {
+window.dispatchEvent(new CustomEvent("show-csv", { detail: { filename: filename, data: csvData } }));
+}
+}
+let _xlsxLibPromise = null;
+function loadXLSXLib() {
+if (window.XLSX)
+return Promise.resolve(window.XLSX);
+if (!_xlsxLibPromise) {
+_xlsxLibPromise = new Promise((resolve, reject) => {
+const s = document.createElement("script");
+s.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+s.onload = () => resolve(window.XLSX);
+s.onerror = () => reject(new Error("Impossibile caricare la libreria Excel (sei online?)"));
+document.head.appendChild(s);
+});
+}
+return _xlsxLibPromise;
+}
+function downloadXLSX(filename, rows, cols, sheetName) {
+return __awaiter(this, void 0, void 0, function* () {
+try {
+const XLSX = yield loadXLSXLib();
+const data = (rows || []).map(r => {
+const o = {};
+cols.forEach(c => {
+let v = r[c.key];
+if (v === undefined || v === null)
+v = "";
+o[c.label] = v;
+});
+return o;
+});
+const ws = XLSX.utils.json_to_sheet(data, { header: cols.map(c => c.label) });
+ws["!cols"] = cols.map(c => {
+let maxLen = c.label.length;
+(rows || []).forEach(r => {
+var _a;
+const val = String((_a = r[c.key]) !== null && _a !== void 0 ? _a : "");
+if (val.length > maxLen)
+maxLen = val.length;
+});
+return { wch: Math.min(Math.max(maxLen + 2, 8), 50) };
+});
+const wb = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb, ws, sheetName || "Dati");
+XLSX.writeFile(wb, filename);
+window.dispatchEvent(new CustomEvent("toast", { detail: { msg: "Excel scaricato: " + filename, color: "#22c55e" } }));
+}
+catch (err) {
+window.dispatchEvent(new CustomEvent("toast", { detail: { msg: "Excel non disponibile offline: esporto in formato compatibile", color: "#f59e0b" } }));
+downloadCSV(filename.replace(/\.xlsx$/, ".csv"), rows, cols);
+}
+});
+}
+function downloadJSON(filename, data) {
+var jsonData = JSON.stringify(data, null, 2);
+try {
+var blob = new Blob([jsonData], { type: 'application/json' });
+var url = URL.createObjectURL(blob);
+var a = document.createElement('a');
+a.href = url;
+a.download = filename;
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+window.dispatchEvent(new CustomEvent("toast", { detail: { msg: "Backup scaricato: " + filename, color: "#22c55e" } }));
+}
+catch (err) {
+window.dispatchEvent(new CustomEvent("show-csv", {
+detail: { filename: filename, data: jsonData, isJson: true }
+}));
+}
+}
+function openPrintWindow(htmlContent) {
+window.dispatchEvent(new CustomEvent('show-pdf', { detail: htmlContent }));
+}
+const PDF_STYLE = `
+@page { size: A4; margin: 0; }
+@media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Helvetica Neue', 'Segoe UI', Arial, sans-serif; font-size: 11px; color: #1e293b; line-height: 1.5; background: #fff; }
+/* ── LAYOUT: barra laterale come background del body (zero altezza extra) ── */
+html, body { height: auto; }
+body { background: linear-gradient(90deg, #0E7490 0mm, #14B8A6 8mm, #fff 8mm); background-repeat: no-repeat; }
+.side { display: none; }
+.main { padding: 14mm 13mm 12mm 13mm; }
+/* ── HEADER ── */
+.header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
+.header .brand-logo { height: 52px; max-width: 200px; object-fit: contain; margin-bottom: 8px; display: block; }
+.header h1 { font-size: 18px; font-weight: 800; letter-spacing: -0.3px; color: #0F172A; line-height: 1.15; }
+.header .sub { font-size: 9.5px; color: #64748B; margin-top: 3px; font-weight: 500; }
+.header .right { text-align: right; }
+.header .doctype { display: inline-block; background: #0F172A; color: #fff; font-size: 8.5px; font-weight: 700; letter-spacing: 1.4px; text-transform: uppercase; padding: 5px 12px; border-radius: 3px; }
+.header .docnum { font-size: 22px; font-weight: 800; color: #0E7490; margin-top: 6px; }
+.header .docdate { font-size: 10px; color: #64748B; margin-top: 1px; }
+/* ── TITLE BAR (nome azienda) ── */
+.titlebar { background: #F0FDFA; border-left: 4px solid #0E7490; padding: 10px 16px; margin: 14px 0 4px; border-radius: 0 6px 6px 0; }
+.titlebar h2 { font-size: 15px; color: #0F172A; font-weight: 800; }
+.titlebar p { font-size: 10px; color: #64748B; margin-top: 2px; }
+/* ── SEZIONI NUMERATE ── */
+.section { margin: 12px 0; }
+.sec-head { display: flex; align-items: center; gap: 9px; margin-bottom: 9px; }
+.sec-num { width: 22px; height: 22px; border-radius: 50%; background: #0E7490; color: #fff; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.sec-title { font-size: 11.5px; font-weight: 800; color: #0F172A; text-transform: uppercase; letter-spacing: .5px; }
+/* compatibilità: vecchio .section-title */
+.section-title { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: #0E7490; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #E2E8F0; }
+/* ── COPPIE CHIAVE-VALORE ── */
+.kv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 22px; }
+.kv { display: flex; gap: 8px; padding: 5px 0; border-bottom: 1px solid #F1F5F9; }
+.kv-label { color: #94A3B8; min-width: 100px; font-size: 10px; font-weight: 500; }
+.kv-value { font-weight: 600; font-size: 11px; color: #1E293B; }
+/* ── TABELLE ── */
+table { width: 100%; border-collapse: collapse; margin: 6px 0; font-size: 10.5px; }
+th { background: #0F172A; color: #F1F5F9; font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; padding: 8px 9px; text-align: left; }
+td { padding: 8px 9px; border-bottom: 1px solid #EEF2F6; vertical-align: middle; }
+tbody tr:nth-child(even) { background: #F8FAFC; }
+/* ── ESITO ── */
+.verdict { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 14px; border-radius: 8px; margin: 12px 0; font-weight: 800; font-size: 16px; letter-spacing: .5px; }
+.verdict.ok { background: #ECFDF5; color: #047857; border: 2px solid #6EE7B7; }
+.verdict.ko { background: #FEF2F2; color: #B91C1C; border: 2px solid #FECACA; }
+/* ── TOTALE (fatture) ── */
+.total-box { background: #0E7490; color: #fff; padding: 13px 18px; display: flex; justify-content: space-between; align-items: center; border-radius: 6px; margin-top: 8px; }
+.total-box .label { font-size: 11px; font-weight: 600; }
+.total-box .amount { font-size: 19px; font-weight: 800; }
+/* ── BADGE ── */
+.badge { display: inline-block; padding: 3px 9px; border-radius: 20px; font-size: 8.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; }
+.pass { color: #047857; background: #D1FAE5; }
+.fail { color: #B91C1C; background: #FEE2E2; }
+.nd { color: #64748B; background: #F1F5F9; }
+/* ── STAT CARDS ── */
+.stat-row { display: flex; gap: 10px; margin: 12px 0; }
+.stat { flex: 1; background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 12px 10px; text-align: center; }
+.stat .n { font-size: 22px; font-weight: 800; color: #0E7490; line-height: 1; }
+.stat .l { font-size: 8.5px; color: #64748B; text-transform: uppercase; letter-spacing: .5px; margin-top: 5px; font-weight: 600; }
+/* ── BOX NOTE/DESCRIZIONE ── */
+.desc-box { background: #F8FAFC; border-left: 3px solid #0E7490; padding: 10px 14px; margin: 6px 0; font-size: 10.5px; line-height: 1.55; border-radius: 0 4px 4px 0; }
+.vis-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #F1F5F9; font-size: 10.5px; }
+/* ── VOCI VERIFICA FUNZIONALE (check ✓/✗) ── */
+.section-note { font-size: 9.5px; color: #6B7280; font-style: italic; margin: 0 0 7px 0; padding: 5px 9px; background: #FFFBEB; border-left: 2px solid #F59E0B; border-radius: 0 3px 3px 0; }
+.check-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 2px; border-bottom: 1px solid #F1F5F9; gap: 10px; }
+.check-text { font-size: 10.5px; color: #334155; flex: 1; }
+.check-result { font-size: 10px; font-weight: 800; padding: 2px 9px; border-radius: 4px; border: 1px solid; white-space: nowrap; }
+/* ── FIRME ── */
+.sign-row { display: flex; gap: 40px; margin-top: 22px; break-inside: avoid; page-break-inside: avoid; }
+.sign { flex: 1; text-align: center; break-inside: avoid; page-break-inside: avoid; }
+.sign .line { border-top: 1px solid #94A3B8; margin-top: 36px; padding-top: 6px; }
+.sign .label { font-size: 9px; color: #64748B; }
+/* ── FOOTER ── */
+.footer { margin-top: 16px; padding-top: 11px; border-top: 2px solid #0E7490; display: flex; justify-content: space-between; font-size: 8.5px; color: #94A3B8; }
+/* ── INTERRUZIONI DI PAGINA: niente blocchi spezzati / righe orfane ── */
+.section, tr, .kv, .check-row, .vis-row, .desc-box, .section-note,
+.verdict, .total-box, .stat-row, .stat, .sign-row, .sign, .footer {
+break-inside: avoid; page-break-inside: avoid;
+}
+.sec-head { break-after: avoid; page-break-after: avoid; }
+thead { display: table-header-group; }
+body { orphans: 3; widows: 3; }
+`;
+const getNextReportNumber = (reports, prefix) => {
+const year = new Date().getFullYear();
+const pattern = new RegExp("^" + prefix + "-" + year + "-(\\d+)$");
+let maxNum = 0;
+(reports || []).forEach(r => {
+const m = (r.reportNumber || "").match(pattern);
+if (m)
+maxNum = Math.max(maxNum, parseInt(m[1], 10));
+});
+const next = String(maxNum + 1).padStart(3, "0");
+return prefix + "-" + year + "-" + next;
+};
+function generateJobPDF(job, assets, parts, customers, company) {
+const asset = assets.find(a => a.id === job.assetId) || {};
+const customer = customers.find(c => c.id === (job.customerId || asset.customerId)) || {};
+const partsTotal = (job.parts || []).reduce((s, p) => {
+const pt = parts.find(x => x.id === p.partId);
+return s + (pt ? (pt.sellPrice || pt.unitPrice) * p.qty : 0);
+}, 0);
+const laborTotal = job.laborHours * job.laborRate;
+const total = partsTotal + laborTotal;
+const PRI = { urgente: '#dc2626', alta: '#ea580c', normale: '#7c3aed', bassa: '#6b7280' };
+const STA = { aperto: '#2563eb', 'in corso': '#d97706', chiuso: '#059669', 'fuori servizio': '#dc2626' };
+const partsRows = (job.parts || []).map(p => {
+const pt = parts.find(x => x.id === p.partId) || {};
+const price = pt.sellPrice || pt.unitPrice || 0;
+return `<tr>
+<td style="font-family:monospace;font-size:10px">${pt.code || p.partId}</td>
+<td>${pt.name || '—'}</td>
+<td style="text-align:right">${p.qty}</td>
+<td style="text-align:right">€${price.toFixed(2)}</td>
+<td style="text-align:right;font-weight:700">€${(price * p.qty).toFixed(2)}</td>
+</tr>`;
+}).join('');
+const tlRows = (job.timeline || []).map(t => `
+<tr>
+<td>${t.date}</td>
+<td>${t.type}</td>
+<td>${t.note || '—'}</td>
+<td style="text-align:right">${t.hours ? t.hours + 'h' : '—'}</td>
+</tr>`).join('');
+const html = `<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8">
+<title>Rapporto ${job.id}</title>
+<style>${PDF_STYLE}</style></head><body><div class="wrap"><div class="side"></div><div class="main">
+<div class="header">
+<div>${company.logo ? `<img src="${company.logo}" class="brand-logo"/>` : `<h1>${(company.name || 'Documento')}</h1>`}${(company.logo && company.logoHasName) ? '' : `<div class="sub" style="font-weight:700;color:#0F172A;font-size:13px">${company.name || ''}</div>`}<div class="sub">${company.subtitle || ''}</div></div>
+<div class="right">
+<div class="doctype">Rapporto di intervento</div>
+<div class="docnum">${job.id}</div>
+<div style="font-size:10px;margin-top:4px">
+<span class="badge" style="background:${PRI[job.priority] || '#6b7280'}22;color:${PRI[job.priority] || '#6b7280'};border:1px solid ${PRI[job.priority] || '#6b7280'}44">${job.priority.toUpperCase()}</span>
+&nbsp;<span class="badge" style="background:${STA[job.status] || '#6b7280'}22;color:${STA[job.status] || '#6b7280'};border:1px solid ${STA[job.status] || '#6b7280'}44">${job.status.toUpperCase()}</span>
+</div>
+</div>
+</div>
+${customer.name ? `<div class="section">
+<div class="section-title">Cliente</div>
+<div class="kv-grid">
+<div class="kv"><span class="kv-label">Ragione sociale</span><span class="kv-value">${customer.name}</span></div>
+${customer.vat ? `<div class="kv"><span class="kv-label">P.IVA</span><span class="kv-value">${customer.vat}</span></div>` : ''}
+${customer.address ? `<div class="kv"><span class="kv-label">Indirizzo</span><span class="kv-value">${customer.address}</span></div>` : ''}
+</div>
+</div>` : ''}
+<div class="section">
+<div class="section-title">Apparecchio</div>
+<div class="kv-grid">
+<div class="kv"><span class="kv-label">Nome</span><span class="kv-value">${asset.name || job.assetId}</span></div>
+<div class="kv"><span class="kv-label">Marca / Modello</span><span class="kv-value">${asset.brand || ''} ${asset.model || ''}</span></div>
+<div class="kv"><span class="kv-label">N° Serie</span><span class="kv-value" style="font-family:monospace">${asset.serial || '—'}</span></div>
+<div class="kv"><span class="kv-label">Ubicazione</span><span class="kv-value">${asset.location || '—'}</span></div>
+</div>
+</div>
+<div class="section">
+<div class="section-title">Dettagli Intervento</div>
+<div class="kv-grid">
+<div class="kv"><span class="kv-label">Tipo</span><span class="kv-value" style="text-transform:capitalize">${job.type}</span></div>
+<div class="kv"><span class="kv-label">Tecnico</span><span class="kv-value">${job.assignee || '—'}</span></div>
+<div class="kv"><span class="kv-label">Data apertura</span><span class="kv-value">${job.openDate}</span></div>
+<div class="kv"><span class="kv-label">Data chiusura</span><span class="kv-value">${job.closeDate || '—'}</span></div>
+</div>
+${job.description ? `<div class="desc-box" style="margin-top:8px">${job.description}</div>` : ''}
+${(job.timeline && job.timeline.length > 0) ? `
+<div style="margin-top:14px;padding-top:10px;border-top:1px solid #e5e7eb">
+<div style="font-size:11px;font-weight:700;color:#1e293b;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Timeline interventi</div>
+<table style="width:100%;font-size:10px;border-collapse:collapse">
+<thead><tr style="background:#f1f5f9;color:#64748b">
+<th style="padding:5px 6px;text-align:left;border:1px solid #cbd5e1;width:90px">Data / Ora</th>
+<th style="padding:5px 6px;text-align:left;border:1px solid #cbd5e1;width:140px">Tipo</th>
+<th style="padding:5px 6px;text-align:left;border:1px solid #cbd5e1">Descrizione</th>
+<th style="padding:5px 6px;text-align:right;border:1px solid #cbd5e1;width:50px">Min.</th>
+<th style="padding:5px 6px;text-align:left;border:1px solid #cbd5e1;width:100px">Tecnico</th>
+</tr></thead>
+<tbody>
+${job.timeline.map(t => `
+<tr>
+<td style="padding:5px 6px;border:1px solid #e5e7eb;font-family:monospace">${t.date || ''} ${t.time || ''}</td>
+<td style="padding:5px 6px;border:1px solid #e5e7eb">${(t.type || '').replace(/_/g, ' ')}</td>
+<td style="padding:5px 6px;border:1px solid #e5e7eb">${t.description || ''}</td>
+<td style="padding:5px 6px;border:1px solid #e5e7eb;text-align:right;font-family:monospace">${t.durationMin || 0}</td>
+<td style="padding:5px 6px;border:1px solid #e5e7eb">${t.technician || ''}</td>
+</tr>
+`).join('')}
+</tbody>
+<tfoot><tr style="background:#f8fafc;font-weight:700">
+<td colspan="3" style="padding:5px 6px;border:1px solid #e5e7eb;text-align:right">Tempo totale lavorato:</td>
+<td style="padding:5px 6px;border:1px solid #e5e7eb;text-align:right;font-family:monospace">${job.timeline.reduce((s, t) => s + (+t.durationMin || 0), 0)}</td>
+<td style="padding:5px 6px;border:1px solid #e5e7eb;font-family:monospace">${(job.timeline.reduce((s, t) => s + (+t.durationMin || 0), 0) / 60).toFixed(1)}h</td>
+</tr></tfoot>
+</table>
+</div>` : ''}
+${job.notes ? `<div style="margin-top:6px;font-size:10px;color:#64748b"><strong>Note:</strong> ${job.notes}</div>` : ''}
+</div>
+<div class="section">
+<div class="section-title">Parti Utilizzate</div>
+<table>
+<thead><tr><th>Codice</th><th>Parte</th><th style="text-align:right">Qtà</th><th style="text-align:right">P. Unit.</th><th style="text-align:right">Totale</th></tr></thead>
+<tbody>${partsRows || '<tr><td colspan="5" style="text-align:center;color:#94a3b8">Nessuna parte utilizzata</td></tr>'}</tbody>
+</table>
+</div>
+${tlRows ? `<div class="section">
+<div class="section-title">Cronologia Intervento</div>
+<table>
+<thead><tr><th>Data</th><th>Tipo</th><th>Descrizione</th><th style="text-align:right">Ore</th></tr></thead>
+<tbody>${tlRows}</tbody>
+</table>
+</div>` : ''}
+<div style="display:flex;justify-content:flex-end;flex-direction:column;align-items:flex-end;gap:4px;margin-top:4px">
+<div style="display:flex;justify-content:space-between;width:260px;padding:4px 0;border-bottom:1px solid #e2e8f0"><span style="color:#64748b">Parti</span><span style="font-weight:700">€${partsTotal.toFixed(2)}</span></div>
+<div style="display:flex;justify-content:space-between;width:260px;padding:4px 0;border-bottom:1px solid #e2e8f0"><span style="color:#64748b">Manodopera (${job.laborHours}h × €${job.laborRate}/h)</span><span style="font-weight:700">€${laborTotal.toFixed(2)}</span></div>
+<div class="total-box" style="width:260px"><span class="label">TOTALE INTERVENTO</span><span class="amount">€${total.toFixed(2)}</span></div>
+</div>
+<div style="margin-top:32px;display:flex">
+<div style="width:200px;border-top:1px solid #94a3b8;padding-top:6px;text-align:center;font-size:10px;color:#64748b">Firma Tecnico Verificatore<br><br>${job.assignee || ''}</div>
+</div>
+<div class="footer">
+<span>${(company.name || 'Documento')} — Generato il ${new Date().toLocaleDateString('it-IT')}</span>
+<span>${job.id} · ${asset.serial || ''}</span>
+</div>
+</div></div></body></html>`;
+openPrintWindow(html);
+}
+function generateInvoicePDF(invoice, customer, jobs, assets, parts, company) {
+const subtotal = (invoice.items || []).reduce((s, it) => s + it.qty * it.unitPrice, 0);
+const totalVAT = (invoice.items || []).reduce((s, it) => s + it.qty * it.unitPrice * it.vat / 100, 0);
+const grandTotal = subtotal + totalVAT;
+const STA = { bozza: '#6b7280', emessa: '#2563eb', pagata: '#059669', scaduta: '#dc2626', annullato: '#dc2626' };
+const itemRows = (invoice.items || []).map(it => `<tr>
+<td>${it.description}</td>
+<td style="text-align:right">${it.qty}</td>
+<td style="text-align:right">€${it.unitPrice.toFixed(2)}</td>
+<td style="text-align:right">${it.vat}%</td>
+<td style="text-align:right;font-weight:700">€${(it.qty * it.unitPrice).toFixed(2)}</td>
+</tr>`).join('');
+const html = `<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8">
+<title>Preventivo ${invoice.number}</title>
+<style>${PDF_STYLE}</style></head><body><div class="wrap"><div class="side"></div><div class="main">
+<div class="header">
+<div>
+${company.logo ? `<img src="${company.logo}" class="brand-logo"/>` : `<h1>${(company.name || 'Documento')}</h1>`}
+${(company.logo && company.logoHasName) ? '' : `<div class="sub" style="font-weight:700;color:#0F172A;font-size:13px">${company.name || ''}</div>`}
+<div class="sub">${company.address || ''}</div>
+${company.vat ? `<div class="sub">P.IVA: ${company.vat}</div>` : ''}
+</div>
+<div class="right">
+<div class="doctype">Preventivo</div>
+<div class="docnum">${invoice.number}</div>
+<div style="font-size:10px;margin-top:4px">
+<span class="badge" style="background:${STA[invoice.status] || '#6b7280'}22;color:${STA[invoice.status] || '#6b7280'};border:1px solid ${STA[invoice.status] || '#6b7280'}44">${invoice.status.toUpperCase()}</span>
+</div>
+<div style="font-size:10px;margin-top:4px;opacity:.8">Data: ${invoice.date}${invoice.dueDate ? ' · Scad: ' + invoice.dueDate : ''}</div>
+</div>
+</div>
+<div class="section">
+<div class="section-title">Cliente</div>
+<div style="font-size:14px;font-weight:700;margin-bottom:4px">${(customer === null || customer === void 0 ? void 0 : customer.name) || '—'}</div>
+${(customer === null || customer === void 0 ? void 0 : customer.address) ? `<div style="font-size:11px;color:#64748b">${customer.address}</div>` : ''}
+${(customer === null || customer === void 0 ? void 0 : customer.vat) ? `<div style="font-size:11px;color:#64748b">P.IVA: ${customer.vat}</div>` : ''}
+${(customer === null || customer === void 0 ? void 0 : customer.fiscalCode) ? `<div style="font-size:11px;color:#64748b">C.F.: ${customer.fiscalCode}</div>` : ''}
+</div>
+<div class="section">
+<div class="section-title">Voci Preventivo</div>
+<table>
+<thead><tr><th>Descrizione</th><th style="text-align:right">Q.tà</th><th style="text-align:right">Prezzo Unit.</th><th style="text-align:right">IVA</th><th style="text-align:right">Importo</th></tr></thead>
+<tbody>${itemRows}</tbody>
+</table>
+</div>
+<div style="display:flex;justify-content:flex-end;flex-direction:column;align-items:flex-end;gap:4px">
+<div style="display:flex;justify-content:space-between;width:280px;padding:4px 0;border-bottom:1px solid #e2e8f0"><span style="color:#64748b">Imponibile</span><span style="font-weight:700">€${subtotal.toFixed(2)}</span></div>
+<div style="display:flex;justify-content:space-between;width:280px;padding:4px 0;border-bottom:1px solid #e2e8f0"><span style="color:#64748b">IVA</span><span style="font-weight:700">€${totalVAT.toFixed(2)}</span></div>
+<div class="total-box" style="width:280px"><span class="label">TOTALE FATTURA</span><span class="amount">€${grandTotal.toFixed(2)}</span></div>
+</div>
+${invoice.paymentTerms ? `<div style="margin-top:16px;padding:10px;background:#f8fafc;border-radius:4px;font-size:10px"><strong>Modalità di pagamento:</strong> ${invoice.paymentTerms}${company.iban ? '<br><strong>IBAN:</strong> ' + company.iban : ''}</div>` : ''}
+${invoice.notes ? `<div style="margin-top:8px;font-size:10px;color:#64748b"><strong>Note:</strong> ${invoice.notes}</div>` : ''}
+<div class="footer">
+<span>${(company.name || 'Documento')} — Generato il ${new Date().toLocaleDateString('it-IT')}</span>
+<span>${invoice.number}</span>
+</div>
+</div></div></body></html>`;
+openPrintWindow(html);
+}
+function generateClientReportPDF(customer, assets, iecReports, funcReports, jobs, company) {
+const myAssets = assets.filter(a => a.customerId === customer.id);
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+const STATUS_LABEL = {
+operativo: "Operativo", "in manutenzione": "In manutenzione",
+"fuori servizio": "Fuori servizio", dismesso: "Dismesso",
+};
+const STATUS_COLOR = {
+operativo: "#059669", "in manutenzione": "#d97706",
+"fuori servizio": "#dc2626", dismesso: "#6b7280",
+};
+const totOperativi = myAssets.filter(a => a.status === "operativo" || !a.status).length;
+const totFuoriServizio = myAssets.filter(a => a.status === "fuori servizio").length;
+const scadute = myAssets.filter(a => {
+if (!a.nextService)
+return false;
+const d = new Date(a.nextService);
+d.setHours(0, 0, 0, 0);
+return d < today;
+}).length;
+const verificheCliente = iecReports.filter(r => r.customerId === customer.id).length
++ funcReports.filter(r => r.customerId === customer.id).length;
+const sorted = [...myAssets].sort((a, b) => {
+if (!a.nextService)
+return 1;
+if (!b.nextService)
+return -1;
+return new Date(a.nextService) - new Date(b.nextService);
+});
+const rows = sorted.map(a => {
+const st = a.status || "operativo";
+let scadColor = "#1a202c", scadNote = "";
+if (a.nextService) {
+const d = new Date(a.nextService);
+d.setHours(0, 0, 0, 0);
+const days = Math.round((d - today) / 86400000);
+if (days < 0) {
+scadColor = "#dc2626";
+scadNote = " (scaduta)";
+}
+else if (days <= 30) {
+scadColor = "#d97706";
+scadNote = " (" + days + "gg)";
+}
+}
+return `<tr>
+<td style="font-weight:700">${a.name || "—"}</td>
+<td>${[a.brand, a.model].filter(Boolean).join(" ") || "—"}</td>
+<td style="font-family:monospace;font-size:10px">${a.serial || "—"}</td>
+<td>${a.location || "—"}</td>
+<td><span class="badge" style="background:${STATUS_COLOR[st]}22;color:${STATUS_COLOR[st]}">${STATUS_LABEL[st] || st}</span></td>
+<td>${a.lastService || "—"}</td>
+<td style="color:${scadColor};font-weight:${scadNote ? "700" : "400"}">${a.nextService ? a.nextService + scadNote : "—"}</td>
+</tr>`;
+}).join("");
+const assetById = {};
+myAssets.forEach(a => assetById[a.id] = a);
+const allVerifiche = [
+...iecReports.filter(r => r.customerId === customer.id || assetById[r.assetId])
+.map(r => {
+var _a, _b;
+return ({ date: r.date || "", kind: "Sicurezza elettrica", norm: r.norm === '61010' ? 'IEC 61010' : r.norm === '60601' ? 'IEC 60601-1' : 'EN 62353',
+asset: ((_a = assetById[r.assetId]) === null || _a === void 0 ? void 0 : _a.name) || "—", serial: ((_b = assetById[r.assetId]) === null || _b === void 0 ? void 0 : _b.serial) || "",
+num: r.reportNumber || r.id || "", pass: r.overallPass });
+}),
+...funcReports.filter(r => r.customerId === customer.id || assetById[r.assetId])
+.map(r => {
+var _a, _b;
+return ({ date: r.date || "", kind: "Funzionale", norm: r.templateName || r.template || "—",
+asset: ((_a = assetById[r.assetId]) === null || _a === void 0 ? void 0 : _a.name) || "—", serial: ((_b = assetById[r.assetId]) === null || _b === void 0 ? void 0 : _b.serial) || "",
+num: r.reportNumber || r.id || "", pass: r.overallPass });
+}),
+].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+const verRows = allVerifiche.map(v => {
+const esito = v.pass === true ? '<span class="badge" style="background:#05966922;color:#059669">CONFORME</span>'
+: v.pass === false ? '<span class="badge" style="background:#dc262622;color:#dc2626">NON CONF.</span>'
+: '<span class="badge" style="background:#94a3b822;color:#64748b">—</span>';
+return `<tr>
+<td>${v.date || "—"}</td>
+<td style="font-weight:700">${v.asset}</td>
+<td style="font-family:monospace;font-size:10px">${v.serial || "—"}</td>
+<td>${v.kind}</td>
+<td>${v.norm}</td>
+<td>${esito}</td>
+</tr>`;
+}).join("");
+const dateStr = new Date().toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" });
+const html = `<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8">
+<title>Report parco macchine - ${customer.name}</title>
+<style>${PDF_STYLE}
+.stat-row { display:flex; gap:10px; margin:12px 0; }
+.stat { flex:1; background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px 12px; text-align:center; }
+.stat .n { font-size:22px; font-weight:900; color:#0D9488; }
+.stat .l { font-size:9px; color:#64748b; text-transform:uppercase; letter-spacing:.5px; margin-top:3px; }
+</style></head><body><div class="wrap"><div class="side"></div><div class="main">
+<div class="header">
+<div>
+${company.logo ? `<img src="${company.logo}" class="brand-logo"/>` : `<h1>${company.name || "Report"}</h1>`}
+${(company.logo && company.logoHasName) ? '' : `<div class="sub" style="font-weight:700;color:#0F172A;font-size:13px">${company.name || ''}</div>`}
+<div class="sub">${company.subtitle || ""}</div>
+</div>
+<div class="right">
+<div class="doctype">Fascicolo Parco Macchine</div>
+<div class="docdate">${dateStr}</div>
+</div>
+</div>
+<div class="section">
+<div class="section-title">Cliente</div>
+<div class="kv-grid">
+<div class="kv"><span class="kv-label">Ragione sociale</span><span class="kv-value">${customer.name}</span></div>
+${customer.vat ? `<div class="kv"><span class="kv-label">P.IVA</span><span class="kv-value">${customer.vat}</span></div>` : ""}
+${customer.address ? `<div class="kv"><span class="kv-label">Indirizzo</span><span class="kv-value">${customer.address}</span></div>` : ""}
+${customer.contact ? `<div class="kv"><span class="kv-label">Riferimento</span><span class="kv-value">${customer.contact}</span></div>` : ""}
+</div>
+</div>
+<div class="stat-row">
+<div class="stat"><div class="n">${myAssets.length}</div><div class="l">Apparecchi</div></div>
+<div class="stat"><div class="n" style="color:#059669">${totOperativi}</div><div class="l">Operativi</div></div>
+<div class="stat"><div class="n" style="color:${totFuoriServizio > 0 ? '#dc2626' : '#0D9488'}">${totFuoriServizio}</div><div class="l">Fuori servizio</div></div>
+<div class="stat"><div class="n" style="color:${scadute > 0 ? '#dc2626' : '#0D9488'}">${scadute}</div><div class="l">Verifiche scadute</div></div>
+<div class="stat"><div class="n">${verificheCliente}</div><div class="l">Verifiche svolte</div></div>
+</div>
+<div class="section">
+<div class="section-title">Elenco apparecchi (${myAssets.length})</div>
+${myAssets.length === 0 ? '<div style="color:#94a3b8;padding:16px;text-align:center">Nessun apparecchio registrato per questo cliente.</div>' : `
+<table>
+<thead><tr>
+<th>Apparecchio</th><th>Marca/Modello</th><th>N. Serie</th><th>Ubicazione</th>
+<th>Stato</th><th>Ultima manut.</th><th>Prossima manut.</th>
+</tr></thead>
+<tbody>${rows}</tbody>
+</table>`}
+</div>
+<div class="section">
+<div class="section-title">Elenco verifiche (${allVerifiche.length})</div>
+${allVerifiche.length === 0 ? '<div style="color:#94a3b8;padding:16px;text-align:center">Nessuna verifica registrata per questo cliente.</div>' : `
+<table>
+<thead><tr>
+<th>Data</th><th>Apparecchio</th><th>N. Serie</th><th>Tipo</th><th>Norma/Modello</th><th>Esito</th>
+</tr></thead>
+<tbody>${verRows}</tbody>
+</table>`}
+</div>
+<div class="footer">
+<div>${company.name || ""} ${company.vat ? "· P.IVA " + company.vat : ""}</div>
+<div>Generato il ${dateStr}</div>
+</div>
+</div></div></body></html>`;
+openPrintWindow(html);
+}
+let _instrumentsRegistry = [];
+function generateIECPDF(rep, asset, customer, company) {
+let _instSerial = rep.instrumentSerial || "";
+let _instExpiry = rep.instrumentCalExpiry || "";
+if ((!_instSerial || !_instExpiry) && rep.instrument && Array.isArray(_instrumentsRegistry)) {
+const _m = _instrumentsRegistry.find(i => { const t = [i.brand, i.model].filter(Boolean).join(" "); return rep.instrument === t || rep.instrument === (t + (i.internalCode ? (" (" + i.internalCode + ")") : "")); });
+if (_m) {
+if (!_instSerial)
+_instSerial = _m.serial || "";
+if (!_instExpiry)
+_instExpiry = _m.calExpiry || "";
+}
+}
+const normL = rep.norm === '61010' ? 'IEC 61010-1 — Strumentazione Lab.' : rep.norm === '60601' ? 'IEC 60601-1 — Prova approfondita' : 'IEC 62353 — Elettromedicale';
+const ptLabel = rep.norm !== '61010' ? (' · Tipo ' + (rep.patientType || 'BF')) : '';
+const vi = rep.visual || {};
+const visItems = [
+['Involucro integro', vi.housing],
+['Cavo di rete e spina integri', vi.cable],
+['Connettori in buono stato', vi.connectors],
+['Etichette e marcatura CE leggibili', vi.labels],
+['Documentazione tecnica presente', vi.docs],
+];
+const visItemsFilled = visItems.filter(([label, val]) => val === true || val === false);
+const visRows = visItemsFilled.map(([label, val]) => `
+<div class="vis-row">
+<span>${label}</span>
+<span class="badge ${val === true ? 'pass' : 'fail'}">${val === true ? '✓ OK' : '✗ NO'}</span>
+</div>`).join('');
+const measFilled = (rep.measures || []).filter(m => m.value !== '' && m.value !== undefined && m.value !== null && !isNaN(parseFloat(m.value)));
+const measRows = measFilled.map(m => {
+const v = parseFloat(m.value);
+const lv = parseFloat(m.limitVal);
+const pass = m.invertPass ? v >= lv : v <= lv;
+return `<tr>
+<td>${m.name}</td>
+<td style="text-align:center;font-family:monospace">${m.limit}</td>
+<td style="text-align:center;font-family:monospace;font-weight:700">${m.value}</td>
+<td style="text-align:center">${m.unit}</td>
+<td style="text-align:center"><span class="badge ${pass ? 'pass' : 'fail'}">${pass ? '✓ PASS' : '✗ FAIL'}</span></td>
+</tr>`;
+}).join('');
+const isNotAvail = rep.verifyStatus === "non_disponibile";
+const esitoColor = isNotAvail ? '#f59e0b' : (rep.overallPass ? '#059669' : '#dc2626');
+const esitoLabel = isNotAvail ? 'NON ESEGUITA' : (rep.overallPass ? 'CONFORME' : 'NON CONFORME');
+const reasonLabel = {
+in_uso: "Apparecchio in uso su paziente",
+non_trovato: "Apparecchio non reperibile in reparto",
+trasferito: "Apparecchio trasferito ad altro reparto",
+riparazione_esterna: "In riparazione esterna",
+dismesso: "Dismesso / non più in uso",
+rifiuto_reparto: "Reparto non autorizza intervento ora",
+altro: "Altro motivo"
+}[rep.notAvailableReason] || rep.notAvailableReason || "Non specificato";
+const html = `<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8">
+<title>Verifica ${rep.reportNumber || rep.id}</title>
+<style>${PDF_STYLE}</style></head><body><div class="wrap"><div class="side"></div><div class="main">
+<div class="header">
+<div>
+${company.logo ? `<img src="${company.logo}" class="brand-logo"/>` : `<h1>${company.name || 'Documento'}</h1>`}
+<div class="sub">Rapporto di Verifica Sicurezza Elettrica</div>
+<div class="sub">${normL}${ptLabel}</div>
+</div>
+<div class="right">
+<div class="doctype">Verifica Sicurezza Elettrica</div>
+<div class="docnum">${rep.reportNumber || rep.id}</div>
+<div style="margin-top:6px;background:${esitoColor};color:#fff;padding:4px 12px;border-radius:4px;font-size:11px;font-weight:800">${esitoLabel}</div>
+<div style="font-size:10px;margin-top:4px;opacity:.8">Data: ${rep.date || '—'}</div>
+</div>
+</div>
+<div class="titlebar">
+${(company.logo && company.logoHasName) ? '' : `<h2>${company.name || 'Documento'}</h2>`}
+<p>${[company.subtitle, company.vat ? 'P.IVA ' + company.vat : '', company.address].filter(Boolean).join(' · ')}</p>
+</div>
+<div class="section">
+<div class="sec-head"><span class="sec-num">1</span><span class="sec-title">Apparecchio</span></div>
+<div class="kv-grid">
+<div class="kv"><span class="kv-label">Nome</span><span class="kv-value">${(asset === null || asset === void 0 ? void 0 : asset.name) || '—'}</span></div>
+<div class="kv"><span class="kv-label">Marca / Modello</span><span class="kv-value">${(asset === null || asset === void 0 ? void 0 : asset.brand) || ''} ${(asset === null || asset === void 0 ? void 0 : asset.model) || ''}</span></div>
+<div class="kv"><span class="kv-label">N° Serie</span><span class="kv-value" style="font-family:monospace">${(asset === null || asset === void 0 ? void 0 : asset.serial) || '—'}</span></div>
+<div class="kv"><span class="kv-label">Ubicazione</span><span class="kv-value">${(asset === null || asset === void 0 ? void 0 : asset.location) || '—'}</span></div>
+${(customer === null || customer === void 0 ? void 0 : customer.name) ? `<div class="kv"><span class="kv-label">Cliente</span><span class="kv-value">${customer.name}</span></div>` : ''}
+</div>
+</div>
+<div class="section">
+<div class="sec-head"><span class="sec-num">2</span><span class="sec-title">Dati Verifica</span></div>
+<div class="kv-grid">
+<div class="kv"><span class="kv-label">Tecnico</span><span class="kv-value">${rep.technician || '—'}</span></div>
+${isNotAvail ? `
+<div class="kv"><span class="kv-label">Data</span><span class="kv-value">${rep.date || '—'}</span></div>
+` : `
+<div class="kv"><span class="kv-label">Strumento di misura</span><span class="kv-value">${rep.instrument || '—'}</span></div>
+<div class="kv"><span class="kv-label">N° Serie strumento</span><span class="kv-value" style="font-family:monospace">${_instSerial || '—'}</span></div>
+<div class="kv"><span class="kv-label">Scadenza taratura</span><span class="kv-value">${_instExpiry || '—'}</span></div>
+<div class="kv"><span class="kv-label">Tipo verifica</span><span class="kv-value" style="text-transform:capitalize">${rep.verifyType || '—'}</span></div>
+${rep.norm === '62353' && rep.equipClass !== 'III' ? `<div class="kv"><span class="kv-label">Metodo misura dispersione</span><span class="kv-value" style="text-transform:capitalize">${rep.leakageMethod || 'diretto'}</span></div>` : ''}
+<div class="kv"><span class="kv-label">Classe apparecchio</span><span class="kv-value">Classe ${rep.equipClass || '—'}</span></div>
+${rep.norm !== '61010' ? `<div class="kv"><span class="kv-label">Tipo parte paziente</span><span class="kv-value">Tipo ${rep.patientType || 'BF'}</span></div>` : ''}
+`}
+</div>
+</div>
+${isNotAvail ? `
+<div class="section">
+<div class="section-title" style="color:#d97706">⚠ Verifica Non Eseguita</div>
+<table style="width:100%;border-collapse:collapse;font-size:11px">
+<tr><td style="padding:6px;border:1px solid #cbd5e1;background:#fef3c7;width:35%"><strong>Motivo</strong></td><td style="padding:6px;border:1px solid #e5e7eb">${reasonLabel}</td></tr>
+<tr><td style="padding:6px;border:1px solid #cbd5e1;background:#fef3c7"><strong>Reparto / Unità</strong></td><td style="padding:6px;border:1px solid #e5e7eb">${rep.departmentName || '—'}</td></tr>
+<tr><td style="padding:6px;border:1px solid #cbd5e1;background:#fef3c7"><strong>Referente reparto</strong></td><td style="padding:6px;border:1px solid #e5e7eb">${rep.departmentContact || '—'}</td></tr>
+<tr><td style="padding:6px;border:1px solid #cbd5e1;background:#fef3c7"><strong>Data tentativo</strong></td><td style="padding:6px;border:1px solid #e5e7eb">${rep.date}</td></tr>
+</table>
+<p style="margin-top:10px;font-size:11px;color:#64748b;font-style:italic">Il presente rapporto documenta l'impossibilità di eseguire la verifica programmata. La verifica sarà ripianificata e l'apparecchio resterà in stato "verifica scaduta" fino al completamento.</p>
+</div>` : `
+${visRows ? `<div class="section">
+<div class="sec-head"><span class="sec-num">3</span><span class="sec-title">Ispezione Visiva</span></div>
+${visRows}
+</div>` : ''}
+${measRows ? `<div class="section">
+<div class="sec-head"><span class="sec-num">4</span><span class="sec-title">Misure Elettriche</span></div>
+<table>
+<thead><tr><th>Parametro</th><th style="text-align:center">Limite (norma)</th><th style="text-align:center">Valore misurato</th><th style="text-align:center">Unità</th><th style="text-align:center">Esito</th></tr></thead>
+<tbody>${measRows}</tbody>
+</table>
+</div>` : ''}`}
+<div class="total-box" style="margin-top:12px">
+<span class="label">ESITO FINALE VERIFICA</span>
+<span class="amount">${esitoLabel}</span>
+</div>
+${rep.notes ? `<div style="margin-top:12px;padding:8px 12px;background:#f8fafc;border-left:3px solid #64748b;font-size:11px"><strong>Note:</strong> ${rep.notes}</div>` : ''}
+<div class="sign-row">
+<div class="sign">
+${rep.technicianSignature ? `<img src="${rep.technicianSignature}" style="max-height:55px;max-width:200px;display:block;margin:0 auto"/>` : '<div style="height:55px"></div>'}
+<div class="line"><span class="label">Firma Tecnico Verificatore</span><br><strong style="color:#1e293b;font-size:11px">${rep.technician || ''}</strong></div>
+</div>
+${(rep.departmentSignature || rep.departmentContact || rep.departmentName) ? `
+<div class="sign">
+${rep.departmentSignature ? `<img src="${rep.departmentSignature}" style="max-height:55px;max-width:200px;display:block;margin:0 auto"/>` : '<div style="height:55px"></div>'}
+<div class="line"><span class="label">Firma Referente Reparto / Cliente</span><br><strong style="color:#1e293b;font-size:11px">${rep.departmentContact || rep.departmentName || ''}</strong></div>
+</div>` : ''}
+</div>
+<div class="footer">
+<span>${(company.name || 'Documento')} — Generato il ${new Date().toLocaleDateString('it-IT')} — ${normL}</span>
+<span>${rep.reportNumber || rep.id} · ${(asset === null || asset === void 0 ? void 0 : asset.serial) || ''}</span>
+</div>
+</div></div></body></html>`;
+openPrintWindow(html);
+}
+function generateFuncPDF(rep, asset, customer, company, templates) {
+let _instSerial = rep.instrumentSerial || "";
+let _instExpiry = rep.instrumentCalExpiry || "";
+if ((!_instSerial || !_instExpiry) && rep.instrument && Array.isArray(_instrumentsRegistry)) {
+const _m = _instrumentsRegistry.find(i => { const t = [i.brand, i.model].filter(Boolean).join(" "); return rep.instrument === t || rep.instrument === (t + (i.internalCode ? (" (" + i.internalCode + ")") : "")); });
+if (_m) {
+if (!_instSerial)
+_instSerial = _m.serial || "";
+if (!_instExpiry)
+_instExpiry = _m.calExpiry || "";
+}
+}
+const _TPLS = templates || (typeof FUNC_TEMPLATES !== "undefined" ? FUNC_TEMPLATES : {});
+const tpl = _TPLS[rep.templateId] || { label: "Verifica Funzionale", icon: "›", norm: "IEC 60601-1", sections: [] };
+const isNotAvail = rep.verifyStatus === "non_disponibile";
+const esitoColor = isNotAvail ? "#f59e0b" : (rep.overallPass ? "#0D9488" : "#dc2626");
+const esitoLabel = isNotAvail ? "NON ESEGUITA" : (rep.overallPass ? "CONFORME" : "NON CONFORME");
+const reasonLabel = {
+in_uso: "Apparecchio in uso su paziente",
+non_trovato: "Apparecchio non reperibile in reparto",
+trasferito: "Apparecchio trasferito ad altro reparto",
+riparazione_esterna: "In riparazione esterna",
+dismesso: "Dismesso / non più in uso",
+rifiuto_reparto: "Reparto non autorizza intervento ora",
+altro: "Altro motivo"
+}[rep.notAvailableReason] || rep.notAvailableReason || "Non specificato";
+let secNum = 1;
+const sectionsHtml = (tpl.sections || []).map(sec => {
+const sd = (rep.sections || {})[sec.id] || { items: {}, measures: {} };
+const hasItem = (sec.items || []).some(it => {
+const v = sd.items[it.id];
+return v === true || v === false;
+});
+const hasMeas = (sec.measures || []).some(m => {
+const v = sd.measures[m.id];
+return v !== undefined && v !== null && String(v).trim() !== "";
+});
+if (!hasItem && !hasMeas)
+return "";
+const itemsHtml = (sec.items || []).map(item => {
+const val = sd.items[item.id];
+const icon = val === true ? "✓" : val === false ? "✗" : "—";
+const color = val === true ? "#0D9488" : val === false ? "#dc2626" : "#9ca3af";
+return `<div class="check-row">
+<span class="check-text">${item.text}</span>
+<span class="check-result" style="color:${color};background:${color}18;border-color:${color}44">${icon}</span>
+</div>`;
+}).join("");
+const measHtml = (sec.measures || []).map(m => {
+const val = sd.measures[m.id] || "";
+const vNum = parseFloat(val);
+let pass = null;
+if (!isNaN(vNum) && val !== "") {
+pass = true;
+if (m.limitMin !== undefined && vNum < m.limitMin)
+pass = false;
+if (m.limitVal !== undefined) {
+if (m.invertPass) {
+if (vNum < m.limitVal)
+pass = false;
+}
+else {
+if (vNum > m.limitVal)
+pass = false;
+}
+}
+}
+const pc = pass === null ? "#9ca3af" : pass ? "#0D9488" : "#dc2626";
+return `<tr>
+<td>${m.name}</td>
+<td style="text-align:center;font-family:monospace;font-size:10px;color:#6b7280">${m.expected || ""}</td>
+<td style="text-align:center;font-family:monospace;font-weight:700">${val || "—"}</td>
+<td style="text-align:center;color:#6b7280">${m.unit}</td>
+<td style="text-align:center"><span class="badge ${pass === null ? "nd" : pass ? "pass" : "fail"}">${pass === null ? "N/D" : pass ? "✓ PASS" : "✗ FAIL"}</span></td>
+</tr>`;
+}).join("");
+secNum++;
+return `<div class="section">
+<div class="sec-head"><span class="sec-num">${secNum}</span><span class="sec-title">${sec.title}</span></div>
+${sec.note ? `<div class="section-note">${sec.note}</div>` : ""}
+${itemsHtml}
+${measHtml ? `<table style="margin-top:${(sec.items || []).length > 0 ? 8 : 0}px">
+<thead><tr><th>Misura</th><th style="text-align:center">Atteso</th><th style="text-align:center">Valore</th><th style="text-align:center">U.M.</th><th style="text-align:center">Esito</th></tr></thead>
+<tbody>${measHtml}</tbody>
+</table>` : ""}
+</div>`;
+}).join("");
+const html = `<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8">
+<title>Verifica Funzionale ${rep.reportNumber || rep.id}</title>
+<style>${PDF_STYLE}</style></head><body><div class="wrap"><div class="side"></div><div class="main">
+<div class="header">
+<div>
+${company.logo ? `<img src="${company.logo}" class="brand-logo"/>` : `<h1>${(company.name || 'Documento')}</h1>`}
+<div class="sub">Rapporto di Verifica Funzionale</div>
+<div class="sub">${tpl.norm}</div>
+</div>
+<div class="right">
+<div class="doctype">Verifica Funzionale</div>
+<div class="docnum">${rep.reportNumber || rep.id}</div>
+<div style="margin-top:6px;background:${esitoColor};color:#fff;padding:4px 12px;border-radius:4px;font-size:11px;font-weight:800">${esitoLabel}</div>
+<div style="font-size:10px;margin-top:4px;opacity:.8">Data: ${rep.date || "—"}</div>
+</div>
+</div>
+<div class="titlebar">
+${(company.logo && company.logoHasName) ? '' : `<h2>${company.name || 'Documento'}</h2>`}
+<p>${[company.subtitle, company.vat ? 'P.IVA ' + company.vat : '', company.address].filter(Boolean).join(' · ')}</p>
+</div>
+<div class="section">
+<div class="sec-head"><span class="sec-num">1</span><span class="sec-title">Apparecchio</span></div>
+<div class="kv-grid">
+<div class="kv"><span class="kv-label">Tipo apparecchio</span><span class="kv-value">${tpl.icon} ${tpl.label}</span></div>
+<div class="kv"><span class="kv-label">Apparecchio</span><span class="kv-value">${(asset === null || asset === void 0 ? void 0 : asset.name) || "—"}</span></div>
+<div class="kv"><span class="kv-label">Marca / Modello</span><span class="kv-value">${(asset === null || asset === void 0 ? void 0 : asset.brand) || ""} ${(asset === null || asset === void 0 ? void 0 : asset.model) || ""}</span></div>
+<div class="kv"><span class="kv-label">N° Serie</span><span class="kv-value" style="font-family:monospace">${(asset === null || asset === void 0 ? void 0 : asset.serial) || "—"}</span></div>
+<div class="kv"><span class="kv-label">Ubicazione</span><span class="kv-value">${(asset === null || asset === void 0 ? void 0 : asset.location) || "—"}</span></div>
+${(customer === null || customer === void 0 ? void 0 : customer.name) ? `<div class="kv"><span class="kv-label">Cliente</span><span class="kv-value">${customer.name}</span></div>` : ""}
+<div class="kv"><span class="kv-label">Tecnico verificatore</span><span class="kv-value">${rep.technician || "—"}</span></div>
+${isNotAvail ? '' : `<div class="kv"><span class="kv-label">Strumento/tester</span><span class="kv-value">${rep.instrument || "—"}</span></div>
+<div class="kv"><span class="kv-label">N° Serie strumento</span><span class="kv-value" style="font-family:monospace">${_instSerial || "—"}</span></div>
+<div class="kv"><span class="kv-label">Scadenza taratura</span><span class="kv-value">${_instExpiry || "—"}</span></div>`}
+</div>
+</div>
+${isNotAvail ? `
+<div class="section">
+<div class="section-title" style="color:#d97706">⚠ Verifica Non Eseguita</div>
+<table style="width:100%;border-collapse:collapse;font-size:11px">
+<tr><td style="padding:6px;border:1px solid #cbd5e1;background:#fef3c7;width:35%"><strong>Motivo</strong></td><td style="padding:6px;border:1px solid #e5e7eb">${reasonLabel}</td></tr>
+<tr><td style="padding:6px;border:1px solid #cbd5e1;background:#fef3c7"><strong>Reparto / Unità</strong></td><td style="padding:6px;border:1px solid #e5e7eb">${rep.departmentName || '—'}</td></tr>
+<tr><td style="padding:6px;border:1px solid #cbd5e1;background:#fef3c7"><strong>Referente reparto</strong></td><td style="padding:6px;border:1px solid #e5e7eb">${rep.departmentContact || '—'}</td></tr>
+<tr><td style="padding:6px;border:1px solid #cbd5e1;background:#fef3c7"><strong>Data tentativo</strong></td><td style="padding:6px;border:1px solid #e5e7eb">${rep.date}</td></tr>
+</table>
+<p style="margin-top:10px;font-size:11px;color:#64748b;font-style:italic">Il presente rapporto documenta l'impossibilità di eseguire la verifica funzionale programmata. La verifica sarà ripianificata.</p>
+</div>` : sectionsHtml}
+${rep.notes ? `<div style="margin-top:8px;padding:8px 10px;background:#f8fafc;border-left:3px solid #64748b;font-size:10px"><strong>Note:</strong> ${rep.notes}</div>` : ""}
+<div class="total-box">
+<span class="label">ESITO FINALE VERIFICA FUNZIONALE</span>
+<span class="amount">${esitoLabel}</span>
+</div>
+<div class="sign-row">
+<div class="sign">
+${rep.technicianSignature ? `<img src="${rep.technicianSignature}" style="max-height:55px;max-width:200px;display:block;margin:0 auto"/>` : '<div style="height:55px"></div>'}
+<div class="line"><span class="label">Firma Tecnico Verificatore</span><br><strong style="color:#1e293b;font-size:11px">${rep.technician || ''}</strong></div>
+</div>
+${(isNotAvail || rep.departmentSignature || rep.departmentContact || rep.departmentName) ? `
+<div class="sign">
+${rep.departmentSignature ? `<img src="${rep.departmentSignature}" style="max-height:55px;max-width:200px;display:block;margin:0 auto"/>` : '<div style="height:55px"></div>'}
+<div class="line"><span class="label">Firma Referente Reparto / Cliente</span><br><strong style="color:#1e293b;font-size:11px">${rep.departmentContact || rep.departmentName || ''}</strong></div>
+</div>` : ''}
+</div>
+<div class="footer">
+<span>${(company.name || 'Documento')} — Generato il ${new Date().toLocaleDateString("it-IT")} — ${tpl.norm}</span>
+<span>${rep.reportNumber || rep.id} · ${(asset === null || asset === void 0 ? void 0 : asset.serial) || ""}</span>
+</div>
+</div></div></body></html>`;
+openPrintWindow(html);
+}
+function TecnicoPicker({ value, onChange, technicians, label }) {
+const list = (value || "").split(",").map(x => x.trim()).filter(Boolean);
+const techs = (technicians || []).filter(Boolean);
+const has = nm => list.some(x => x.toLowerCase() === nm.toLowerCase());
+const setList = arr => onChange(arr.join(", "));
+const toggle = nm => has(nm) ? setList(list.filter(x => x.toLowerCase() !== nm.toLowerCase())) : setList([...list, nm]);
+const [manual, setManual] = React.useState("");
+const addManual = () => { const nm = manual.trim(); if (nm && !has(nm))
+setList([...list, nm]); setManual(""); };
+const PILL = on => ({ background: on ? "#2DD4BF22" : "#202028", border: "1px solid " + (on ? "#2DD4BF" : "#2a3040"), color: on ? "#2DD4BF" : "#94a3b8", borderRadius: 8, padding: "6px 11px", fontSize: 12.5, cursor: "pointer", fontWeight: 600 });
+return (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } },
+React.createElement("label", { style: { fontSize: 12, color: "#94a3b8", fontWeight: 600 } }, label || "Tecnico/i"),
+techs.length > 0 && (React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6 } }, techs.map(t => React.createElement("button", { key: t, type: "button", onClick: () => toggle(t), style: PILL(has(t)) },
+has(t) ? "\u2713 " : "",
+t)))),
+React.createElement("div", { style: { display: "flex", gap: 6 } },
+React.createElement("input", { value: manual, onChange: e => setManual(e.target.value), onKeyDown: e => { if (e.key === "Enter") {
+e.preventDefault();
+addManual();
+} }, placeholder: techs.length ? "altro nome a mano\u2026" : "scrivi il nome del tecnico", style: { flex: 1, background: "#16161e", border: "1px solid #2a3040", borderRadius: 8, color: "#e2e8f0", padding: "9px 11px", fontSize: 13.5 } }),
+React.createElement("button", { type: "button", onClick: addManual, style: { background: "#202028", border: "1px solid #2a3040", borderRadius: 8, color: "#2DD4BF", padding: "0 14px", fontSize: 18, cursor: "pointer", fontWeight: 700 } }, "+")),
+list.length > 0 && (React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" } },
+React.createElement("span", { style: { fontSize: 11.5, color: "#64748b" } }, "Selezionati:"),
+list.map(nm => (React.createElement("span", { key: nm, style: { display: "inline-flex", alignItems: "center", gap: 6, background: "#2DD4BF18", border: "1px solid #2DD4BF55", color: "#2DD4BF", borderRadius: 8, padding: "4px 4px 4px 9px", fontSize: 12, fontWeight: 600 } },
+nm,
+React.createElement("button", { type: "button", onClick: () => setList(list.filter(x => x.toLowerCase() !== nm.toLowerCase())), title: "Rimuovi", style: { background: "transparent", border: "none", color: "#2DD4BF", fontSize: 13, lineHeight: 1, cursor: "pointer", padding: "0 4px" } }, "\u2715"))))))));
+}
+function TecniciManager({ technicians, onChange }) {
+const list = (technicians || []).filter(Boolean);
+const [name, setName] = React.useState("");
+const add = () => { const nm = name.trim(); if (nm && !list.some(x => x.toLowerCase() === nm.toLowerCase()))
+onChange([...list, nm]); setName(""); };
+const remove = nm => onChange(list.filter(x => x !== nm));
+return (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } },
+React.createElement("div", { style: { fontSize: 11.5, color: "#94a3b8", lineHeight: 1.55 } }, "I tecnici registrati qui compaiono in una tendina quando crei un Job o una verifica, cos\\u00ec li assegni con un tocco (anche pi\\u00f9 d'uno). Puoi sempre scrivere un nome a mano."),
+list.length > 0 ? (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, list.map(t => (React.createElement("div", { key: t, style: { display: "flex", alignItems: "center", justifyContent: "space-between", background: "#16161e", border: "1px solid #2a3344", borderRadius: 9, padding: "10px 14px" } },
+React.createElement("span", { style: { fontSize: 13.5, color: "#e2e8f0", fontWeight: 600 } }, t),
+React.createElement("button", { type: "button", onClick: () => remove(t), title: "Rimuovi", style: { background: "transparent", border: "none", color: "#ef4444", fontSize: 16, cursor: "pointer" } }, "\\u2715")))))) : React.createElement("div", { style: { fontSize: 12, color: "#64748b" } }, "Nessun tecnico ancora. Aggiungine uno qui sotto."),
+React.createElement("div", { style: { display: "flex", gap: 6 } },
+React.createElement("input", { value: name, onChange: e => setName(e.target.value), onKeyDown: e => { if (e.key === "Enter") {
+e.preventDefault();
+add();
+} }, placeholder: "Nome tecnico (es. Mario Rossi)", style: { flex: 1, background: "#16161e", border: "1px solid #2a3040", borderRadius: 8, color: "#e2e8f0", padding: "10px 12px", fontSize: 13.5 } }),
+React.createElement("button", { type: "button", onClick: add, style: { background: "#2DD4BF", border: "none", borderRadius: 8, color: "#04201C", padding: "0 16px", fontSize: 14, fontWeight: 800, cursor: "pointer" } }, "Aggiungi"))));
+}
+function FuncVerifyForm({ initial, assetId: propAssetId, assets, customers, existingReports, templates, instruments, technicians, onSave, onClose }) {
+const TPLS = templates || FUNC_TEMPLATES;
+const asset = assets.find(a => a.id === propAssetId) || null;
+const [selectedAssetId, setSelectedAssetId] = React.useState(propAssetId || (initial === null || initial === void 0 ? void 0 : initial.assetId) || "");
+const effectiveAsset = asset || assets.find(a => a.id === selectedAssetId) || null;
+const suggestedTpl = guessTemplate((effectiveAsset === null || effectiveAsset === void 0 ? void 0 : effectiveAsset.name) || "");
+const [templateId, setTemplateId] = React.useState((initial === null || initial === void 0 ? void 0 : initial.templateId) || suggestedTpl || "generico");
+const tpl = TPLS[templateId] || TPLS["generico"];
+const blank = {
+id: "FV" + Date.now().toString().slice(-6),
+reportNumber: "",
+assetId: propAssetId || "",
+date: new Date().toISOString().slice(0, 10),
+technician: "",
+instrument: "", instrumentSerial: "", instrumentCalExpiry: "",
+templateId: templateId,
+verifyType: "periodica",
+sections: {},
+notes: "",
+overallPass: false,
+verifyStatus: "completata",
+notAvailableReason: "", departmentName: "", departmentContact: "",
+technicianSignature: "", departmentSignature: ""
+};
+const [f, setF] = React.useState(() => {
+const init = initial || blank;
+if (!initial && !init.reportNumber) {
+init.reportNumber = getNextReportNumber(existingReports || [], "VF");
+}
+if (!init.sections)
+return Object.assign(Object.assign({}, init), { sections: {} });
+return init;
+});
+const [errors, setErrors] = React.useState({});
+const sv = k => e => setF(x => (Object.assign(Object.assign({}, x), { [k]: e.target.value })));
+React.useEffect(() => {
+setF(x => (Object.assign(Object.assign({}, x), { templateId })));
+}, [templateId]);
+const getSectionData = (secId) => f.sections[secId] || { items: {}, measures: {} };
+const setItem = (secId, itemId, val) => setF(x => (Object.assign(Object.assign({}, x), { sections: Object.assign(Object.assign({}, x.sections), { [secId]: Object.assign(Object.assign({}, getSectionData(secId)), { items: Object.assign(Object.assign({}, getSectionData(secId).items), { [itemId]: val }) }) }) })));
+const setMeasure = (secId, mId, val) => setF(x => (Object.assign(Object.assign({}, x), { sections: Object.assign(Object.assign({}, x.sections), { [secId]: Object.assign(Object.assign({}, getSectionData(secId)), { measures: Object.assign(Object.assign({}, getSectionData(secId).measures), { [mId]: val }) }) }) })));
+const computePass = () => {
+for (const sec of tpl.sections) {
+if (sd_isNA(sec.id))
+continue;
+const sd = getSectionData(sec.id);
+for (const item of (sec.items || [])) {
+if (sd.items[item.id] === false)
+return false;
+}
+for (const m of (sec.measures || [])) {
+const raw = sd.measures[m.id];
+if (raw === "na")
+continue;
+const v = parseFloat(raw || "");
+if (isNaN(v))
+continue;
+if (m.limitMin !== undefined && v < m.limitMin)
+return false;
+if (m.limitVal !== undefined) {
+if (m.invertPass) {
+if (v < m.limitVal)
+return false;
+}
+else {
+if (v > m.limitVal)
+return false;
+}
+}
+}
+}
+return true;
+};
+const sd_isNA = (secId) => {
+const sd = getSectionData(secId);
+return sd._sectionNA === true;
+};
+const setSectionNA = (secId, isNA) => {
+setF(x => {
+const old = x.sections[secId] || { items: {}, measures: {} };
+return Object.assign(Object.assign({}, x), { sections: Object.assign(Object.assign({}, x.sections), { [secId]: Object.assign(Object.assign({}, old), { _sectionNA: isNA }) }) });
+});
+};
+const pass = computePass();
+const FLD = FORM_FLD;
+const LBL = FORM_LBL;
+const INP = FORM_INP;
+const isMobile = useMedia("(max-width:600px)");
+const renderItemRow = ({ secId, item }) => {
+const val = getSectionData(secId).items[item.id];
+const STATES = [
+{ v: true, lbl: "✓", col: "#22c55e", title: "Conforme" },
+{ v: false, lbl: "✗", col: "#ef4444", title: "Non conforme" },
+{ v: "na", lbl: "N/A", col: "#64748b", title: "Non applicabile a questa macchina" },
+{ v: null, lbl: "—", col: "#475569", title: "Non verificato" },
+];
+const isOpt = item.optional || /opzionale|optional/i.test(item.text || "");
+return (React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: "1px solid #1a2030", gap: 10 } },
+React.createElement("span", { style: { fontSize: 12, color: val === "na" ? "#475569" : "#94a3b8", flex: 1, textDecoration: val === "na" ? "line-through" : "none" } },
+item.text,
+isOpt && React.createElement("span", { style: { fontSize: 9, color: "#64748b", marginLeft: 6, padding: "1px 5px", border: "1px solid #2a3040", borderRadius: 3 } }, "opz.")),
+React.createElement("div", { style: { display: "flex", gap: 4, flexShrink: 0 } }, STATES.map((s, i) => (React.createElement("button", { key: i, title: s.title, onClick: () => setItem(secId, item.id, s.v), style: {
+background: val === s.v ? s.col + "22" : "#141418",
+border: "1px solid " + (val === s.v ? s.col + "66" : "#202028"),
+color: val === s.v ? s.col : "#475569",
+borderRadius: 5, padding: "4px 8px", cursor: "pointer", fontSize: 11, fontWeight: 700, whiteSpace: "nowrap",
+touchAction: "manipulation", WebkitTapHighlightColor: "transparent"
+} }, s.lbl))))));
+};
+const renderMeasureRow = ({ secId, m }) => {
+const raw = getSectionData(secId).measures[m.id] || "";
+const isNA = raw === "na";
+const vNum = isNA ? NaN : parseFloat(raw);
+let pass = null;
+if (!isNA && !isNaN(vNum)) {
+pass = true;
+if (m.limitMin !== undefined && vNum < m.limitMin)
+pass = false;
+if (m.limitVal !== undefined) {
+if (m.invertPass) {
+if (vNum < m.limitVal)
+pass = false;
+}
+else {
+if (vNum > m.limitVal)
+pass = false;
+}
+}
+}
+const fail = pass === false;
+const limitText = (() => {
+const u = m.unit || "";
+if (m.limitVal !== undefined && !m.invertPass)
+return "limite ≤ " + m.limitVal + " " + u;
+if (m.limitVal !== undefined && m.invertPass)
+return "limite ≥ " + m.limitVal + " " + u;
+if (m.limitMin !== undefined)
+return "min ≥ " + m.limitMin + " " + u;
+return "";
+})();
+return (React.createElement("div", { style: { marginBottom: fail ? 8 : 6 } },
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 90px 60px 38px 30px", gap: 6, alignItems: "center", background: fail ? "#3a0f0f" : "#0D0D12", borderRadius: 6, padding: "6px 8px", opacity: isNA ? 0.55 : 1, border: fail ? "2px solid #ef4444" : "1px solid #1e2a3a" } },
+React.createElement("span", { style: { fontSize: 12.5, color: fail ? "#fecaca" : "#e2e8f0", fontWeight: fail ? 700 : 500, textDecoration: isNA ? "line-through" : "none" } }, m.name),
+React.createElement("span", { style: { fontSize: 10, color: "#94a3b8", fontFamily: "monospace" } }, m.expected || m.limit || ""),
+isNA ? (React.createElement("span", { style: { fontSize: 10, color: "#94a3b8", fontStyle: "italic", textAlign: "center" } }, "N/A")) : (React.createElement("input", { type: "number", step: "any", inputMode: "decimal", value: raw, onChange: e => setMeasure(secId, m.id, e.target.value), placeholder: "\u2014", style: { background: fail ? "#5b1414" : "#1c1c24", border: "2px solid " + (fail ? "#f87171" : "#33394a"), borderRadius: 5, padding: "6px 8px", color: fail ? "#ffe4e4" : "#ffffff", fontSize: 14, outline: "none", fontFamily: "monospace", fontWeight: 800, boxShadow: fail ? "0 0 0 1px #ef4444" : "none" } })),
+React.createElement("span", { style: { fontWeight: 800, fontSize: 14, textAlign: "center", color: pass === null ? "#64748b" : pass ? "#34d399" : "#f87171" } }, m.unit),
+React.createElement("button", { title: isNA ? "Ripristina misura" : "Marca come Non Applicabile", onClick: () => setMeasure(secId, m.id, isNA ? "" : "na"), style: {
+background: isNA ? "#64748b33" : "#1c1c24",
+border: "1px solid " + (isNA ? "#64748b66" : "#33394a"),
+color: isNA ? "#cbd5e1" : "#94a3b8",
+borderRadius: 5, padding: "4px 4px", cursor: "pointer", fontSize: 9, fontWeight: 700,
+touchAction: "manipulation", WebkitTapHighlightColor: "transparent"
+} }, "N/A")),
+fail && limitText && (React.createElement("div", { style: { fontSize: 11.5, color: "#fff", background: "#dc2626", borderRadius: "0 0 6px 6px", margin: "0 2px", padding: "5px 10px", display: "flex", alignItems: "center", gap: 6, fontWeight: 600 } },
+React.createElement("span", { style: { fontSize: 13 } }, "\u26A0"),
+React.createElement("span", null,
+"Fuori limite \u2014 ",
+limitText,
+". Controlla il valore o l'apparecchio.")))));
+};
+return (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14 } },
+React.createElement(ErrorSummary, { errors: errors }),
+React.createElement("div", { style: { background: pass ? "#22c55e1f" : "#ef44441f", border: `1px solid ${pass ? "#22c55e55" : "#ef444455"}`, borderRadius: 8, padding: "10px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 } },
+React.createElement("span", { style: { fontSize: 11, color: "#94a3b8" } },
+"Template: ",
+React.createElement("strong", { style: { color: "#e2e8f0" } },
+tpl.icon,
+" ",
+tpl.label),
+" \u2014 ",
+tpl.norm),
+React.createElement("span", { style: { fontWeight: 900, fontSize: 15, letterSpacing: .3, color: pass ? "#04201C" : "#fff", background: pass ? "#2DD4BF" : "#ef4444", borderRadius: 6, padding: "5px 12px", whiteSpace: "nowrap" } }, pass ? "CONFORME" : "NON CONFORME")),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 13 } },
+!propAssetId && (React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Apparecchio"),
+React.createElement(AssetCombobox, { value: selectedAssetId, onChange: id => {
+setSelectedAssetId(id);
+setF(x => (Object.assign(Object.assign({}, x), { assetId: id })));
+const a = assets.find(x => x.id === id);
+if (a) {
+const t = guessTemplate(a.name);
+setTemplateId(t);
+}
+}, assets: assets, customers: customers, placeholder: "Cerca apparecchio\u2026" }))),
+effectiveAsset && React.createElement("div", { style: Object.assign(Object.assign({}, FLD), { justifyContent: "flex-end" }) },
+React.createElement("label", { style: LBL }, "Apparecchio selezionato"),
+React.createElement("div", { style: { background: "#141418", borderRadius: 8, padding: "8px 14px", border: "1px solid #1e2a3a", fontSize: 12, color: "#94a3b8" } },
+React.createElement("strong", { style: { color: "#e2e8f0" } }, effectiveAsset.name),
+" \u00B7 ",
+effectiveAsset.brand,
+" ",
+effectiveAsset.model,
+" \u00B7 S/N: ",
+effectiveAsset.serial || "—")),
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Template verifica funzionale"),
+React.createElement("select", { value: templateId, onChange: e => setTemplateId(e.target.value), style: INP }, Object.entries(TPLS).map(([id, t]) => React.createElement("option", { key: id, value: id },
+t.icon,
+" ",
+t.label,
+t.isCustom ? " ★" : "")))),
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "N\u00B0 Rapporto"),
+React.createElement("input", { value: f.reportNumber, onChange: sv("reportNumber"), placeholder: "VF-2026-001", style: INP })),
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Data verifica"),
+React.createElement("input", { type: "date", value: f.date, onChange: sv("date"), style: INP })),
+React.createElement("div", { style: FLD },
+React.createElement(TecnicoPicker, { label: "Tecnico/i", value: f.technician, onChange: v => setF(x => (Object.assign(Object.assign({}, x), { technician: v }))), technicians: technicians })),
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Tipo verifica"),
+React.createElement("select", { value: f.verifyType || "periodica", onChange: sv("verifyType"), style: INP },
+React.createElement("option", { value: "periodica" }, "Periodica programmata"),
+React.createElement("option", { value: "dopo riparazione" }, "Dopo riparazione"),
+React.createElement("option", { value: "prima messa in servizio" }, "Prima messa in servizio"),
+React.createElement("option", { value: "straordinaria" }, "Straordinaria")),
+(f.verifyType === "straordinaria") && React.createElement("span", { style: { fontSize: 10, color: "#f59e0b", marginTop: 3 } }, "\u26A0 Straordinaria: non aggiorna la pianificazione annuale")),
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Strumento/tester utilizzato"),
+(instruments && instruments.length > 0) && (React.createElement("select", { value: "", onChange: e => { const ins = (instruments || []).find(i => i.id === e.target.value); if (ins) {
+const txt = [ins.brand, ins.model].filter(Boolean).join(" ") + (ins.internalCode ? (" (" + ins.internalCode + ")") : "");
+setF(x => (Object.assign(Object.assign({}, x), { instrument: txt, instrumentSerial: ins.serial || "", instrumentCalExpiry: ins.calExpiry || "" })));
+} }, style: Object.assign(Object.assign({}, INP), { marginBottom: 6 }) },
+React.createElement("option", { value: "" }, "\u2014 Scegli tra i tuoi strumenti \u2014"),
+(instruments || []).map(i => React.createElement("option", { key: i.id, value: i.id },
+[i.brand, i.model].filter(Boolean).join(" "),
+i.internalCode ? (" · " + i.internalCode) : "",
+i.calExpiry ? (" (scad. " + i.calExpiry + ")") : "")))),
+React.createElement("input", { value: f.instrument, onChange: sv("instrument"), placeholder: "o scrivi a mano", style: INP }))),
+React.createElement("div", { style: { background: "#0D0D12", borderRadius: 8, padding: "10px 14px", border: "1px solid #1e2a3a" } },
+React.createElement("div", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700, marginBottom: 8 } }, "Stato verifica"),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 } },
+React.createElement("button", { type: "button", onClick: () => setF(x => (Object.assign(Object.assign({}, x), { verifyStatus: "completata" }))), style: {
+background: (f.verifyStatus || "completata") === "completata" ? "#22c55e22" : "#141418",
+border: "1px solid " + ((f.verifyStatus || "completata") === "completata" ? "#22c55e66" : "#2a3040"),
+color: (f.verifyStatus || "completata") === "completata" ? "#22c55e" : "#94a3b8",
+borderRadius: 7, padding: "10px", cursor: "pointer", fontSize: 12, fontWeight: 700,
+touchAction: "manipulation", WebkitTapHighlightColor: "transparent"
+} }, "\u2713 Verifica completata"),
+React.createElement("button", { type: "button", onClick: () => setF(x => (Object.assign(Object.assign({}, x), { verifyStatus: "non_disponibile" }))), style: {
+background: f.verifyStatus === "non_disponibile" ? "#f59e0b22" : "#141418",
+border: "1px solid " + (f.verifyStatus === "non_disponibile" ? "#f59e0b66" : "#2a3040"),
+color: f.verifyStatus === "non_disponibile" ? "#f59e0b" : "#94a3b8",
+borderRadius: 7, padding: "10px", cursor: "pointer", fontSize: 12, fontWeight: 700,
+touchAction: "manipulation", WebkitTapHighlightColor: "transparent"
+} }, "\u26A0 Apparecchio non disponibile")),
+f.verifyStatus === "non_disponibile" && (React.createElement("div", { style: { marginTop: 10, padding: "10px 12px", background: "#f59e0b08", border: "1px solid #f59e0b33", borderRadius: 6, fontSize: 11, color: "#fbbf24" } }, "La verifica non sar\u00E0 eseguita. Sar\u00E0 generato un report di mancata esecuzione da far firmare al reparto."))),
+f.verifyStatus === "non_disponibile" ? (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14 } },
+React.createElement("div", { style: { background: "#f59e0b08", border: "1px solid #f59e0b44", borderRadius: 10, padding: "14px 16px" } },
+React.createElement("div", { style: { fontSize: 11, color: "#f59e0b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 800, marginBottom: 10 } }, "\u26A0 Apparecchio non disponibile per verifica"),
+React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } },
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Motivo mancata esecuzione *"),
+React.createElement("select", { value: f.notAvailableReason || "", onChange: sv("notAvailableReason"), style: INP },
+React.createElement("option", { value: "" }, "\u2014 Seleziona \u2014"),
+React.createElement("option", { value: "in_uso" }, "Apparecchio in uso su paziente"),
+React.createElement("option", { value: "non_trovato" }, "Apparecchio non reperibile in reparto"),
+React.createElement("option", { value: "trasferito" }, "Apparecchio trasferito ad altro reparto"),
+React.createElement("option", { value: "riparazione_esterna" }, "In riparazione esterna"),
+React.createElement("option", { value: "dismesso" }, "Dismesso / non pi\u00F9 in uso"),
+React.createElement("option", { value: "rifiuto_reparto" }, "Reparto non autorizza intervento ora"),
+React.createElement("option", { value: "altro" }, "Altro (specificare nelle note)"))),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 } },
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Reparto / Unit\u00E0 operativa *"),
+React.createElement("input", { value: f.departmentName || "", onChange: sv("departmentName"), placeholder: "es. UO Cardiologia", style: INP })),
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Referente reparto"),
+React.createElement("input", { value: f.departmentContact || "", onChange: sv("departmentContact"), placeholder: "es. Caposala Mario Rossi", style: INP }))),
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Note aggiuntive"),
+React.createElement("textarea", { value: f.notes, onChange: sv("notes"), rows: 2, style: { background: "#141418", border: "1px solid #2a3040", borderRadius: 8, padding: "9px 11px", color: "#e2e8f0", fontSize: 13, outline: "none", width: "100%", boxSizing: "border-box" } })))),
+React.createElement("div", { style: { background: "#141418", borderRadius: 10, padding: "12px 16px", border: "1px solid #1e2a3a" } },
+React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: .8, fontWeight: 800, marginBottom: 10 } }, "Firme"),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 } },
+React.createElement(SignaturePad, { label: "Firma Tecnico verificatore", value: f.technicianSignature || "", onChange: v => setF(x => (Object.assign(Object.assign({}, x), { technicianSignature: v }))), height: 120 }),
+React.createElement(SignaturePad, { label: "Firma Referente reparto (presa visione)", value: f.departmentSignature || "", onChange: v => setF(x => (Object.assign(Object.assign({}, x), { departmentSignature: v }))), height: 120 }))))) : (React.createElement(React.Fragment, null,
+tpl.sections.map(sec => {
+const isNA = sd_isNA(sec.id);
+return (React.createElement("div", { key: sec.id, style: { background: "#16161e", borderRadius: 10, padding: "12px 16px", border: "1px solid " + (isNA ? "#475569" : "#2a3344"), opacity: isNA ? 0.6 : 1 } },
+React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: sec.note ? 4 : 10 } },
+React.createElement("div", { style: { fontSize: 11, color: isNA ? "#64748b" : "#5EEAD4", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700, textDecoration: isNA ? "line-through" : "none" } },
+sec.title,
+isNA && " (N/A)"),
+React.createElement("button", { title: isNA ? "Riabilita sezione" : "Marca tutta la sezione come Non Applicabile", onClick: () => setSectionNA(sec.id, !isNA), style: {
+background: isNA ? "#64748b22" : "#141418",
+border: "1px solid " + (isNA ? "#64748b66" : "#2a3040"),
+color: isNA ? "#94a3b8" : "#64748b",
+borderRadius: 5, padding: "3px 8px", cursor: "pointer", fontSize: 10, fontWeight: 700, whiteSpace: "nowrap",
+touchAction: "manipulation", WebkitTapHighlightColor: "transparent"
+} }, isNA ? "↻ Riabilita" : "N/A sez.")),
+sec.note && React.createElement("div", { style: { fontSize: 10, color: "#64748b", marginBottom: 10, fontStyle: "italic" } }, sec.note),
+!isNA && (sec.items || []).map(item => renderItemRow({ secId: sec.id, item })),
+!isNA && (sec.measures || []).length > 0 && (React.createElement("div", { style: { marginTop: (sec.items || []).length > 0 ? 10 : 0 } },
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 90px 60px 38px 30px", gap: 6, marginBottom: 6 } }, ["Misura", "Atteso", "Valore", "U.M.", ""].map((h, i) => React.createElement("div", { key: i, style: { fontSize: 9.5, color: "#94a3b8", fontWeight: 700, textTransform: "uppercase", letterSpacing: .5 } }, h))),
+(sec.measures || []).map(m => renderMeasureRow({ secId: sec.id, m }))))));
+}),
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Note e osservazioni"),
+React.createElement("textarea", { value: f.notes, onChange: sv("notes"), rows: 3, style: { background: "#141418", border: "1px solid #2a3040", borderRadius: 8, padding: "9px 11px", color: "#e2e8f0", fontSize: 13, outline: "none", width: "100%", boxSizing: "border-box", resize: "vertical" } })),
+React.createElement("div", { style: { background: "#141418", borderRadius: 10, padding: "12px 16px", border: "1px solid #1e2a3a" } },
+React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: .8, fontWeight: 800, marginBottom: 10 } }, "Firme"),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 } },
+React.createElement(SignaturePad, { label: "Firma Tecnico verificatore", value: f.technicianSignature || "", onChange: v => setF(x => (Object.assign(Object.assign({}, x), { technicianSignature: v }))), height: 120 }),
+React.createElement(SignaturePad, { label: "Firma Referente reparto (opzionale)", value: f.departmentSignature || "", onChange: v => setF(x => (Object.assign(Object.assign({}, x), { departmentSignature: v }))), height: 120 })),
+React.createElement("div", { style: { marginTop: 8, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 } },
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Reparto / Unit\u00E0 (opzionale)"),
+React.createElement("input", { value: f.departmentName || "", onChange: sv("departmentName"), placeholder: "es. UO Cardiologia", style: INP })),
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Referente (opzionale)"),
+React.createElement("input", { value: f.departmentContact || "", onChange: sv("departmentContact"), placeholder: "es. Caposala Rossi", style: INP })))))),
+React.createElement("div", { style: { display: "flex", gap: 10, justifyContent: "flex-end" } },
+React.createElement(Btn, { variant: "ghost", onClick: onClose }, "Annulla"),
+React.createElement(Btn, { onClick: () => {
+const errs = {};
+if (!f.assetId && !selectedAssetId)
+errs.assetId = "Seleziona un apparecchio";
+if (!f.date)
+errs.date = "Inserisci la data";
+if (!f.technician)
+errs.technician = "Inserisci il nome del tecnico";
+if (f.verifyStatus === "non_disponibile") {
+if (!f.notAvailableReason)
+errs.notAvailableReason = "Seleziona il motivo della mancata esecuzione";
+if (!f.departmentName)
+errs.departmentName = "Inserisci il nome del reparto";
+}
+setErrors(errs);
+if (Object.keys(errs).length > 0)
+return;
+onSave(Object.assign(Object.assign({}, f), { assetId: f.assetId || selectedAssetId, overallPass: f.verifyStatus === "non_disponibile" ? null : pass, templateId }));
+} }, "Salva rapporto"))));
+}
+function IECReportForm({ initial, assetId: propAssetId, assets, customers, existingReports, instruments, technicians, onSave, onClose }) {
+const getMeasures = React.useCallback((norm, cls, patientType, method, sfc) => {
+if (norm === "61010")
+return [
+{ id: "pe", name: "Resistenza conduttore di protezione (PE)", unit: "Ω", limit: "≤ 0.1", limitVal: 0.1, value: "" },
+{ id: "ins", name: "Resistenza di isolamento (500 Vdc)", unit: "MΩ", limit: "≥ 1", limitVal: 1, value: "", invertPass: true },
+{ id: "id1", name: "Corrente di dispersione — carcassa", unit: "mA", limit: "≤ 3.5", limitVal: 3.5, value: "" },
+{ id: "id2", name: "Corrente di dispersione — circuito prova", unit: "mA", limit: "≤ 0.5", limitVal: 0.5, value: "" },
+];
+if (norm === "60601") {
+const pt60 = patientType || "BF";
+const plNC = pt60 === "CF" ? 10 : 100;
+const plSFC = pt60 === "CF" ? 50 : 500;
+const mapVal = pt60 === "CF" ? 50 : 5000;
+const arr = [];
+if (cls === "I") {
+arr.push({ id: "pe", name: "Resistenza conduttore di protezione (PE)", unit: "Ω", limit: "≤ 0.1", limitVal: 0.1, value: "" });
+arr.push({ id: "earth_nc", name: "Dispersione verso terra (earth) — NC", unit: "µA", limit: "≤ 5000", limitVal: 5000, value: "" });
+}
+if (cls !== "III")
+arr.push({ id: "encl_nc", name: "Dispersione involucro (touch) — NC", unit: "µA", limit: "≤ 100", limitVal: 100, value: "" });
+arr.push({ id: "pat_nc", name: "Dispersione paziente " + pt60 + " — NC", unit: "µA", limit: "≤ " + plNC, limitVal: plNC, value: "" });
+arr.push({ id: "aux_nc", name: "Corrente ausiliaria paziente " + pt60 + " — NC", unit: "µA", limit: "≤ " + plNC, limitVal: plNC, value: "" });
+if (sfc) {
+if (cls === "I")
+arr.push({ id: "earth_sfc", name: "Dispersione verso terra (earth) — SFC", unit: "µA", limit: "≤ 10000", limitVal: 10000, value: "" });
+if (cls !== "III")
+arr.push({ id: "encl_sfc", name: "Dispersione involucro (touch) — SFC", unit: "µA", limit: "≤ 500", limitVal: 500, value: "" });
+arr.push({ id: "pat_sfc", name: "Dispersione paziente " + pt60 + " — SFC", unit: "µA", limit: "≤ " + plSFC, limitVal: plSFC, value: "" });
+arr.push({ id: "aux_sfc", name: "Corrente ausiliaria paziente " + pt60 + " — SFC", unit: "µA", limit: "≤ " + plSFC, limitVal: plSFC, value: "" });
+if (pt60 !== "B")
+arr.push({ id: "map_sfc", name: "Dispersione paziente — rete su PA (MAP) " + pt60 + " — SFC", unit: "µA", limit: "≤ " + mapVal, limitVal: mapVal, value: "" });
+}
+return arr;
+}
+const pt = patientType || "BF";
+const m = method || "diretto";
+const eqLim = {
+"I": { diretto: 500, differenziale: 500, alternativo: 1000 },
+"II": { diretto: 100, differenziale: 100, alternativo: 500 },
+};
+const eqVal = eqLim[cls] ? eqLim[cls][m] : 500;
+const methodLabel = m === "diretto" ? "metodo diretto" : m === "differenziale" ? "metodo differenziale" : "metodo alternativo";
+const methodShort = m === "diretto" ? "D" : m === "differenziale" ? "DIFF" : "ALT";
+const apLim = {
+"B": null,
+"BF": { lim: "≤ 5000", val: 5000 },
+"CF": { lim: "≤ 50", val: 50 },
+};
+const ap = apLim[pt];
+if (cls === "III")
+return [
+{ id: "ins_pa", name: "Resistenza isolamento parte applicata — rete (500 Vdc)", unit: "MΩ", limit: "≥ 2", limitVal: 2, value: "", invertPass: true },
+...(ap ? [{ id: "id_pa", name: "Dispersione parte applicata " + pt + " (" + methodLabel + ")", unit: "µA", limit: ap.lim, limitVal: ap.val, value: "" }] : []),
+];
+if (cls === "II")
+return [
+{ id: "ins_main", name: "Resistenza isolamento — rete vs accessibili (500 Vdc)", unit: "MΩ", limit: "≥ 7", limitVal: 7, value: "", invertPass: true },
+{ id: "ins_pa", name: "Resistenza isolamento parte applicata — rete (500 Vdc)", unit: "MΩ", limit: "≥ 2", limitVal: 2, value: "", invertPass: true },
+{ id: "id_eq", name: "Equipment Leakage Cl.II (" + methodLabel + ")", unit: "µA", limit: "≤ " + eqVal, limitVal: eqVal, value: "" },
+...(ap ? [{ id: "id_pa", name: "Dispersione parte applicata " + pt + " (" + methodLabel + ")", unit: "µA", limit: ap.lim, limitVal: ap.val, value: "" }] : []),
+];
+return [
+{ id: "pe", name: "Resistenza conduttore di protezione (PE)", unit: "Ω", limit: "≤ 0.3", limitVal: 0.3, value: "" },
+{ id: "ins_main", name: "Resistenza isolamento — rete vs PE (500 Vdc)", unit: "MΩ", limit: "≥ 2", limitVal: 2, value: "", invertPass: true },
+{ id: "ins_pa", name: "Resistenza isolamento parte applicata — rete (500 Vdc)", unit: "MΩ", limit: "≥ 2", limitVal: 2, value: "", invertPass: true },
+{ id: "id_eq", name: "Equipment Leakage Cl.I (" + methodLabel + ")", unit: "µA", limit: "≤ " + eqVal, limitVal: eqVal, value: "" },
+...(ap ? [{ id: "id_pa", name: "Dispersione parte applicata " + pt + " (" + methodLabel + ")", unit: "µA", limit: ap.lim, limitVal: ap.val, value: "" }] : []),
+];
+}, []);
+const blank = { id: "R" + Date.now().toString().slice(-6), reportNumber: "", norm: "62353", date: new Date().toISOString().slice(0, 10),
+technician: "", instrument: "", instrumentSerial: "", instrumentCalExpiry: "", calNumber: "", verifyType: "periodica",
+equipClass: "I", equipType: "", assetId: propAssetId || "",
+leakageMethod: "diretto", sfc: true,
+visual: { housing: null, cable: null, connectors: null, labels: null, docs: null },
+measures: [], notes: "", overallPass: false,
+verifyStatus: "completata",
+notAvailableReason: "", departmentName: "", departmentContact: "",
+technicianSignature: "", departmentSignature: "" };
+const [f, setF] = React.useState(() => {
+var _a;
+const init = initial || blank;
+if (!initial && !init.reportNumber) {
+init.reportNumber = getNextReportNumber(existingReports || [], "VSE");
+}
+if (!((_a = init.measures) === null || _a === void 0 ? void 0 : _a.length))
+return Object.assign(Object.assign({}, init), { measures: getMeasures(init.norm || "62353", "I", init.patientType || "BF", init.leakageMethod || "diretto", init.sfc !== false) });
+return init;
+});
+const [errors, setErrors] = React.useState({});
+const sv = k => e => setF(x => (Object.assign(Object.assign({}, x), { [k]: e.target.value })));
+const setVis = (k, v) => setF(x => (Object.assign(Object.assign({}, x), { visual: Object.assign(Object.assign({}, x.visual), { [k]: v }) })));
+const setMeas = (id, val) => setF(x => (Object.assign(Object.assign({}, x), { measures: x.measures.map(m => m.id === id ? Object.assign(Object.assign({}, m), { value: val }) : m) })));
+React.useEffect(() => { setF(x => (Object.assign(Object.assign({}, x), { measures: getMeasures(x.norm, x.equipClass, x.patientType, x.leakageMethod, x.sfc !== false) }))); }, [f.norm, f.equipClass, f.patientType, f.leakageMethod, f.sfc]);
+const computePass = React.useCallback((measures, visual) => {
+const mf = measures.some(m => { if (m.value === "" || m.value === undefined)
+return false; const v = parseFloat(m.value); const lv = parseFloat(m.limitVal); if (isNaN(v) || isNaN(lv))
+return false; return m.invertPass ? v < lv : v > lv; });
+const vf = Object.values(visual).some(v => v === false);
+return !mf && !vf;
+}, []);
+React.useEffect(() => { setF(x => (Object.assign(Object.assign({}, x), { overallPass: computePass(x.measures, x.visual) }))); }, [f.measures, f.visual]);
+const asset = assets.find(a => a.id === (f.assetId || propAssetId));
+const prevReport = React.useMemo(() => {
+const aid = f.assetId || propAssetId;
+if (!aid || !Array.isArray(existingReports))
+return null;
+const others = existingReports
+.filter(r => r.assetId === aid && r.id !== f.id && r.date)
+.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+return others[0] || null;
+}, [f.assetId, propAssetId, f.id, existingReports]);
+const prevValueOf = (mid) => {
+if (!(prevReport === null || prevReport === void 0 ? void 0 : prevReport.measures))
+return null;
+const pm = prevReport.measures.find(x => x.id === mid);
+return (pm && pm.value !== "" && pm.value !== undefined) ? pm.value : null;
+};
+const FLD = { display: "flex", flexDirection: "column", gap: 5 };
+const LBL = { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700 };
+const INP = { background: "#141418", border: "1px solid #2a3040", borderRadius: 8, padding: "9px 11px", color: "#e2e8f0", fontSize: 13, outline: "none", width: "100%", boxSizing: "border-box" };
+const isMobile = useMedia("(max-width:600px)");
+return (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14 } },
+React.createElement(ErrorSummary, { errors: errors }),
+React.createElement("div", { style: { background: f.overallPass ? "#22c55e1f" : "#ef44441f", border: `1px solid ${f.overallPass ? "#22c55e55" : "#ef444455"}`, borderRadius: 8, padding: "10px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 } },
+React.createElement("span", { style: { fontSize: 11, color: "#94a3b8" } },
+"Norma: ",
+React.createElement("strong", { style: { color: "#e2e8f0" } }, f.norm === "61010" ? "IEC 61010-1 (Lab)" : f.norm === "60601" ? "IEC 60601-1 (Approfondita)" : "IEC 62353 (Elettromedicale)")),
+React.createElement("span", { style: { fontWeight: 900, fontSize: 15, letterSpacing: .3, color: f.overallPass ? "#04201C" : "#fff", background: f.overallPass ? "#2DD4BF" : "#ef4444", borderRadius: 6, padding: "5px 12px", whiteSpace: "nowrap" } }, f.overallPass ? "CONFORME" : "NON CONFORME")),
+f.norm === "62353" && (React.createElement("div", { style: { background: "#0D0D12", border: "1px solid #2DD4BF44", borderRadius: 8, padding: "10px 14px", fontSize: 11, color: "#9090A8", lineHeight: 1.5 } },
+React.createElement("div", { style: { color: "#2DD4BF", fontWeight: 700, marginBottom: 4, fontSize: 11 } }, "\u2139 IEC 62353:2014 \u2014 Limiti test periodico"),
+React.createElement("div", null,
+React.createElement("strong", { style: { color: "#cbd5e1" } }, "Equipment Leakage:"),
+" Cl.I \u2264500\u00B5A (D/DIFF) / \u22641000\u00B5A (ALT) \u00B7 Cl.II \u2264100\u00B5A / \u2264500\u00B5A"),
+React.createElement("div", null,
+React.createElement("strong", { style: { color: "#cbd5e1" } }, "Applied Part Leakage:"),
+" BF \u22645000\u00B5A \u00B7 CF \u226450\u00B5A (limite identico per i 3 metodi)"),
+React.createElement("div", { style: { marginTop: 4, paddingTop: 4, borderTop: "1px solid #2DD4BF22", color: "#94a3b8" } },
+React.createElement("strong", { style: { color: "#cbd5e1" } }, "Metodi:"),
+" Diretto (apparecchio alimentato) \u00B7 Differenziale (somma vett. L-N) \u00B7 Alternativo (apparecchio scollegato)"),
+React.createElement("div", null,
+React.createElement("strong", { style: { color: "#cbd5e1" } }, "PE Resistance:"),
+" \u22640.3 \u03A9 \u00B7 ",
+React.createElement("strong", { style: { color: "#cbd5e1" } }, "Isolamento:"),
+" \u22652 M\u03A9"))),
+f.norm === "60601" && (React.createElement("div", { style: { background: "#0D0D12", border: "1px solid #2DD4BF44", borderRadius: 8, padding: "10px 14px", fontSize: 11, color: "#9090A8", lineHeight: 1.5 } },
+React.createElement("div", { style: { color: "#2DD4BF", fontWeight: 700, marginBottom: 4, fontSize: 11 } }, "\u2139 IEC 60601-1 \u2014 Prova approfondita (NC + Primo Guasto)"),
+React.createElement("div", null,
+React.createElement("strong", { style: { color: "#cbd5e1" } }, "Dispersione paziente:"),
+" B/BF \u2264100\u00B5A (NC) / \u2264500\u00B5A (SFC) \u00B7 CF \u226410\u00B5A (NC) / \u226450\u00B5A (SFC)"),
+React.createElement("div", null,
+React.createElement("strong", { style: { color: "#cbd5e1" } }, "Involucro:"),
+" \u2264100\u00B5A (NC) / \u2264500\u00B5A (SFC) \u00B7 ",
+React.createElement("strong", { style: { color: "#cbd5e1" } }, "Terra:"),
+" \u22645000\u00B5A (NC) / \u226410000\u00B5A (SFC, 3\u00AA ed.)"),
+React.createElement("div", null,
+React.createElement("strong", { style: { color: "#cbd5e1" } }, "Rete su PA (MAP, solo SFC):"),
+" BF \u22645000\u00B5A \u00B7 CF \u226450\u00B5A"),
+React.createElement("div", { style: { marginTop: 4, paddingTop: 4, borderTop: "1px solid #2DD4BF22", color: "#94a3b8" } },
+"Le prove di ",
+React.createElement("strong", { style: { color: "#cbd5e1" } }, "Primo Guasto (SFC)"),
+" sollecitano l'apparecchio: puoi disattivarle qui sotto."))),
+!propAssetId && (React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Apparecchio"),
+React.createElement(AssetCombobox, { value: f.assetId, onChange: id => setF(x => (Object.assign(Object.assign({}, x), { assetId: id }))), assets: assets, customers: customers, placeholder: "Cerca apparecchio\u2026" }))),
+asset && React.createElement("div", { style: { background: "#141418", borderRadius: 8, padding: "8px 14px", border: "1px solid #1e2a3a", fontSize: 12, color: "#94a3b8" } },
+React.createElement("strong", { style: { color: "#e2e8f0" } }, asset.name),
+" \u00B7 ",
+asset.brand,
+" ",
+asset.model,
+" \u00B7 S/N: ",
+asset.serial || "—"),
+React.createElement("div", { style: { background: "#0D0D12", borderRadius: 8, padding: "10px 14px", border: "1px solid #1e2a3a" } },
+React.createElement("div", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700, marginBottom: 8 } }, "Stato verifica"),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 } },
+React.createElement("button", { type: "button", onClick: () => setF(x => (Object.assign(Object.assign({}, x), { verifyStatus: "completata" }))), style: {
+background: f.verifyStatus === "completata" ? "#22c55e22" : "#141418",
+border: "1px solid " + (f.verifyStatus === "completata" ? "#22c55e66" : "#2a3040"),
+color: f.verifyStatus === "completata" ? "#22c55e" : "#94a3b8",
+borderRadius: 7, padding: "10px", cursor: "pointer", fontSize: 12, fontWeight: 700,
+touchAction: "manipulation", WebkitTapHighlightColor: "transparent"
+} }, "\u2713 Verifica completata"),
+React.createElement("button", { type: "button", onClick: () => setF(x => (Object.assign(Object.assign({}, x), { verifyStatus: "non_disponibile" }))), style: {
+background: f.verifyStatus === "non_disponibile" ? "#f59e0b22" : "#141418",
+border: "1px solid " + (f.verifyStatus === "non_disponibile" ? "#f59e0b66" : "#2a3040"),
+color: f.verifyStatus === "non_disponibile" ? "#f59e0b" : "#94a3b8",
+borderRadius: 7, padding: "10px", cursor: "pointer", fontSize: 12, fontWeight: 700,
+touchAction: "manipulation", WebkitTapHighlightColor: "transparent"
+} }, "\u26A0 Apparecchio non disponibile")),
+f.verifyStatus === "non_disponibile" && (React.createElement("div", { style: { marginTop: 10, padding: "10px 12px", background: "#f59e0b08", border: "1px solid #f59e0b33", borderRadius: 6, fontSize: 11, color: "#fbbf24" } }, "La verifica non sar\u00E0 eseguita. Sar\u00E0 generato un report di mancata esecuzione da far firmare al reparto."))),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 13 } },
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "N\u00B0 Rapporto"),
+React.createElement("input", { value: f.reportNumber, onChange: sv("reportNumber"), placeholder: "VSE-2026-001", style: INP })),
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Data"),
+React.createElement("input", { type: "date", value: f.date, onChange: sv("date"), style: INP })),
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: Object.assign(Object.assign({}, LBL), { display: "flex", alignItems: "center" }) },
+"Norma",
+React.createElement(Hint, { text: "IEC 62353: verifiche periodiche e dopo riparazione su apparecchiature elettromedicali. IEC 61010-1: strumenti elettrici da misura, controllo e laboratorio. La scelta determina i parametri da misurare e i limiti di accettabilit\u00E0." })),
+React.createElement("select", { value: f.norm, onChange: sv("norm"), style: INP },
+React.createElement("option", { value: "62353" }, "IEC 62353 \u2014 Elettromedicale"),
+React.createElement("option", { value: "61010" }, "IEC 61010-1 \u2014 Laboratorio"),
+React.createElement("option", { value: "60601" }, "IEC 60601-1 \u2014 Prova approfondita (NC+SFC)"))),
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: Object.assign(Object.assign({}, LBL), { display: "flex", alignItems: "center" }) },
+"Classe apparecchio",
+React.createElement(Hint, { text: "Classe di sicurezza elettrica (IEC 60601-1). Classe I: ha conduttore di protezione (PE/terra) \u2014 la carcassa \u00E8 collegata a terra (es. monitor, ventilatori). Classe II: doppio isolamento, niente PE, simbolo del quadrato dentro quadrato (es. piccoli apparecchi portatili). Classe III: alimentazione SELV a bassissima tensione di sicurezza, niente PE (es. apparecchi a batteria interna). La classe determina quali misure di sicurezza eseguire." })),
+React.createElement("select", { value: f.equipClass, onChange: sv("equipClass"), style: INP },
+React.createElement("option", { value: "I" }, "Classe I \u2014 Con PE (messa a terra)"),
+React.createElement("option", { value: "II" }, "Classe II \u2014 Doppio isolamento (no PE)"),
+React.createElement("option", { value: "III" }, "Classe III \u2014 SELV (alimentazione interna/sicura)")),
+React.createElement("span", { style: { fontSize: 10, color: "#64748b", marginTop: 3 } },
+f.equipClass === "I" && "Misure: PE + isolamento + dispersione terra + dispersione paziente",
+f.equipClass === "II" && "Misure: isolamento + dispersione carcassa + dispersione paziente (NO PE)",
+f.equipClass === "III" && "Misure: isolamento + dispersione paziente soltanto (circuito SELV, NO terra)")),
+f.norm !== "61010" && (React.createElement("div", { style: FLD },
+React.createElement("label", { style: Object.assign(Object.assign({}, LBL), { display: "flex", alignItems: "center" }) },
+"Tipo parte applicata (paziente)",
+React.createElement(Hint, { text: "Definito dalla norma IEC 60601-1. B = contatto corpo non cardiaco, senza isolamento speciale (es. monitor temperatura cute). BF = parte applicata isolata floating, tipica di ECG, SpO2, ventilatori \u2014 soglia dispersione paziente 5000\u00B5A in condizioni di guasto. CF = applicazione cardiaca diretta (cateteri intracardiaci, cardiostimolatori) \u2014 limiti molto severi, dispersione paziente max 50\u00B5A. Il tipo \u00E8 indicato dal simbolo sulla targhetta dell'apparecchio." })),
+React.createElement("select", { value: f.patientType || "BF", onChange: sv("patientType"), style: INP },
+React.createElement("option", { value: "B" }, "Tipo B \u2014 Contatto corpo (no PA isolata)"),
+React.createElement("option", { value: "BF" }, "Tipo BF \u2014 Parte isolata floating (PA \u2264 5000\u00B5A alt.)"),
+React.createElement("option", { value: "CF" }, "Tipo CF \u2014 Applicazione cardiaca (PA \u2264 50\u00B5A)")),
+React.createElement("span", { style: { fontSize: 10, color: "#64748b", marginTop: 3 } },
+(f.patientType || "BF") === "B" && "Tipo B: contatto diretto con paziente, non cardiaco",
+(f.patientType || "BF") === "BF" && "Tipo BF: parte applicata isolata (es. ECG, SpO2)",
+(f.patientType || "BF") === "CF" && "Tipo CF: applicazione cardiaca diretta — limiti più severi"))),
+f.norm === "62353" && f.equipClass !== "III" && (React.createElement("div", { style: FLD },
+React.createElement("label", { style: Object.assign(Object.assign({}, LBL), { display: "flex", alignItems: "center" }) },
+"Metodo di misura dispersione",
+React.createElement(Hint, { text: "Metodi previsti da IEC 62353. DIRETTO: misurato tra le parti accessibili e la terra (pi\u00F9 rapido, classico). DIFFERENZIALE: misurato come differenza tra corrente in fase e neutro (limiti uguali al diretto). ALTERNATIVO: misurato con sorgente isolata 100-120V, separato dalla rete (sicuro per il tecnico, limiti pi\u00F9 alti \u2014 fino a 1000\u00B5A per Cl.I). Scegli in base allo strumento e alla situazione clinica." })),
+React.createElement("select", { value: f.leakageMethod || "diretto", onChange: sv("leakageMethod"), style: INP },
+React.createElement("option", { value: "diretto" }, "Diretto \u2014 misura corrente da PE verso terra"),
+React.createElement("option", { value: "differenziale" }, "Differenziale \u2014 somma vettoriale L-N"),
+React.createElement("option", { value: "alternativo" }, "Alternativo (sostituzione) \u2014 apparecchio scollegato")),
+React.createElement("span", { style: { fontSize: 10, color: "#64748b", marginTop: 3 } },
+(f.leakageMethod || "diretto") === "diretto" && "Diretto: apparecchio alimentato, sonda tra carcassa e terra. Adatto a stanze con presa standard.",
+(f.leakageMethod || "diretto") === "differenziale" && "Differenziale: misura la differenza tra L e N. Adatto a circuiti con isolamento o trasformatore.",
+(f.leakageMethod || "diretto") === "alternativo" && "Alternativo: apparecchio scollegato, simula la corrente di guasto. Adatto a sale operatorie con RCD/IT."))),
+f.norm === "60601" && (React.createElement("div", { style: FLD },
+React.createElement("label", { style: Object.assign(Object.assign({}, LBL), { display: "flex", alignItems: "center" }) },
+"Prove di Primo Guasto (SFC)",
+React.createElement(Hint, { text: "Le prove in condizione di primo guasto (interruzione di un conduttore, terra aperta, rete sulla parte applicata) sono pi\u00F9 approfondite ma sollecitano l'apparecchio. Disattivale per eseguire solo la Condizione Normale (NC)." })),
+React.createElement("button", { type: "button", onClick: () => setF(x => (Object.assign(Object.assign({}, x), { sfc: !(x.sfc !== false) }))), style: { display: "flex", alignItems: "center", gap: 10, background: "#141418", border: "1px solid " + ((f.sfc !== false) ? "#2DD4BF66" : "#2a3040"), borderRadius: 7, padding: "10px 12px", cursor: "pointer", touchAction: "manipulation", WebkitTapHighlightColor: "transparent" } },
+React.createElement("div", { style: { width: 38, height: 22, borderRadius: 11, background: (f.sfc !== false) ? "#2DD4BF" : "#2a3040", position: "relative", flexShrink: 0 } },
+React.createElement("div", { style: { position: "absolute", top: 2, left: (f.sfc !== false) ? 18 : 2, width: 18, height: 18, borderRadius: 9, background: "#fff" } })),
+React.createElement("span", { style: { fontSize: 12, fontWeight: 700, color: (f.sfc !== false) ? "#2DD4BF" : "#94a3b8" } }, (f.sfc !== false) ? "Incluse (NC + SFC)" : "Escluse (solo NC)")),
+React.createElement("span", { style: { fontSize: 10, color: "#64748b", marginTop: 3 } }, (f.sfc !== false) ? "Verifica completa: condizione normale e primo guasto." : "Solo condizione normale — non sollecita l'apparecchio."))),
+React.createElement("div", { style: FLD },
+React.createElement(TecnicoPicker, { label: "Tecnico/i verificatore", value: f.technician, onChange: v => setF(x => (Object.assign(Object.assign({}, x), { technician: v }))), technicians: technicians })),
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Strumento di misura"),
+(instruments && instruments.length > 0) && (React.createElement("select", { value: "", onChange: e => { const ins = (instruments || []).find(i => i.id === e.target.value); if (ins) {
+const txt = [ins.brand, ins.model].filter(Boolean).join(" ") + (ins.internalCode ? (" (" + ins.internalCode + ")") : "");
+setF(x => (Object.assign(Object.assign({}, x), { instrument: txt, instrumentSerial: ins.serial || "", instrumentCalExpiry: ins.calExpiry || "", calNumber: ins.certNumber || x.calNumber })));
+} }, style: Object.assign(Object.assign({}, INP), { marginBottom: 6 }) },
+React.createElement("option", { value: "" }, "\u2014 Scegli tra i tuoi strumenti \u2014"),
+(instruments || []).map(i => React.createElement("option", { key: i.id, value: i.id },
+[i.brand, i.model].filter(Boolean).join(" "),
+i.internalCode ? (" · " + i.internalCode) : "",
+i.calExpiry ? (" (scad. " + i.calExpiry + ")") : "")))),
+React.createElement("input", { value: f.instrument, onChange: sv("instrument"), placeholder: "o scrivi a mano", style: INP })),
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "N\u00B0 calibrazione"),
+React.createElement("input", { value: f.calNumber, onChange: sv("calNumber"), style: INP })),
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Tipo verifica"),
+React.createElement("select", { value: f.verifyType, onChange: sv("verifyType"), style: INP }, ["periodica", "dopo riparazione", "prima messa in servizio", "straordinaria"].map(v => React.createElement("option", { key: v }, v))),
+f.verifyType === "straordinaria" && React.createElement("span", { style: { fontSize: 10, color: "#f59e0b", marginTop: 3 } }, "\u26A0 Straordinaria: non aggiorna la pianificazione annuale"))),
+f.verifyStatus === "non_disponibile" ? (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14 } },
+React.createElement("div", { style: { background: "#f59e0b08", border: "1px solid #f59e0b44", borderRadius: 10, padding: "14px 16px" } },
+React.createElement("div", { style: { fontSize: 11, color: "#f59e0b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 800, marginBottom: 10 } }, "\u26A0 Apparecchio non disponibile per verifica"),
+React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } },
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Motivo mancata esecuzione *"),
+React.createElement("select", { value: f.notAvailableReason, onChange: sv("notAvailableReason"), style: INP },
+React.createElement("option", { value: "" }, "\u2014 Seleziona \u2014"),
+React.createElement("option", { value: "in_uso" }, "Apparecchio in uso su paziente"),
+React.createElement("option", { value: "non_trovato" }, "Apparecchio non reperibile in reparto"),
+React.createElement("option", { value: "trasferito" }, "Apparecchio trasferito ad altro reparto"),
+React.createElement("option", { value: "riparazione_esterna" }, "In riparazione esterna"),
+React.createElement("option", { value: "dismesso" }, "Dismesso / non pi\u00F9 in uso"),
+React.createElement("option", { value: "rifiuto_reparto" }, "Reparto non autorizza intervento ora"),
+React.createElement("option", { value: "altro" }, "Altro (specificare nelle note)"))),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 } },
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Reparto / Unit\u00E0 operativa *"),
+React.createElement("input", { value: f.departmentName, onChange: sv("departmentName"), placeholder: "es. UO Cardiologia, Sala Operatoria 2", style: INP })),
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Referente reparto (nome e qualifica)"),
+React.createElement("input", { value: f.departmentContact, onChange: sv("departmentContact"), placeholder: "es. Caposala Mario Rossi", style: INP }))),
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Note aggiuntive"),
+React.createElement("textarea", { value: f.notes, onChange: sv("notes"), rows: 2, placeholder: "Dettagli, riprogrammare per data, ecc.", style: { background: "#141418", border: "1px solid #2a3040", borderRadius: 8, padding: "9px 11px", color: "#e2e8f0", fontSize: 13, outline: "none", width: "100%", boxSizing: "border-box" } })))),
+React.createElement("div", { style: { background: "#141418", borderRadius: 10, padding: "12px 16px", border: "1px solid #1e2a3a" } },
+React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: .8, fontWeight: 800, marginBottom: 10 } }, "Firme"),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 } },
+React.createElement(SignaturePad, { label: "Firma Tecnico verificatore", value: f.technicianSignature, onChange: v => setF(x => (Object.assign(Object.assign({}, x), { technicianSignature: v }))), height: 120 }),
+React.createElement(SignaturePad, { label: "Firma Referente reparto (per presa visione)", value: f.departmentSignature, onChange: v => setF(x => (Object.assign(Object.assign({}, x), { departmentSignature: v }))), height: 120 }))))) : (React.createElement(React.Fragment, null,
+React.createElement("div", { style: { background: "#141418", borderRadius: 10, padding: "12px 16px", border: "1px solid #1e2a3a" } },
+React.createElement("div", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700, marginBottom: 10 } }, "Ispezione visiva"),
+[["housing", "Involucro integro e privo di danni"], ["cable", "Cavo di rete e spina integri"], ["connectors", "Connettori e prese in buono stato"], ["labels", "Etichette e marcatura CE leggibili"], ["docs", "Documentazione tecnica presente"]].map(([k, label]) => (React.createElement("div", { key: k, style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", borderBottom: "1px solid #1a2030" } },
+React.createElement("span", { style: { fontSize: 12, color: "#94a3b8" } }, label),
+React.createElement("div", { style: { display: "flex", gap: 6 } }, [true, false, null].map((v, i) => (React.createElement("button", { key: i, onClick: () => setVis(k, v), style: {
+background: f.visual[k] === v ? (v === true ? "#22c55e22" : v === false ? "#ef444422" : "#202028") : "#141418",
+border: `1px solid ${f.visual[k] === v ? (v === true ? "#22c55e44" : v === false ? "#ef444433" : "#32323F") : "#202028"}`,
+color: f.visual[k] === v ? (v === true ? "#22c55e" : v === false ? "#ef4444" : "#64748b") : "#475569",
+borderRadius: 5, padding: "3px 9px", cursor: "pointer", fontSize: 11, fontWeight: 700
+} }, v === true ? "✓ OK" : v === false ? "✗ NO" : "N/D")))))))),
+React.createElement("div", { style: { background: "#141418", borderRadius: 10, padding: "12px 16px", border: "1px solid #1e2a3a" } },
+React.createElement("div", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700, marginBottom: 10 } }, "Misure elettriche"),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: prevReport ? "1fr 70px 70px 50px 56px 44px" : "1fr 80px 80px 50px 50px", gap: 6, marginBottom: 6 } }, (prevReport ? ["Parametro", "Limite", "Valore", "Unità", "Prec.", "Trend"] : ["Parametro", "Limite", "Valore", "Unità", "Esito"]).map(h => React.createElement("div", { key: h, style: { fontSize: 9, color: "#475569", fontWeight: 700, textTransform: "uppercase" } }, h))),
+prevReport && (React.createElement("div", { style: { fontSize: 10.5, color: "#5EEAD4", background: "#2DD4BF12", border: "1px solid #2DD4BF33", borderRadius: 6, padding: "6px 10px", marginBottom: 4 } },
+"Confronto con la verifica precedente del ",
+prevReport.date,
+prevReport.overallPass === false ? " (esito: NON conforme)" : "",
+". La colonna \"Prec.\" mostra i valori di allora.")),
+f.measures.map(m => {
+const v = parseFloat(m.value);
+const lv = parseFloat(m.limitVal);
+const ok = m.value !== "" && m.value !== undefined ? (m.invertPass ? v >= lv : v <= lv) : null;
+const prevVal = prevValueOf(m.id);
+const pv = prevVal !== null ? parseFloat(prevVal) : null;
+let trend = null;
+if (pv !== null && !isNaN(v) && !isNaN(pv) && pv !== 0) {
+const diff = v - pv;
+const worse = m.invertPass ? diff < 0 : diff > 0;
+if (Math.abs(diff) / Math.abs(pv) >= 0.10)
+trend = worse ? "worse" : "better";
+}
+return (React.createElement("div", { key: m.id, style: { display: "grid", gridTemplateColumns: prevReport ? "1fr 70px 70px 50px 56px 44px" : "1fr 80px 80px 50px 50px", gap: 6, alignItems: "center", marginBottom: 6, background: "#0D0D12", borderRadius: 6, padding: "6px 8px" } },
+React.createElement("span", { style: { fontSize: 11, color: "#94a3b8" } }, m.name),
+React.createElement("span", { style: { fontSize: 11, color: "#64748b", fontFamily: "monospace" } }, m.limit),
+React.createElement("input", { type: "number", step: "0.001", value: m.value, onChange: e => setMeas(m.id, e.target.value), placeholder: "\u2014", style: { background: "#16161C", border: "1px solid #2a3040", borderRadius: 5, padding: "4px 7px", color: "#e2e8f0", fontSize: 12, outline: "none", fontFamily: "monospace" } }),
+React.createElement("span", { style: { fontSize: 11, color: "#64748b" } }, m.unit),
+prevReport ? (React.createElement(React.Fragment, null,
+React.createElement("span", { style: { fontSize: 11, color: "#64748b", fontFamily: "monospace", textAlign: "center" } }, prevVal !== null ? prevVal : "—"),
+React.createElement("span", { style: { fontSize: 14, textAlign: "center", fontWeight: 700, color: trend === "worse" ? "#ef4444" : trend === "better" ? "#22c55e" : "#475569" }, title: trend === "worse" ? "In peggioramento rispetto alla volta scorsa" : trend === "better" ? "In miglioramento" : (ok === null ? "" : (ok ? "Conforme" : "Non conforme")) }, trend === "worse" ? "▲" : trend === "better" ? "▼" : (ok === null ? "—" : ok ? "✓" : "✗")))) : (React.createElement("span", { style: { fontWeight: 700, fontSize: 13, color: ok === null ? "#475569" : ok ? "#22c55e" : "#ef4444" } }, ok === null ? "—" : ok ? "✓" : "✗"))));
+})),
+React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 5 } },
+React.createElement("label", { style: LBL }, "Note e osservazioni"),
+React.createElement("textarea", { value: f.notes, onChange: sv("notes"), rows: 3, style: { background: "#141418", border: "1px solid #2a3040", borderRadius: 8, padding: "9px 11px", color: "#e2e8f0", fontSize: 13, outline: "none", width: "100%", boxSizing: "border-box", resize: "vertical" } })),
+React.createElement("div", { style: { background: "#141418", borderRadius: 10, padding: "12px 16px", border: "1px solid #1e2a3a" } },
+React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: .8, fontWeight: 800, marginBottom: 10 } }, "Firme"),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 } },
+React.createElement(SignaturePad, { label: "Firma Tecnico verificatore", value: f.technicianSignature, onChange: v => setF(x => (Object.assign(Object.assign({}, x), { technicianSignature: v }))), height: 120 }),
+React.createElement(SignaturePad, { label: "Firma Referente reparto (opzionale)", value: f.departmentSignature, onChange: v => setF(x => (Object.assign(Object.assign({}, x), { departmentSignature: v }))), height: 120 })),
+React.createElement("div", { style: { marginTop: 8, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 14 } },
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Reparto / Unit\u00E0 (opzionale)"),
+React.createElement("input", { value: f.departmentName || "", onChange: sv("departmentName"), placeholder: "es. UO Cardiologia", style: INP })),
+React.createElement("div", { style: FLD },
+React.createElement("label", { style: LBL }, "Referente (opzionale)"),
+React.createElement("input", { value: f.departmentContact || "", onChange: sv("departmentContact"), placeholder: "es. Caposala Rossi", style: INP })))))),
+React.createElement("div", { style: { display: "flex", gap: 10, justifyContent: "flex-end" } },
+React.createElement(Btn, { variant: "ghost", onClick: onClose }, "Annulla"),
+React.createElement(Btn, { onClick: () => {
+const errs = {};
+if (!f.assetId && !propAssetId)
+errs.assetId = "Seleziona un apparecchio";
+if (!f.date)
+errs.date = "Inserisci la data";
+if (!f.technician)
+errs.technician = "Inserisci il nome del tecnico";
+if (f.verifyStatus === "non_disponibile") {
+if (!f.notAvailableReason)
+errs.notAvailableReason = "Seleziona il motivo della mancata esecuzione";
+if (!f.departmentName)
+errs.departmentName = "Inserisci il nome del reparto";
+}
+setErrors(errs);
+if (Object.keys(errs).length > 0)
+return;
+onSave(Object.assign(Object.assign({}, f), { assetId: f.assetId || propAssetId || "", overallPass: f.verifyStatus === "non_disponibile" ? null : f.overallPass }));
+} }, "Salva rapporto"))));
+}
+const FUNC_TEMPLATES = {
+"dialisi": {
+label: "Apparecchio per emodialisi", icon: "›", norm: "IEC 60601-2-16:2018",
+sections: [
+{ id: "ispezione", title: "Ispezione visiva e idraulica", items: [
+{ id: "involucro", text: "Involucro, display e supporti: integri e puliti" },
+{ id: "linee", text: "Linee/circuito idraulico e raccordi: integri, senza perdite" },
+{ id: "pompe", text: "Pompe (sangue, eparina): rulli/alloggiamenti integri" },
+{ id: "filtri", text: "Filtri e connettori dialisato: integri, puliti" },
+{ id: "etichette", text: "Etichette CE, n° serie, parti applicate: leggibili" },
+] },
+{ id: "sicurezza_el", title: "Sicurezza elettrica (IEC 62353)", note: "Eseguire la verifica di sicurezza elettrica (vedi template dedicato IEC 60601-1 / IEC 62353).", items: [
+{ id: "se_fatto", text: "Verifica di sicurezza elettrica eseguita, esito registrato" },
+] },
+{ id: "funz", title: "Funzionalità di base", items: [
+{ id: "acc", text: "Accensione e autotest: superati" },
+{ id: "pompa_sangue", text: "Pompa sangue: rotazione regolare, portata regolabile" },
+{ id: "uf", text: "Controllo ultrafiltrazione (UF): risponde all'impostazione" },
+{ id: "risc", text: "Riscaldatore dialisato: raggiunge la temperatura impostata" },
+{ id: "cond", text: "Preparazione/conducibilità dialisato: stabile in range" },
+{ id: "deaer", text: "Deareazione/rimozione bolle: funzionante" },
+] },
+{ id: "allarmi", title: "Allarmi di sicurezza (IEC 60601-2-16)", note: "Verificare l'intervento degli allarmi critici secondo procedura.", items: [
+{ id: "all_aria", text: "Rilevatore aria/microbolle: arresta la pompa sangue e allarma" },
+{ id: "all_blood", text: "Rilevatore perdita ematica (blood leak): allarma" },
+{ id: "all_press", text: "Allarmi pressioni (arteriosa, venosa, TMP): intervengono ai limiti" },
+{ id: "all_cond", text: "Allarme conducibilità fuori range: interviene" },
+{ id: "all_temp", text: "Allarme temperatura dialisato fuori range: interviene" },
+{ id: "all_alim", text: "Allarme mancanza alimentazione: interviene" },
+], measures: [
+{ id: "t_dial", name: "Temperatura dialisato vs set", unit: "°C", expected: "secondo costruttore (tipico ~37 °C)", value: "" },
+{ id: "cond_dial", name: "Conducibilità dialisato", unit: "mS/cm", expected: "secondo costruttore", value: "" },
+{ id: "q_sangue", name: "Portata pompa sangue (a impostazione di rif.)", unit: "ml/min", expected: "secondo costruttore", value: "" },
+] },
+{ id: "doc", title: "Registro e documentazione", items: [
+{ id: "dataora", text: "Data/ora corrette; disinfezione/ciclo igienico eseguito" },
+{ id: "registro", text: "Registro manutenzioni aggiornato con data e firma" },
+] },
+]
+},
+"capnografo": {
+label: "Capnografo / monitor gas respiratori", icon: "›", norm: "ISO 80601-2-55:2018",
+sections: [
+{ id: "ispezione", title: "Ispezione visiva", items: [
+{ id: "involucro", text: "Involucro e display: integri e puliti" },
+{ id: "linea", text: "Linea di campionamento e water-trap: integre, non occluse" },
+{ id: "sensore", text: "Sensore/cella di misura: pulito, finestra ottica integra" },
+{ id: "etichette", text: "Etichette CE, n° serie: leggibili" },
+] },
+{ id: "funz", title: "Funzionalità di base", items: [
+{ id: "acc", text: "Accensione e autotest: nessun errore" },
+{ id: "zero", text: "Azzeramento (zeroing): eseguibile, completato" },
+{ id: "riscald", text: "Riscaldamento/condizionamento sensore: completato" },
+{ id: "forma", text: "Curva di capnografia: presente e stabile" },
+] },
+{ id: "prestazioni", title: "Accuratezza (ISO 80601-2-55) — con gas di taratura", note: "Verificare con miscela di gas certificata (es. CO2 nota). Compilare i limiti secondo ISO 80601-2-55 e/o le specifiche del costruttore. Per O2/N2O/agenti anestetici usare le rispettive miscele.", items: [
+{ id: "gas", text: "Miscela di gas certificata collegata" },
+], measures: [
+{ id: "co2", name: "CO2 letta — miscela nota", unit: "mmHg / %", expected: "valore nominale ± tolleranza secondo ISO 80601-2-55/costruttore", value: "" },
+{ id: "o2", name: "O2 letta (se previsto) — miscela nota", unit: "%", expected: "secondo norma/costruttore", value: "" },
+] },
+{ id: "allarmi", title: "Allarmi (IEC 60601-1-8)", items: [
+{ id: "all_apnea", text: "Allarme apnea: interviene entro il tempo impostato" },
+{ id: "all_co2", text: "Allarmi CO2 (etCO2/FiCO2) alta/bassa: intervengono" },
+{ id: "all_fr", text: "Allarme frequenza respiratoria: interviene" },
+{ id: "all_occl", text: "Allarme occlusione/linea: interviene" },
+] },
+{ id: "doc", title: "Registro e documentazione", items: [
+{ id: "registro", text: "Registro manutenzioni aggiornato con data e firma" },
+] },
+]
+},
+"tavolo_operatorio": {
+label: "Tavolo operatorio", icon: "›", norm: "IEC 60601-2-46:2016",
+sections: [
+{ id: "ispezione", title: "Ispezione visiva e meccanica", items: [
+{ id: "struttura", text: "Struttura, colonna e piano: integri, nessun gioco anomalo" },
+{ id: "sezioni", text: "Sezioni del piano e snodi: integri, fissaggi sicuri" },
+{ id: "cuscini", text: "Cuscini/imbottiture: integri, puliti" },
+{ id: "ruote", text: "Ruote e sistema di frenatura/ancoraggio: funzionanti" },
+{ id: "comando", text: "Pulsantiera/telecomando e cavo: integri; batteria non gonfia" },
+{ id: "etichette", text: "Etichette CE, n° serie, carico massimo: leggibili" },
+] },
+{ id: "sicurezza_el", title: "Sicurezza elettrica (IEC 62353)", note: "Eseguire la verifica di sicurezza elettrica (vedi template dedicato).", items: [
+{ id: "se_fatto", text: "Verifica di sicurezza elettrica eseguita, esito registrato" },
+] },
+{ id: "funz", title: "Movimenti e funzionalità", items: [
+{ id: "altezza", text: "Salita/discesa altezza: fluida, su tutta la corsa" },
+{ id: "trend", text: "Trendelenburg / anti-Trendelenburg: funzionanti" },
+{ id: "lat", text: "Inclinazioni laterali (tilt): funzionanti" },
+{ id: "dorso_gambe", text: "Sezioni dorso/gambe/testa: regolazioni funzionanti" },
+{ id: "ritorno", text: "Ritorno a zero/livellamento (se previsto): funzionante" },
+{ id: "tenuta", text: "Tenuta in posizione sotto carico: nessun cedimento" },
+] },
+{ id: "sicurezza", title: "Sicurezza", items: [
+{ id: "emergenza", text: "Arresto di emergenza / blocco movimenti: funzionante" },
+{ id: "backup", text: "Comando di emergenza/manuale (se previsto): funzionante" },
+{ id: "stabilita", text: "Stabilità complessiva: nessun rischio di ribaltamento" },
+] },
+{ id: "doc", title: "Registro e documentazione", items: [
+{ id: "registro", text: "Registro manutenzioni aggiornato con data e firma" },
+] },
+]
+},
+"culla_termica": {
+label: "Culla termica / lettino di rianimazione (radiant warmer)", icon: "›", norm: "IEC 60601-2-21:2009+A1:2016",
+sections: [
+{ id: "ispezione", title: "Ispezione visiva e meccanica", items: [
+{ id: "struttura", text: "Struttura, colonna e piano: integri, stabili" },
+{ id: "riscaldatore", text: "Elemento riscaldante radiante: integro, griglia di protezione presente" },
+{ id: "sonda", text: "Sonda cutanea: integra, cavo OK" },
+{ id: "materasso", text: "Materasso e sponde: integri, puliti" },
+{ id: "ruote", text: "Ruote e freni: funzionanti" },
+{ id: "etichette", text: "Etichette CE, n° serie, parti applicate: leggibili" },
+] },
+{ id: "sicurezza_el", title: "Sicurezza elettrica (IEC 62353)", note: "Eseguire la verifica di sicurezza elettrica (vedi template dedicato).", items: [
+{ id: "se_fatto", text: "Verifica di sicurezza elettrica eseguita, esito registrato" },
+] },
+{ id: "funz", title: "Funzionalità", items: [
+{ id: "acc", text: "Accensione e autotest: nessun errore" },
+{ id: "manuale", text: "Modo manuale (potenza riscaldatore): regolabile" },
+{ id: "servo", text: "Modo servo-controllo cute: insegue la temperatura impostata" },
+{ id: "sonda_ok", text: "Lettura sonda cutanea: plausibile e stabile" },
+{ id: "luce_apgar", text: "Illuminazione e (se presente) timer Apgar: funzionanti" },
+] },
+{ id: "allarmi", title: "Allarmi (IEC 60601-2-21)", items: [
+{ id: "all_alta", text: "Allarme sovra-temperatura cute: interviene" },
+{ id: "all_bassa", text: "Allarme sotto-temperatura cute: interviene" },
+{ id: "all_sonda", text: "Allarme guasto/scollegamento sonda: interviene" },
+{ id: "all_manuale", text: "Allarme periodico in modo manuale (controllo prolungato): presente" },
+{ id: "all_alim", text: "Allarme mancanza alimentazione: interviene" },
+], measures: [
+{ id: "t_cute", name: "Temperatura cute (servo) vs set", unit: "°C", expected: "deviazione secondo IEC 60601-2-21/costruttore", value: "" },
+] },
+{ id: "doc", title: "Registro e documentazione", items: [
+{ id: "registro", text: "Registro manutenzioni aggiornato con data e firma" },
+] },
+]
+},
+"holter_ecg": {
+label: "Holter ECG (registratore ambulatoriale)", icon: "›", norm: "IEC 60601-2-47:2012",
+sections: [
+{ id: "ispezione", title: "Ispezione visiva", items: [
+{ id: "reg", text: "Registratore e display: integri e puliti" },
+{ id: "cavo", text: "Cavo paziente ed elettrodi/clip: integri, isolamento OK" },
+{ id: "batteria", text: "Vano batteria/contatti: puliti; batteria non gonfia" },
+{ id: "etichette", text: "Etichette CE, n° serie, parti applicate (CF): leggibili" },
+] },
+{ id: "funz", title: "Funzionalità", items: [
+{ id: "acc", text: "Accensione e avvio registrazione: corretti" },
+{ id: "canali", text: "Canali/derivazioni: tutti acquisiti, no canali muti" },
+{ id: "marker", text: "Tasto marcatore evento paziente: funzionante" },
+{ id: "orologio", text: "Orologio interno: ora corretta" },
+{ id: "scarico", text: "Scarico dati e software di analisi: funzionante" },
+] },
+{ id: "prestazioni", title: "Prestazioni (IEC 60601-2-47) — con simulatore ECG", note: "Verificare con simulatore ECG certificato. Compilare i limiti secondo IEC 60601-2-47 e/o le specifiche del costruttore.", items: [
+{ id: "sim", text: "Simulatore ECG collegato" },
+{ id: "morf", text: "Morfologia registrata: corretta su tutti i canali" },
+], measures: [
+{ id: "fc", name: "FC rilevata — simulatore (valore di rif.)", unit: "bpm", expected: "secondo norma/costruttore", value: "" },
+] },
+{ id: "batteria_sec", title: "Alimentazione", items: [
+{ id: "auton", text: "Autonomia adeguata alla durata di registrazione prevista" },
+] },
+{ id: "doc", title: "Registro e documentazione", items: [
+{ id: "registro", text: "Registro manutenzioni aggiornato con data e firma" },
+] },
+]
+},
+"riunito_odontoiatrico": {
+label: "Riunito odontoiatrico", icon: "›", norm: "ISO 7494-1:2018 (+ IEC 60601-1)",
+sections: [
+{ id: "ispezione", title: "Ispezione visiva e meccanica", items: [
+{ id: "poltrona", text: "Poltrona, bracci e snodi: integri, stabili" },
+{ id: "manipoli", text: "Manipoli/turbine e cordoni: integri, raccordi a tenuta" },
+{ id: "faretra", text: "Faretra/strumenti, siringa aria-acqua: integri" },
+{ id: "lampada", text: "Lampada operatoria e snodo: integri, funzionanti" },
+{ id: "idrico", text: "Gruppo idrico/aspirazione, bacinella: integri, scarichi liberi" },
+{ id: "etichette", text: "Etichette CE, n° serie: leggibili" },
+] },
+{ id: "sicurezza_el", title: "Sicurezza elettrica (IEC 60601-1 / IEC 62353)", note: "Eseguire la verifica di sicurezza elettrica (vedi template dedicato).", items: [
+{ id: "se_fatto", text: "Verifica di sicurezza elettrica eseguita, esito registrato" },
+] },
+{ id: "poltrona_funz", title: "Poltrona e sicurezza movimenti", note: "ISO 7494-1 richiede un sistema di arresto delle funzioni (function stop) per le poltrone a movimento elettrico.", items: [
+{ id: "movimenti", text: "Movimenti poltrona (salita/discesa, schienale): fluidi" },
+{ id: "function_stop", text: "Sistema di arresto funzioni (function stop): arresta i movimenti pericolosi" },
+{ id: "posizioni", text: "Posizioni memorizzate/ritorno (se previsti): funzionanti" },
+] },
+{ id: "strumenti", title: "Strumenti e servizi", items: [
+{ id: "turbine", text: "Manipoli/turbine: rotazione, spray e raffreddamento corretti" },
+{ id: "siringa", text: "Siringa aria/acqua: erogazione corretta" },
+{ id: "aspirazione", text: "Aspirazione (chirurgica/saliva): potenza adeguata" },
+{ id: "polimerizz", text: "Lampada polimerizzante (se integrata): funzionante" },
+{ id: "riscaldatore", text: "Riscaldatore acqua/siringa (se presente): funzionante" },
+] },
+{ id: "igiene", title: "Impianto idrico e igiene", note: "ISO 7494-1: filtro solidi (≥ 2 mm); se presente, separatore amalgama conforme a ISO 11143.", items: [
+{ id: "filtro", text: "Filtro solidi presente e pulito" },
+{ id: "amalgama", text: "Separatore amalgama (se presente): funzionante" },
+{ id: "decont", text: "Decontaminazione/flussaggio linee acqua: eseguito secondo protocollo" },
+] },
+{ id: "doc", title: "Registro e documentazione", items: [
+{ id: "registro", text: "Registro manutenzioni aggiornato con data e firma" },
+] },
+]
+},
+"elettrocardiografo": {
+label: "Elettrocardiografo (ECG diagnostico)", icon: "›", norm: "IEC 60601-2-25:2011",
+sections: [
+{ id: "ispezione", title: "Ispezione visiva e meccanica", items: [
+{ id: "involucro", text: "Involucro, display e tastiera: integri e puliti" },
+{ id: "cavo_paz", text: "Cavo paziente e derivazioni: isolamento integro, connettori OK" },
+{ id: "elettrodi", text: "Elettrodi/pinze/ventose: puliti, molle e adesione funzionanti" },
+{ id: "alim", text: "Alimentatore e cavo rete: integri; batteria (se presente) non gonfia" },
+{ id: "stampante", text: "Stampante e carta: presenti, avanzamento regolare" },
+{ id: "etichette", text: "Etichette CE, n° serie, parti applicate (tipo CF): leggibili" },
+] },
+{ id: "sicurezza_el", title: "Sicurezza elettrica (IEC 62353)", note: "Eseguire le prove di sicurezza elettrica secondo IEC 62353 (resistenza del conduttore di protezione e correnti di dispersione) con safety analyzer. Parti applicate ECG: tipo CF.", items: [
+{ id: "se_fatto", text: "Verifica di sicurezza elettrica IEC 62353 eseguita, esito registrato" },
+] },
+{ id: "funz", title: "Funzionalità di base", items: [
+{ id: "acc", text: "Accensione e autotest: nessun messaggio di errore" },
+{ id: "deriv", text: "Selezione derivazioni (I, II, III, aVR, aVL, aVF, V1-V6): tutte presenti" },
+{ id: "vel", text: "Velocità carta selezionabile (25 / 50 mm/s)" },
+{ id: "gain", text: "Sensibilità/guadagno selezionabile (5 / 10 / 20 mm/mV)" },
+{ id: "filtri", text: "Filtri (rete 50 Hz, muscolare, deriva linea di base): attivabili" },
+{ id: "lead_off", text: "Segnalazione elettrodo staccato (lead-off): funzionante" },
+] },
+{ id: "prestazioni", title: "Prestazioni (IEC 60601-2-25) — con simulatore ECG", note: "Verificare con simulatore ECG certificato. Compilare i limiti secondo IEC 60601-2-25 e/o le specifiche del costruttore (accuratezza di guadagno, base dei tempi, frequenza).", items: [
+{ id: "sim", text: "Simulatore ECG collegato e impostato" },
+{ id: "cal_1mv", text: "Impulso di taratura 1 mV: ampiezza corretta sul tracciato" },
+{ id: "morf", text: "Morfologia su tutte le derivazioni: corretta, senza artefatti" },
+], measures: [
+{ id: "amp_cal", name: "Ampiezza impulso 1 mV a 10 mm/mV", unit: "mm", expected: "10 mm — tolleranza secondo IEC 60601-2-25 (tipico ±5%)", value: "" },
+{ id: "fc_60", name: "FC visualizzata — simulatore 60 bpm", unit: "bpm", expected: "60 — secondo norma/costruttore", value: "" },
+{ id: "vel_carta", name: "Velocità carta misurata (impostata 25 mm/s)", unit: "mm/s", expected: "25 — tolleranza secondo norma/costruttore", value: "" },
+] },
+{ id: "doc", title: "Registro e documentazione", items: [
+{ id: "dataora", text: "Data/ora di sistema corrette" },
+{ id: "registro", text: "Registro manutenzioni aggiornato con data e firma tecnico" },
+] },
+]
+},
+"sfigmomanometro": {
+label: "Sfigmomanometro automatico (NIBP)", icon: "›", norm: "IEC 80601-2-30:2018",
+sections: [
+{ id: "ispezione", title: "Ispezione visiva e meccanica", items: [
+{ id: "involucro", text: "Involucro e display: integri e puliti" },
+{ id: "bracciali", text: "Bracciali e tubi: integri, senza tagli, raccordi a tenuta" },
+{ id: "valvola", text: "Connettore bracciale e valvola: integri, innesto corretto" },
+{ id: "alim", text: "Alimentatore/batteria: integri, batteria non gonfia" },
+{ id: "etichette", text: "Etichette CE, n° serie, parte applicata: leggibili" },
+] },
+{ id: "sicurezza_el", title: "Sicurezza elettrica (IEC 62353)", note: "Per i dispositivi alimentati da rete eseguire le prove IEC 62353 con safety analyzer.", items: [
+{ id: "se_fatto", text: "Verifica di sicurezza elettrica IEC 62353 eseguita (se da rete), esito registrato" },
+] },
+{ id: "funz", title: "Funzionalità di base", items: [
+{ id: "acc", text: "Accensione e autotest: nessun errore" },
+{ id: "ciclo", text: "Ciclo di misura completo: gonfiaggio, sgonfiaggio graduale, lettura" },
+{ id: "modi", text: "Modalità adulto/pediatrico/neonatale (se previste): selezionabili" },
+{ id: "sgonfia", text: "Sgonfiaggio rapido di sicurezza (stop): funzionante" },
+] },
+{ id: "pressione", title: "Accuratezza pressione statica (IEC 80601-2-30) — con manometro di riferimento", note: "Collegare un manometro/simulatore NIBP certificato al posto del bracciale (volume di prova). La norma IEC 80601-2-30 richiede accuratezza dell'indicazione di pressione entro ±3 mmHg (o ±2% del valore, il maggiore).", items: [
+{ id: "rif", text: "Manometro di riferimento / simulatore NIBP collegato" },
+], measures: [
+{ id: "p_50", name: "Pressione statica — riferimento 50 mmHg", unit: "mmHg", expected: "50 ±3 (47–53)", limitVal: 53, limitMin: 47, value: "" },
+{ id: "p_150", name: "Pressione statica — riferimento 150 mmHg", unit: "mmHg", expected: "150 ±3 (147–153)", limitVal: 153, limitMin: 147, value: "" },
+{ id: "p_250", name: "Pressione statica — riferimento 250 mmHg", unit: "mmHg", expected: "250 ±3 (247–253)", limitVal: 253, limitMin: 247, value: "" },
+{ id: "tenuta", name: "Perdita pneumatica (caduta in 1 min a ~250 mmHg)", unit: "mmHg/min", expected: "secondo costruttore (tipico basso)", value: "" },
+] },
+{ id: "sicurezza", title: "Sicurezza e allarmi", note: "Verificare la sovrapressione massima e gli allarmi secondo IEC 60601-1-8.", items: [
+{ id: "overpress", text: "Limite di sovrapressione (cut-off): interviene entro il massimo dichiarato" },
+{ id: "all_err", text: "Allarmi/segnalazioni di errore (bracciale, movimento, fuori range): presenti" },
+] },
+{ id: "doc", title: "Registro e documentazione", items: [
+{ id: "dataora", text: "Data/ora corrette" },
+{ id: "registro", text: "Registro manutenzioni aggiornato con data e firma" },
+] },
+]
+},
+"termometro_clinico": {
+label: "Termometro clinico elettronico", icon: "›", norm: "ISO 80601-2-56:2017",
+sections: [
+{ id: "ispezione", title: "Ispezione visiva", items: [
+{ id: "involucro", text: "Involucro, display e sonda: integri e puliti" },
+{ id: "copri", text: "Copri-sonda (se usa-e-getta): disponibili, integri" },
+{ id: "batteria", text: "Batteria/contatti: OK, batteria non gonfia" },
+{ id: "etichette", text: "Etichette CE, n° serie: leggibili" },
+] },
+{ id: "funz", title: "Funzionalità di base", items: [
+{ id: "acc", text: "Accensione e autotest: nessun errore" },
+{ id: "misura", text: "Ciclo di misura completo con segnale di fine misura" },
+{ id: "modo", text: "Modalità (predittiva/diretta, sito di misura): selezionabili se previste" },
+] },
+{ id: "accuratezza", title: "Accuratezza (ISO 80601-2-56) — con bagno/simulatore di temperatura", note: "Verificare con bagno termostatico o simulatore certificato. Compilare i limiti secondo ISO 80601-2-56 e/o le specifiche del costruttore (errore massimo di laboratorio, tipicamente molto stretto nel range clinico ~35,5–42 °C).", items: [
+{ id: "rif", text: "Riferimento di temperatura certificato pronto" },
+], measures: [
+{ id: "t_37", name: "Lettura — riferimento 37,0 °C", unit: "°C", expected: "37,0 — tolleranza secondo ISO 80601-2-56/costruttore", value: "" },
+{ id: "t_40", name: "Lettura — riferimento 40,0 °C", unit: "°C", expected: "40,0 — tolleranza secondo ISO 80601-2-56/costruttore", value: "" },
+] },
+{ id: "doc", title: "Registro e documentazione", items: [
+{ id: "registro", text: "Registro manutenzioni aggiornato con data e firma" },
+] },
+]
+},
+"incubatrice_neonatale": {
+label: "Incubatrice neonatale", icon: "›", norm: "IEC 60601-2-19:2009+A1:2016",
+sections: [
+{ id: "ispezione", title: "Ispezione visiva e meccanica", items: [
+{ id: "cupola", text: "Cupola/parete: integra, trasparente, guarnizioni a tenuta" },
+{ id: "oblo", text: "Oblò e maniche di accesso: chiusura e tenuta corrette" },
+{ id: "materasso", text: "Materasso e piano: puliti, integri, inclinazione funzionante" },
+{ id: "ruote", text: "Carrello/ruote e freni: stabili e funzionanti" },
+{ id: "umidif", text: "Vaschetta umidificazione (se presente): pulita, senza incrostazioni" },
+{ id: "etichette", text: "Etichette CE, n° serie, parti applicate: leggibili" },
+] },
+{ id: "sicurezza_el", title: "Sicurezza elettrica (IEC 62353)", note: "Eseguire le prove IEC 62353 con safety analyzer.", items: [
+{ id: "se_fatto", text: "Verifica di sicurezza elettrica IEC 62353 eseguita, esito registrato" },
+] },
+{ id: "funz", title: "Funzionalità di base", items: [
+{ id: "acc", text: "Accensione e autotest: nessun errore" },
+{ id: "modo", text: "Controllo temperatura aria / servo-cute (sonda paziente): funzionanti" },
+{ id: "sonda", text: "Sonda cutanea: integra, lettura plausibile" },
+{ id: "umid_set", text: "Regolazione umidità (se presente): risponde all'impostazione" },
+{ id: "o2", text: "Controllo/monitor O2 (se presente): risponde, da verificare con analizzatore" },
+] },
+{ id: "temperatura", title: "Temperatura (IEC 60601-2-19) — con termometro di riferimento", note: "Verificare temperatura e uniformità con termometro/registratore certificato sul piano materasso. Compilare i limiti secondo IEC 60601-2-19 (deviazione, variabilità, uniformità) e/o le specifiche del costruttore.", items: [
+{ id: "rif", text: "Termometro di riferimento posizionato sul materasso" },
+{ id: "stabile", text: "Temperatura raggiunta e stabile prima della misura" },
+], measures: [
+{ id: "t_set", name: "Temperatura aria vs set-point", unit: "°C", expected: "deviazione secondo IEC 60601-2-19/costruttore", value: "" },
+{ id: "t_unif", name: "Uniformità sul materasso (max-min tra punti)", unit: "°C", expected: "secondo IEC 60601-2-19/costruttore", value: "" },
+] },
+{ id: "allarmi", title: "Allarmi (IEC 60601-1-8 / IEC 60601-2-19)", items: [
+{ id: "all_alta", text: "Allarme sovra-temperatura: interviene" },
+{ id: "all_sonda", text: "Allarme guasto/scollegamento sonda: interviene" },
+{ id: "all_flusso", text: "Allarme guasto ventilazione/flusso aria: interviene" },
+{ id: "all_alim", text: "Allarme mancanza alimentazione: interviene" },
+{ id: "all_udibile", text: "Segnali acustici e visivi: presenti e percepibili" },
+] },
+{ id: "doc", title: "Registro e documentazione", items: [
+{ id: "dataora", text: "Data/ora corrette" },
+{ id: "registro", text: "Registro manutenzioni aggiornato con data e firma" },
+] },
+]
+},
+"lampada_scialitica": {
+label: "Lampada scialitica (operatoria)", icon: "›", norm: "IEC 60601-2-41:2009+A1:2013",
+sections: [
+{ id: "ispezione", title: "Ispezione visiva e meccanica", items: [
+{ id: "cupola", text: "Cupola/corpo lampada: integro, pulito" },
+{ id: "bracci", text: "Bracci e snodi: tenuta in posizione, movimenti fluidi, nessun cedimento" },
+{ id: "maniglia", text: "Maniglia centrale (sterilizzabile/usa-e-getta): presente, fissaggio OK" },
+{ id: "led", text: "LED/lampade: tutti funzionanti, nessun modulo spento" },
+{ id: "etichette", text: "Etichette CE, n° serie: leggibili" },
+] },
+{ id: "sicurezza_el", title: "Sicurezza elettrica (IEC 62353)", note: "Eseguire le prove IEC 62353 con safety analyzer (alimentazione e, se presente, gruppo di continuità).", items: [
+{ id: "se_fatto", text: "Verifica di sicurezza elettrica IEC 62353 eseguita, esito registrato" },
+] },
+{ id: "funz", title: "Funzionalità", items: [
+{ id: "acc", text: "Accensione/spegnimento: corretti" },
+{ id: "dimmer", text: "Regolazione intensità (dimmer): tutti i livelli funzionanti" },
+{ id: "fuoco", text: "Regolazione fuoco/diametro campo (se prevista): funzionante" },
+{ id: "emergenza", text: "Alimentazione di emergenza/batteria (se presente): commutazione OK" },
+{ id: "posiz", text: "Posizionamento e stabilità nelle varie angolazioni" },
+] },
+{ id: "prestazioni", title: "Prestazioni illuminotecniche (IEC 60601-2-41)", note: "Parametri come illuminamento centrale (Ec), diametro del campo, temperatura di colore e resa cromatica (Ra) si misurano con luxmetro/strumenti idonei. Compilare secondo IEC 60601-2-41 e/o le specifiche del costruttore — NON stimare a vista.", items: [
+{ id: "strum", text: "Strumento di misura (luxmetro) disponibile, se la misura è richiesta" },
+], measures: [
+{ id: "ec", name: "Illuminamento centrale Ec (se misurato)", unit: "lux", expected: "secondo IEC 60601-2-41/costruttore", value: "" },
+] },
+{ id: "doc", title: "Registro e documentazione", items: [
+{ id: "registro", text: "Registro manutenzioni aggiornato con data e firma" },
+] },
+]
+},
+"fototerapia_neonatale": {
+label: "Lampada fototerapia neonatale", icon: "›", norm: "IEC 60601-2-50:2009+A1:2016",
+sections: [
+{ id: "ispezione", title: "Ispezione visiva e meccanica", items: [
+{ id: "corpo", text: "Corpo lampada e supporto: integri, stabili" },
+{ id: "led", text: "LED/tubi fototerapia: tutti funzionanti, nessuno annerito/spento" },
+{ id: "schermo", text: "Schermo/diffusore: pulito, integro" },
+{ id: "contaore", text: "Contaore lampada/sorgente: leggibile (durata residua)" },
+{ id: "etichette", text: "Etichette CE, n° serie: leggibili" },
+] },
+{ id: "sicurezza_el", title: "Sicurezza elettrica (IEC 62353)", note: "Eseguire le prove IEC 62353 con safety analyzer.", items: [
+{ id: "se_fatto", text: "Verifica di sicurezza elettrica IEC 62353 eseguita, esito registrato" },
+] },
+{ id: "funz", title: "Funzionalità", items: [
+{ id: "acc", text: "Accensione/spegnimento e timer (se presente): corretti" },
+{ id: "intensita", text: "Regolazione intensità (se prevista): funzionante" },
+{ id: "distanza", text: "Regolazione altezza/distanza dal neonato: funzionante" },
+] },
+{ id: "prestazioni", title: "Irradianza (IEC 60601-2-50) — con radiometro", note: "L'irradianza spettrale efficace (banda ~400–500 nm) si misura SOLO con radiometro per fototerapia certificato, alla distanza d'uso. Compilare secondo IEC 60601-2-50 e/o le specifiche del costruttore — NON stimare a vista.", items: [
+{ id: "radiom", text: "Radiometro per fototerapia disponibile e tarato" },
+], measures: [
+{ id: "irr", name: "Irradianza alla distanza d'uso (se misurata)", unit: "µW/cm²/nm", expected: "secondo IEC 60601-2-50/costruttore", value: "" },
+] },
+{ id: "doc", title: "Registro e documentazione", items: [
+{ id: "registro", text: "Registro manutenzioni aggiornato; ore lampada annotate" },
+] },
+]
+},
+"elettrostimolatore": {
+label: "Elettrostimolatore / TENS", icon: "›", norm: "IEC 60601-2-10:2012",
+sections: [
+{ id: "ispezione", title: "Ispezione visiva e meccanica", items: [
+{ id: "involucro", text: "Involucro, display e comandi: integri e puliti" },
+{ id: "cavi", text: "Cavi paziente ed elettrodi: isolamento integro, connettori OK" },
+{ id: "batteria", text: "Batteria/alimentatore: integri, batteria non gonfia" },
+{ id: "etichette", text: "Etichette CE, n° serie, parti applicate (tipo BF/CF): leggibili" },
+] },
+{ id: "sicurezza_el", title: "Sicurezza elettrica (IEC 62353)", note: "Per i dispositivi alimentati da rete eseguire le prove IEC 62353. Le parti applicate degli stimolatori devono essere tipo BF o CF (IEC 60601-2-10).", items: [
+{ id: "se_fatto", text: "Verifica di sicurezza elettrica IEC 62353 eseguita (se da rete), esito registrato" },
+] },
+{ id: "funz", title: "Funzionalità di base", items: [
+{ id: "acc", text: "Accensione e autotest: nessun errore" },
+{ id: "prog", text: "Programmi/parametri (frequenza, durata impulso, ampiezza): selezionabili" },
+{ id: "intens", text: "Regolazione intensità: graduale, parte da zero" },
+{ id: "open_circ", text: "Rilevazione elettrodo staccato / circuito aperto: intensità si annulla" },
+{ id: "timer", text: "Timer di trattamento: funzionante" },
+] },
+{ id: "prestazioni", title: "Uscita (IEC 60601-2-10) — con oscilloscopio/carico resistivo", note: "Misurare i parametri d'uscita su carico resistivo idoneo (es. 500 Ω) con oscilloscopio. Compilare secondo IEC 60601-2-10 e/o le specifiche del costruttore (corrente/tensione max, frequenza, durata impulso). N.B.: per uscite > 10 mA o 10 V valgono requisiti aggiuntivi della norma.", items: [
+{ id: "carico", text: "Carico resistivo e strumento di misura collegati" },
+{ id: "forma", text: "Forma d'onda d'uscita: conforme alle specifiche costruttore" },
+], measures: [
+{ id: "i_out", name: "Corrente d'uscita su carico (a impostazione di rif.)", unit: "mA", expected: "secondo IEC 60601-2-10/costruttore", value: "" },
+{ id: "freq", name: "Frequenza impulsi (a impostazione di rif.)", unit: "Hz", expected: "secondo costruttore", value: "" },
+{ id: "width", name: "Durata impulso (a impostazione di rif.)", unit: "µs", expected: "secondo costruttore", value: "" },
+] },
+{ id: "doc", title: "Registro e documentazione", items: [
+{ id: "registro", text: "Registro manutenzioni aggiornato con data e firma" },
+] },
+]
+},
+"autoclave": {
+label: "Autoclave / sterilizzatrice a vapore", icon: "›", norm: "EN 13060:2014+A1:2018",
+sections: [
+{ id: "ispezione", title: "Ispezione visiva e meccanica", items: [
+{ id: "camera", text: "Camera e guarnizione portello: pulite, integre, tenuta corretta" },
+{ id: "portello", text: "Chiusura/blocco portello: funzionante, sicurezza attiva" },
+{ id: "acqua", text: "Serbatoi acqua pulita/usata: livelli e qualità acqua OK" },
+{ id: "filtro", text: "Filtro/i e cestelli: puliti, integri" },
+{ id: "etichette", text: "Etichette CE, n° serie, tipo cicli (B/N/S): leggibili" },
+] },
+{ id: "sicurezza_el", title: "Sicurezza elettrica (IEC 62353)", note: "Eseguire le prove IEC 62353 con safety analyzer.", items: [
+{ id: "se_fatto", text: "Verifica di sicurezza elettrica IEC 62353 eseguita, esito registrato" },
+] },
+{ id: "funz", title: "Funzionalità e cicli", items: [
+{ id: "acc", text: "Accensione e autotest: nessun allarme anomalo" },
+{ id: "cicli", text: "Selezione cicli (134 °C, 121 °C, ecc.): avviabili e completati" },
+{ id: "stampa", text: "Stampante/registrazione ciclo (data, parametri): funzionante" },
+{ id: "sicurezze", text: "Sicurezze (sovrapressione, sovratemperatura, blocco portello): integre" },
+] },
+{ id: "test", title: "Test periodici (EN 13060)", note: "Test previsti per i piccoli sterilizzatori a vapore: vuoto/tenuta, penetrazione vapore. Per i cicli tipo B usare l'helix; il Bowie-Dick per i carichi porosi.", items: [
+{ id: "vacuum", text: "Vacuum/leak test (tenuta del vuoto): superato" },
+{ id: "bowie", text: "Bowie-Dick / Helix (penetrazione vapore): superato" },
+{ id: "indicatori", text: "Indicatori chimici/biologici secondo protocollo: esito conforme" },
+] },
+{ id: "plateau", title: "Parametri di sterilizzazione (plateau) — con data-logger/registro ciclo", note: "Confrontare i valori del ciclo con i parametri standard di sterilizzazione a vapore saturo. Tipici: 134 °C con plateau ≥ 3 min (banda 134–137 °C); 121 °C con plateau ≥ 15 min (banda 121–124 °C). Verificare su stampa ciclo o data-logger calibrato.", items: [
+{ id: "saturo", text: "Vapore saturo (relazione temperatura/pressione corretta)" },
+], measures: [
+{ id: "t_134", name: "Temperatura di plateau — ciclo 134 °C", unit: "°C", expected: "134–137 °C", limitVal: 137, limitMin: 134, value: "" },
+{ id: "h_134", name: "Durata plateau — ciclo 134 °C", unit: "min", expected: "≥ 3 min", limitMin: 3, invertPass: true, value: "" },
+{ id: "t_121", name: "Temperatura di plateau — ciclo 121 °C", unit: "°C", expected: "121–124 °C", limitVal: 124, limitMin: 121, value: "" },
+{ id: "h_121", name: "Durata plateau — ciclo 121 °C", unit: "min", expected: "≥ 15 min", limitMin: 15, invertPass: true, value: "" },
+] },
+{ id: "doc", title: "Registro e documentazione", items: [
+{ id: "dataora", text: "Data/ora di sistema corrette" },
+{ id: "registro", text: "Registro manutenzioni e test periodici aggiornato con firma" },
+] },
+]
+},
+"pulsossimetro": {
+label: "Pulsossimetro / SpO2 monitor", icon: "›", norm: "ISO 80601-2-61:2017",
+sections: [
+{
+id: "ispezione", title: "Ispezione visiva e meccanica",
+items: [
+{ id: "involucro", text: "Involucro/display: integro, privo di crepe o danni" },
+{ id: "cavo_paz", text: "Cavo paziente e sensore: integri, isolamento OK" },
+{ id: "sensore", text: "Sensore SpO2: clip/finger pulita, LED visibili e funzionanti" },
+{ id: "alimentaz", text: "Cavo alimentazione / alimentatore: integro (se da rete)" },
+{ id: "batteria", text: "Batteria interna (se presente): non gonfia, contatti puliti" },
+{ id: "etichette", text: "Etichette CE, n° serie, classificazione: leggibili" },
+]
+},
+{
+id: "alimentazione", title: "Alimentazione e batteria",
+note: "ISO 80601-2-61: i pulsossimetri portatili devono funzionare almeno 8 ore con batteria carica (manutenzione tipica).",
+items: [
+{ id: "acc_rete", text: "Accensione da rete: corretta, indicatori luminosi normali" },
+{ id: "acc_batteria", text: "Accensione da batteria: corretta, indicatore stato carica visibile" },
+{ id: "low_batt", text: "Allarme batteria scarica: attivo (test con tensione bassa o storia clinica)" },
+],
+measures: [
+{ id: "batt_perc", name: "Carica residua batteria", unit: "%", expected: "≥ 80% dopo ricarica completa", limitVal: 100, limitMin: 80, invertPass: true, value: "" },
+{ id: "auton", name: "Autonomia (se misurata)", unit: "h", expected: "≥ 8 h (portatili)", limitMin: 8, invertPass: true, value: "" },
+]
+},
+{
+id: "accuratezza_spo2", title: "Accuratezza SpO2 (ISO 80601-2-61)",
+note: "Verificare con simulatore SpO2 certificato (es. Fluke ProSim 8, Index 2 SpO2, Rigel UNI-SiM). Tolleranza tipica ±2% nel range 70-100%. Test su almeno 3 punti: 90%, 80%, 70%.",
+items: [
+{ id: "simulatore", text: "Simulatore SpO2 collegato e calibrato" },
+{ id: "morf_pleth", text: "Forma d'onda pletismografica: presente e stabile sul display" },
+],
+measures: [
+{ id: "spo2_97", name: "SpO2 simulato 97% — lettura", unit: "%", expected: "97 ±2 (95-99)", limitVal: 99, limitMin: 95, value: "" },
+{ id: "spo2_90", name: "SpO2 simulato 90% — lettura", unit: "%", expected: "90 ±2 (88-92)", limitVal: 92, limitMin: 88, value: "" },
+{ id: "spo2_80", name: "SpO2 simulato 80% — lettura", unit: "%", expected: "80 ±2 (78-82)", limitVal: 82, limitMin: 78, value: "" },
+{ id: "spo2_70", name: "SpO2 simulato 70% — lettura", unit: "%", expected: "70 ±3 (67-73)", limitVal: 73, limitMin: 67, value: "" },
+]
+},
+{
+id: "accuratezza_fc", title: "Accuratezza frequenza cardiaca",
+note: "Verificare con simulatore impostato a diverse frequenze. Tolleranza tipica ±2% o ±2 bpm (il valore maggiore).",
+items: [
+{ id: "fc_traccia", text: "Tracciato FC stabile, senza artefatti" },
+],
+measures: [
+{ id: "fc_30", name: "FC simulato 30 bpm — lettura", unit: "bpm", expected: "30 ±2 (28-32)", limitVal: 32, limitMin: 28, value: "" },
+{ id: "fc_60", name: "FC simulato 60 bpm — lettura", unit: "bpm", expected: "60 ±2 (58-62)", limitVal: 62, limitMin: 58, value: "" },
+{ id: "fc_120", name: "FC simulato 120 bpm — lettura", unit: "bpm", expected: "120 ±3 (117-123)", limitVal: 123, limitMin: 117, value: "" },
+{ id: "fc_200", name: "FC simulato 200 bpm — lettura", unit: "bpm", expected: "200 ±4 (196-204)", limitVal: 204, limitMin: 196, value: "" },
+]
+},
+{
+id: "allarmi", title: "Allarmi (IEC 60601-1-8)",
+note: "Verificare attivazione allarmi acustici e visivi al superamento delle soglie impostate.",
+items: [
+{ id: "all_spo2_low", text: "Allarme SpO2 basso: si attiva entro 10s dal superamento soglia" },
+{ id: "all_spo2_high", text: "Allarme SpO2 alto: si attiva entro 10s (se previsto)" },
+{ id: "all_fc_low", text: "Allarme FC bassa: si attiva entro 10s" },
+{ id: "all_fc_high", text: "Allarme FC alta: si attiva entro 10s" },
+{ id: "all_sensore", text: "Allarme sensore scollegato/no segnale: si attiva entro 10s" },
+{ id: "all_audio", text: "Segnale acustico udibile a 1m (>= 45 dB)" },
+{ id: "all_visivo", text: "Segnale visivo (icona/LED): chiaramente visibile" },
+{ id: "all_pausa", text: "Funzione pausa/silenziamento allarme: funzionante, ripristino automatico <= 120s" },
+]
+},
+{
+id: "perfusione", title: "Indice di perfusione (PI) - OPZIONALE",
+note: "OPZIONALE - solo se il dispositivo riporta l'indice di perfusione (PI). Verifica del comportamento a basso segnale.",
+items: [
+{ id: "pi_basso", text: "Lettura PI bassa (< 1%): dispositivo riconosce condizione e segnala bassa perfusione" },
+{ id: "pi_norm", text: "Lettura PI normale (3-10%): valore stabile su simulatore" },
+]
+},
+{
+id: "registro", title: "Registro e documentazione",
+items: [
+{ id: "data_ora", text: "Data/ora di sistema corrette" },
+{ id: "memorizzazione", text: "Memorizzazione trend (se presente): funzionante" },
+{ id: "trasferimento", text: "Trasferimento dati / interfaccia (USB/Bluetooth, se prevista): funzionante" },
+{ id: "registro_aggiornato", text: "Registro manutenzioni aggiornato con data e firma tecnico" },
+]
+},
+]
+},
+"defibrillatore": {
+label: "Defibrillatore manuale", icon: "›", norm: "IEC 60601-2-4:2010+AMD1:2021",
+sections: [
+{
+id: "ispezione", title: "Ispezione visiva e meccanica",
+items: [
+{ id: "cavo_al", text: "Cavo alimentazione e spina: integri, nessun danno visibile" },
+{ id: "involucro", text: "Involucro e display: privi di crepe, bruciature o danni meccanici" },
+{ id: "piastre", text: "Palette/piastre manuali: superficie conduttiva integra, impugnatura isolata" },
+{ id: "pad_adesivi", text: "Pad adesivi (se presenti): non scaduti, gel integro, connettori OK" },
+{ id: "cavo_ecg", text: "Cavo ECG paziente e connettori: integrità isolamento, clip/elettrodi funzionanti" },
+{ id: "stampante", text: "Stampante termica: carta presente, funzionante" },
+{ id: "etichette", text: "Etichette di sicurezza, classe e numero serie: leggibili e presenti" },
+]
+},
+{
+id: "batteria", title: "Batteria e alimentazione",
+items: [
+{ id: "batt_scad", text: "Data scadenza batteria: non superata" },
+{ id: "batt_carica", text: "Indicatore carica: livello adeguato per utilizzo" },
+{ id: "batt_autotest", text: "Autotest batteria (se previsto dal costruttore): superato" },
+{ id: "rete_ok", text: "Funzionamento da rete: corretto, indicatore carica attivo" },
+],
+measures: [
+{ id: "batt_perc", name: "Carica residua batteria", unit: "%", expected: "≥ 80%", limitVal: 80, invertPass: true, value: "" },
+]
+},
+{
+id: "funz_base", title: "Funzionalità di base",
+items: [
+{ id: "accensione", text: "Accensione: nessun messaggio di errore o allarme anomalo" },
+{ id: "display", text: "Display: leggibile, nessun pixel morto o artefatto" },
+{ id: "sel_energia", text: "Selettore energia: funzionante a tutti i livelli (da minimo a massimo)" },
+{ id: "puls_carica", text: "Tasto CARICA: funzionante, tempo carica entro specifiche costruttore" },
+{ id: "puls_scarica", text: "Tasto SCARICA: funzionante (test su analizzatore/carico resistivo)" },
+{ id: "beep_carica", text: "Segnale acustico carica completata: presente e udibile" },
+{ id: "annullamento", text: "Annullamento carica (tasto o timeout): funzionante" },
+]
+},
+{
+id: "energia", title: "Energia erogata (IEC 60601-2-4 cl.201.12.4.101)",
+note: "Misurare con analizzatore certificato su carico resistivo 50 Ω. Tolleranza ammessa: ±15% del valore selezionato oppure ±3 J (si applica il maggiore dei due). Eseguire anche a 25 Ω e 175 Ω se richiesto dal costruttore.",
+items: [
+{ id: "carico_50", text: "Analizzatore collegato: carico 50 Ω" },
+{ id: "forma_onda", text: "Forma d'onda di scarica (bifasica/monofasica): conforme alle specifiche costruttore" },
+],
+measures: [
+{ id: "e_low", name: "Energia — selezione minima", unit: "J", expected: "sel. ±15% o ±3J", value: "" },
+{ id: "e_50j", name: "Energia — selezione 50 J", unit: "J", expected: "50 ±15% (42.5–57.5) o ±3J", limitVal: 57.5, limitMin: 42.5, value: "" },
+{ id: "e_100j", name: "Energia — selezione 100 J", unit: "J", expected: "100 ±15% (85–115)", limitVal: 115, limitMin: 85, value: "" },
+{ id: "e_150j", name: "Energia — selezione 150 J", unit: "J", expected: "150 ±15% (127.5–172.5)", limitVal: 172.5, limitMin: 127.5, value: "" },
+{ id: "e_200j", name: "Energia — selezione 200 J", unit: "J", expected: "200 ±15% (170–230)", limitVal: 230, limitMin: 170, value: "" },
+{ id: "e_max", name: "Energia — selezione massima", unit: "J", expected: "max ±15% o ±3J", value: "" },
+{ id: "t_carica", name: "Tempo di carica a energia max", unit: "s", expected: "≤ 15 s (IEC 60601-2-4)", limitVal: 15, value: "" },
+]
+},
+{
+id: "sync", title: "Cardioversione sincronizzata (IEC 60601-2-4 cl.201.12.4.4)",
+note: "Il ritardo tra picco R e inizio scarica deve essere < 60 ms (IEC 60601-2-4).",
+items: [
+{ id: "sync_attiva", text: "Modalità SYNC: attivabile, indicatore visivo presente" },
+{ id: "sync_marker", text: "Marker di sincronismo sull'onda R del tracciato ECG: visibile" },
+{ id: "sync_auto_off", text: "Disattivazione automatica SYNC dopo scarica: confermata" },
+],
+measures: [
+{ id: "sync_delay", name: "Ritardo scarica dal picco R (sync delay)", unit: "ms", expected: "< 60 ms", limitVal: 60, value: "" },
+]
+},
+{
+id: "ecg_mon", title: "Monitoraggio ECG (IEC 60601-2-27)",
+items: [
+{ id: "ecg_tracciato", text: "Tracciato ECG su simulatore: morfologia corretta, no artefatti" },
+{ id: "ecg_derivazioni", text: "Selezione derivazioni (I, II, III, aVR, aVL, aVF, V): funzionante" },
+{ id: "ecg_allarmi", text: "Allarmi FC alta/bassa: attivazione nei range impostati" },
+{ id: "ecg_vf", text: "Rilevazione FV (se previsto): segnale di allarme presente" },
+],
+measures: [
+{ id: "fc_sim60", name: "FC visualizzata — simulatore a 60 bpm", unit: "bpm", expected: "60 ±1% o ±1 bpm", limitVal: 61, limitMin: 59, value: "" },
+{ id: "fc_sim120", name: "FC visualizzata — simulatore a 120 bpm", unit: "bpm", expected: "120 ±1% o ±1 bpm", limitVal: 122, limitMin: 118, value: "" },
+]
+},
+{
+id: "pacing", title: "Pacing esterno transcutaneo (se presente)",
+items: [
+{ id: "pacing_attiva", text: "Modalità pacing: attivabile" },
+{ id: "pacing_freq", text: "Frequenza pacing: selezionabile nel range indicato" },
+{ id: "pacing_corrente", text: "Corrente stimolazione: selezionabile da min a max" },
+{ id: "pacing_cattura", text: "Cattura ventricolare verificabile su simulatore ECG" },
+{ id: "pacing_spike", text: "Spike di pacing visibile sul tracciato" },
+]
+},
+]
+},
+"dae": {
+label: "DAE — Defibrillatore Automatico Esterno", icon: "DAE", norm: "IEC 60601-2-4 / D.Lgs. 53/2021",
+sections: [
+{
+id: "ispezione", title: "Ispezione visiva e stato operativo",
+items: [
+{ id: "contenitore", text: "Contenitore/zaino: integrità, chiusura funzionante" },
+{ id: "segnalatore", text: "Segnalatore di pronto intervento (luce verde/LED): attivo" },
+{ id: "involucro", text: "Involucro DAE: privo di danni, sporco o umidità" },
+{ id: "display", text: "Display/segnalazioni vocali: funzionanti" },
+{ id: "pad_adulti", text: "Pad adulti: non scaduti, confezionamento integro" },
+{ id: "pad_pediatrici", text: "Pad pediatrici (se presenti): non scaduti, integri" },
+{ id: "accessori", text: "Accessori kit (forbici, rasoio, guanti, garze): presenti e integri" },
+]
+},
+{
+id: "batteria", title: "Batteria (IEC 60601-2-4)",
+items: [
+{ id: "batt_scad", text: "Data scadenza batteria: non superata" },
+{ id: "batt_status", text: "Indicatore stato batteria: OK / pronto" },
+{ id: "batt_autotest", text: "Autotest automatico superato (log di sistema)" },
+],
+measures: [
+{ id: "batt_perc", name: "Carica residua batteria", unit: "%", expected: "≥ 80%", limitVal: 80, invertPass: true, value: "" },
+{ id: "n_scariche", name: "Numero scariche residue stimate", unit: "n", expected: "≥ 100 scariche", limitVal: 100, invertPass: true, value: "" },
+]
+},
+{
+id: "funz_dae", title: "Verifica funzionale (con analizzatore/simulatore)",
+note: "Usare simulatore ECG con pattern FV/TV. NON eseguire scarica su persona.",
+items: [
+{ id: "analisi_fv", text: "Analisi ritmo FV: DAE consiglia scarica correttamente" },
+{ id: "analisi_rns", text: "Analisi ritmo sinusale normale: DAE NON consiglia scarica" },
+{ id: "guida_vocale", text: "Guida vocale durante procedura: chiara e corretta" },
+{ id: "segnale_cpr", text: "Segnale guida RCP post-scarica: presente (se previsto)" },
+]
+},
+{
+id: "energia_dae", title: "Verifica energia erogata",
+note: "Misurare con analizzatore su carico 50 Ω. Tolleranza ±15% o ±3J.",
+items: [
+{ id: "scarica_ok", text: "Scarica su carico 50 Ω: eseguita correttamente" },
+],
+measures: [
+{ id: "e_scarica1", name: "Energia 1ª scarica", unit: "J", expected: "secondo costruttore ±15%", value: "" },
+{ id: "e_scarica2", name: "Energia 2ª scarica (se escalation)", unit: "J", expected: "secondo costruttore ±15%", value: "" },
+]
+},
+{
+id: "registro", title: "Registro e documentazione",
+items: [
+{ id: "log_ok", text: "Log eventi scaricato e verificato (nessun allarme anomalo)" },
+{ id: "data_manut", text: "Data prossima manutenzione/scadenza aggiornata" },
+{ id: "posizione", text: "Segnaletica posizione DAE: visibile e corretta" },
+{ id: "registro_aggiornato", text: "Registro manutenzioni aggiornato" },
+]
+},
+]
+},
+"aspiratore_chirurgico": {
+label: "Aspiratore chirurgico / da secreti", icon: "ASP", norm: "ISO 10079-1:2015",
+sections: [
+{
+id: "ispezione", title: "Ispezione visiva e meccanica",
+items: [
+{ id: "cavo_al", text: "Cavo alimentazione: integro, spina OK" },
+{ id: "involucro", text: "Involucro e carrello (se presente): integrità strutturale" },
+{ id: "tubazioni", text: "Tubazioni, raccordi e connettori: integri, senza cricche o occlusioni" },
+{ id: "filtro_batt", text: "Filtro batterico: presente, non scaduto, non otturato" },
+{ id: "filtro_idr", text: "Filtro idrofobico (protezione pompa): presente e integro" },
+{ id: "contenitore", text: "Contenitore liquidi: integro, guarnizioni OK, sistema di smaltimento funzionante" },
+{ id: "overflow", text: "Dispositivo di protezione overflow: presente e funzionante" },
+{ id: "valvola_sic", text: "Valvola di sicurezza/limitatore di pressione: presente" },
+]
+},
+{
+id: "vuoto", title: "Verifica del vuoto (ISO 10079-1 cl.5.2)",
+note: "Aspiratore chirurgico: vuoto max ≥ 80 kPa. Aspiratore da secreti: ≥ 60 kPa. Misurare a contenitore chiuso.",
+items: [
+{ id: "otturazione", text: "Occlusione dell'uscita paziente: corretta per test" },
+],
+measures: [
+{ id: "vuoto_max", name: "Vuoto massimo (contenitore chiuso)", unit: "kPa", expected: "≥ 80 kPa (chirurgico) / ≥ 60 kPa (secreti)", limitVal: 80, invertPass: true, value: "" },
+{ id: "t_vuoto", name: "Tempo raggiungimento vuoto max", unit: "s", expected: "< 20 s (chirurgico)", limitVal: 20, value: "" },
+]
+},
+{
+id: "portata", title: "Verifica portata (ISO 10079-1 cl.5.3)",
+note: "Portata libera misurata a pressione atmosferica. Chirurgico: ≥ 25 L/min. Da secreti: ≥ 15 L/min.",
+measures: [
+{ id: "portata_lib", name: "Portata libera (max, a 0 kPa)", unit: "L/min", expected: "≥ 25 L/min (chir.)", limitVal: 25, invertPass: true, value: "" },
+{ id: "portata_50", name: "Portata a 50 kPa di depressione", unit: "L/min", expected: "≥ 15 L/min", limitVal: 15, invertPass: true, value: "" },
+{ id: "regolazione", name: "Depressione regolabile (valore max impostato)", unit: "kPa", expected: "regolabile", value: "" },
+]
+},
+{
+id: "batteria_asp", title: "Batteria (se dispositivo portatile)",
+items: [
+{ id: "batt_scad", text: "Batteria: non scaduta, carica adeguata" },
+{ id: "autonomia", text: "Autonomia su batteria: sufficiente per l'uso previsto" },
+],
+measures: [
+{ id: "batt_perc", name: "Carica residua", unit: "%", expected: "≥ 80%", limitVal: 80, invertPass: true, value: "" },
+]
+},
+]
+},
+"elettrobisturi": {
+label: "Elettrobisturi / Unità HF chirurgica", icon: "ESU", norm: "IEC 60601-2-2:2017",
+sections: [
+{
+id: "ispezione", title: "Ispezione visiva",
+items: [
+{ id: "cavo_al", text: "Cavo alimentazione e spina: integrità isolamento" },
+{ id: "involucro", text: "Involucro: privo di danni, ventilazione libera" },
+{ id: "cavi_att", text: "Cavi elettrodi attivi (monopolare/bipolare): isolamento integro, connettori OK" },
+{ id: "elettrodo_n", text: "Elettrodo neutro (piastra): integrità, connettore, cavo" },
+{ id: "pedale", text: "Pedale di comando (se presente): funzionante, cavo integro" },
+{ id: "etichette", text: "Etichette potenza, avvertenze e classe: leggibili" },
+]
+},
+{
+id: "funz_hf", title: "Verifica funzionale",
+items: [
+{ id: "accensione", text: "Accensione: nessun allarme anomalo" },
+{ id: "display", text: "Display potenza e modalità: corretto" },
+{ id: "sel_modo", text: "Selezione modalità (CUT/COAG/BLEND): funzionante" },
+{ id: "attivazione", text: "Attivazione manuale e pedale: funzionanti" },
+{ id: "allarme_en", text: "Allarme elettrodo neutro disconnesso: attivo (IEC 60601-2-2 cl.201.8.4)" },
+]
+},
+{
+id: "potenza", title: "Verifica potenza erogata (IEC 60601-2-2 cl.201.12.4.101)",
+note: "Misurare con analizzatore HF certificato su carico resistivo. Tolleranza: ±20% della potenza nominale per ciascuna modalità.",
+items: [
+{ id: "carico_300", text: "Analizzatore su carico resistivo 300 Ω (monopolare standard)" },
+],
+measures: [
+{ id: "p_cut_low", name: "Potenza CUT — selezione bassa (es. 30W)", unit: "W", expected: "30 ±20% (24–36 W)", limitVal: 36, limitMin: 24, value: "" },
+{ id: "p_cut_med", name: "Potenza CUT — selezione media (es. 60W)", unit: "W", expected: "60 ±20% (48–72 W)", limitVal: 72, limitMin: 48, value: "" },
+{ id: "p_cut_high", name: "Potenza CUT — selezione alta (es. 100W)", unit: "W", expected: "100 ±20% (80–120 W)", limitVal: 120, limitMin: 80, value: "" },
+{ id: "p_coag_low", name: "Potenza COAG — selezione bassa", unit: "W", expected: "secondo costruttore ±20%", value: "" },
+{ id: "p_coag_high", name: "Potenza COAG — selezione alta", unit: "W", expected: "secondo costruttore ±20%", value: "" },
+{ id: "p_bip", name: "Potenza BIPOLARE (se presente)", unit: "W", expected: "secondo costruttore ±20%", value: "" },
+{ id: "i_hf_leak", name: "Corrente di perdita HF (IEC 60601-2-2 cl.202.8.4)", unit: "mA", expected: "< 150 mA", limitVal: 150, value: "" },
+]
+},
+]
+},
+"monitor_multipar": {
+label: "Monitor multiparametrico", icon: "MON", norm: "IEC 60601-2-27/30/49 · ISO 80601-2-61",
+sections: [
+{
+id: "ispezione", title: "Ispezione visiva",
+items: [
+{ id: "cavo_al", text: "Cavo alimentazione: integro" },
+{ id: "involucro", text: "Involucro e schermo: privi di danni, schermo leggibile" },
+{ id: "cavi_paz", text: "Cavi paziente (ECG, SpO2, NIBP, temperatura): integrità e connettori" },
+{ id: "manicotti", text: "Manicotti NIBP: integrità, assenza perdite d'aria" },
+{ id: "sensori", text: "Sensori SpO2 e temperatura: condizioni operative OK" },
+]
+},
+{
+id: "ecg_mon", title: "ECG (IEC 60601-2-27)",
+note: "Tolleranza FC: ±1% del valore visualizzato oppure ±1 bpm (il maggiore dei due).",
+items: [
+{ id: "tracciato", text: "Tracciato ECG con simulatore: morfologia corretta, assenza artefatti" },
+{ id: "derivazioni", text: "Selezione derivazioni: tutte funzionanti (almeno I, II, III)" },
+{ id: "allarmi_fc", text: "Allarmi FC alta/bassa: attivazione nei limiti impostati" },
+{ id: "st_analisi", text: "Analisi del tratto ST (se presente): visualizzazione corretta" },
+],
+measures: [
+{ id: "fc_30", name: "FC — simulatore 30 bpm", unit: "bpm", expected: "30 ±1 bpm", limitVal: 31, limitMin: 29, value: "" },
+{ id: "fc_60", name: "FC — simulatore 60 bpm", unit: "bpm", expected: "60 ±1 bpm", limitVal: 61, limitMin: 59, value: "" },
+{ id: "fc_120", name: "FC — simulatore 120 bpm", unit: "bpm", expected: "120 ±1 bpm", limitVal: 121, limitMin: 119, value: "" },
+{ id: "fc_200", name: "FC — simulatore 200 bpm", unit: "bpm", expected: "200 ±1% o ±1 bpm", limitVal: 202, limitMin: 198, value: "" },
+]
+},
+{
+id: "spo2", title: "SpO₂ (ISO 80601-2-61)",
+note: "Accuratezza richiesta: ±3% ARMS nel range 70–100% SaO2.",
+items: [
+{ id: "spo2_display", text: "Visualizzazione SpO2 e curva pletismografica: corretta" },
+{ id: "spo2_allarmi", text: "Allarmi SpO2 bassa: attivazione corretta" },
+],
+measures: [
+{ id: "spo2_98", name: "SpO2 — simulatore 98%", unit: "%", expected: "98 ±3% (95–100)", limitVal: 100, limitMin: 95, value: "" },
+{ id: "spo2_90", name: "SpO2 — simulatore 90%", unit: "%", expected: "90 ±3% (87–93)", limitVal: 93, limitMin: 87, value: "" },
+{ id: "spo2_80", name: "SpO2 — simulatore 80%", unit: "%", expected: "80 ±3% (77–83)", limitVal: 83, limitMin: 77, value: "" },
+{ id: "fc_spo2", name: "FC da SpO2 — simulatore 60 bpm", unit: "bpm", expected: "60 ±3 bpm", limitVal: 63, limitMin: 57, value: "" },
+]
+},
+{
+id: "nibp", title: "NIBP — PA non invasiva (IEC 60601-2-30)",
+note: "Errore medio ≤ 5 mmHg, deviazione standard ≤ 8 mmHg (IEC 60601-2-30 cl.201.12.1.101).",
+items: [
+{ id: "gonfiaggio", text: "Gonfiaggio e sgonfiaggio automatico: corretto" },
+{ id: "allarmi_pa", text: "Allarmi PA alta/bassa: attivazione corretta" },
+{ id: "modalita", text: "Modalità manuale, automatica e STAT: funzionanti" },
+],
+measures: [
+{ id: "pa_sis_120", name: "PA sistolica — riferimento 120 mmHg", unit: "mmHg", expected: "120 ±5 mmHg (115–125)", limitVal: 125, limitMin: 115, value: "" },
+{ id: "pa_dias_80", name: "PA diastolica — riferimento 80 mmHg", unit: "mmHg", expected: "80 ±5 mmHg (75–85)", limitVal: 85, limitMin: 75, value: "" },
+{ id: "pa_map_93", name: "PA media (MAP) — riferimento 93 mmHg", unit: "mmHg", expected: "93 ±5 mmHg", limitVal: 98, limitMin: 88, value: "" },
+]
+},
+{
+id: "temp", title: "Temperatura (IEC 60601-2-56)",
+note: "Accuratezza richiesta: ±0.3°C nel range clinico 35–42°C.",
+measures: [
+{ id: "temp_37", name: "Temperatura — riferimento 37.0°C", unit: "°C", expected: "37.0 ±0.3°C (36.7–37.3)", limitVal: 37.3, limitMin: 36.7, value: "" },
+{ id: "temp_39", name: "Temperatura — riferimento 39.0°C", unit: "°C", expected: "39.0 ±0.3°C (38.7–39.3)", limitVal: 39.3, limitMin: 38.7, value: "" },
+]
+},
+{
+id: "allarmi_mon", title: "Sistema allarmi (IEC 60601-1-8)",
+note: "IEC 60601-1-8 impone che tutti gli allarmi di priorità alta siano visivi E acustici.",
+items: [
+{ id: "allarme_vis", text: "Allarmi alta priorità: segnalazione visiva (lampeggio rosso) presente" },
+{ id: "allarme_ac", text: "Allarmi alta priorità: segnalazione acustica presente e udibile" },
+{ id: "allarme_sil", text: "Silenziamento allarmi: funzionante con ripristino automatico" },
+{ id: "allarme_tecn", text: "Allarmi tecnici (guasto tecnico, batteria scarica): attivazione corretta" },
+]
+},
+{
+id: "etco2", title: "etCO₂ (ISO 80601-2-55) — se presente",
+measures: [
+{ id: "etco2_val", name: "etCO2 — gas di riferimento (es. 38 mmHg)", unit: "mmHg", expected: "±2 mmHg o ±8%", value: "" },
+{ id: "fr_etco2", name: "FR da capnografia", unit: "atti/min", expected: "±1 atto/min", value: "" },
+]
+},
+]
+},
+"ventilatore": {
+label: "Ventilatore polmonare (terapia intensiva)", icon: "VEN", norm: "ISO 80601-2-12:2020",
+sections: [
+{
+id: "ispezione", title: "Ispezione visiva e meccanica",
+items: [
+{ id: "cavo_al", text: "Cavo alimentazione e spina: integri" },
+{ id: "involucro", text: "Involucro: privo di danni, ventilazione libera" },
+{ id: "circuito", text: "Circuito paziente: integrità tubi, raccordi, valvole espiratoria/inspiratoria" },
+{ id: "filtri", text: "Filtri (antibatterico, HMEF): presenti e non scaduti" },
+{ id: "sensori_fl", name: "Sensori di flusso e pressione: puliti, non otturati" },
+{ id: "umidif", text: "Umidificatore (se presente): livello acqua corretto, integro" },
+{ id: "polmone_test", text: "Polmone test per calibrazione: disponibile" },
+{ id: "o2_supply", text: "Alimentazione O2 e aria compressa: pressione corretta (3.5–6 bar)" },
+]
+},
+{
+id: "calibrazione", title: "Calibrazione e autotest",
+items: [
+{ id: "autotest", text: "Autotest all'accensione: superato senza errori" },
+{ id: "calib_fluido", text: "Calibrazione sensori di flusso: eseguita secondo costruttore" },
+{ id: "test_tenuta", text: "Test tenuta circuito (leak test): perdita entro specifiche costruttore" },
+{ id: "calib_o2", text: "Calibrazione cella O2 (se applicabile): eseguita" },
+]
+},
+{
+id: "parametri", title: "Verifica accuratezza parametri erogati (ISO 80601-2-12 cl.201.12.4)",
+note: "ISO 80601-2-12: VT ±10% o ±10 mL; FR ±1 atto/min; PEEP ±2 cmH2O; FiO2 ±3%; Ppeak ±4% o ±2 cmH2O.",
+items: [
+{ id: "connessione", text: "Ventilatore connesso al polmone test" },
+],
+measures: [
+{ id: "vt_500", name: "Volume corrente erogato (impostato 500 mL)", unit: "mL", expected: "500 ±10% (450–550)", limitVal: 550, limitMin: 450, value: "" },
+{ id: "fr_15", name: "Frequenza respiratoria (impostata 15 a/min)", unit: "atti/min", expected: "15 ±1 (14–16)", limitVal: 16, limitMin: 14, value: "" },
+{ id: "peep_5", name: "PEEP (impostata 5 cmH2O)", unit: "cmH2O", expected: "5 ±2 (3–7)", limitVal: 7, limitMin: 3, value: "" },
+{ id: "peep_10", name: "PEEP (impostata 10 cmH2O)", unit: "cmH2O", expected: "10 ±2 (8–12)", limitVal: 12, limitMin: 8, value: "" },
+{ id: "fio2_40", name: "FiO2 (impostata 40%)", unit: "%", expected: "40 ±3% (37–43)", limitVal: 43, limitMin: 37, value: "" },
+{ id: "fio2_100", name: "FiO2 (impostata 100%)", unit: "%", expected: "100 ±3% (97–100)", limitVal: 100, limitMin: 97, value: "" },
+{ id: "ppeak", name: "Pressione di picco inspiratoria", unit: "cmH2O", expected: "±4% o ±2 cmH2O del valore misurato", value: "" },
+]
+},
+{
+id: "allarmi_vent", title: "Allarmi (ISO 80601-2-12 + IEC 60601-1-8)",
+note: "Allarmi obbligatori per ventilatori TI: disconnessione, alta pressione, apnea, alimentazione gas, O2.",
+items: [
+{ id: "alarm_disc", text: "Allarme DISCONNESSIONE paziente: attivazione < 15 s" },
+{ id: "alarm_press", text: "Allarme ALTA PRESSIONE: attivazione al superamento del limite impostato" },
+{ id: "alarm_apnea", text: "Allarme APNEA: attivazione entro il tempo impostato (default 20 s)" },
+{ id: "alarm_o2", text: "Allarme MANCANZA O2/ARIA: attivazione corretta" },
+{ id: "alarm_power", text: "Allarme MANCANZA ALIMENTAZIONE elettrica: attivazione" },
+{ id: "batt_vent", text: "Autonomia su batteria interna: sufficiente (≥ 30 min o secondo costruttore)" },
+{ id: "alarm_fio2", text: "Allarme FiO2 bassa/alta: attivazione corretta (se presente)" },
+]
+},
+]
+},
+"pompa_infusionale": {
+label: "Pompa infusionale / siringa elettrica", icon: "POM", norm: "IEC 60601-2-24:2012",
+sections: [
+{
+id: "ispezione", title: "Ispezione visiva",
+items: [
+{ id: "cavo_al", text: "Cavo alimentazione: integro" },
+{ id: "involucro", text: "Involucro: privo di danni, slot siringa/sacca funzionante" },
+{ id: "display", text: "Display e tastiera: leggibili e funzionanti" },
+{ id: "porta_set", text: "Porta set infusionale / sede siringa: pulizia, usura meccanismo" },
+{ id: "sensori", text: "Sensori aria in linea e occlusione: presenti e attivi" },
+]
+},
+{
+id: "accuratezza", title: "Accuratezza portata (IEC 60601-2-24 cl.201.12.4.101)",
+note: "IEC 60601-2-24: errore portata ≤ ±5% dopo periodo di stabilizzazione (almeno 1h a portata nominale). Misurare con metodo gravimetrico o contagocce calibrato.",
+items: [
+{ id: "stabilizz", text: "Periodo di stabilizzazione ≥ 1 ora prima della misurazione" },
+{ id: "metodo_grav", text: "Metodo di misura: gravimetrico (bilancia ±0.01 g) o contagocce calibrato" },
+],
+measures: [
+{ id: "q_5", name: "Portata — impostata 5 mL/h", unit: "mL/h", expected: "5 ±5% (4.75–5.25)", limitVal: 5.25, limitMin: 4.75, value: "" },
+{ id: "q_25", name: "Portata — impostata 25 mL/h", unit: "mL/h", expected: "25 ±5% (23.75–26.25)", limitVal: 26.25, limitMin: 23.75, value: "" },
+{ id: "q_100", name: "Portata — impostata 100 mL/h", unit: "mL/h", expected: "100 ±5% (95–105)", limitVal: 105, limitMin: 95, value: "" },
+{ id: "q_kvo", name: "Portata KVO (Keep Vein Open)", unit: "mL/h", expected: "1–5 mL/h (secondo costruttore)", value: "" },
+]
+},
+{
+id: "allarmi_pompa", title: "Allarmi (IEC 60601-2-24 + IEC 60601-1-8)",
+items: [
+{ id: "alarm_occ", text: "Allarme OCCLUSIONE a valle: attivazione entro pressione specificata dal costruttore" },
+{ id: "alarm_aria", text: "Allarme ARIA IN LINEA: attivazione con bolla ≥ 50 µL (se presente sensore)" },
+{ id: "alarm_fine", text: "Allarme FINE INFUSIONE / SIRINGA QUASI VUOTA: attivazione corretta" },
+{ id: "alarm_batt", text: "Allarme BATTERIA SCARICA: attivazione con preavviso adeguato" },
+{ id: "alarm_porta", text: "Allarme PORTA APERTA / SIRINGA RIMOSSA: attivazione immediata" },
+]
+},
+{
+id: "batteria_pompa", title: "Batteria",
+items: [
+{ id: "batt_scad", text: "Batteria: non scaduta" },
+],
+measures: [
+{ id: "batt_perc", name: "Carica residua", unit: "%", expected: "≥ 80%", limitVal: 80, invertPass: true, value: "" },
+{ id: "autonomia_h", name: "Autonomia su batteria", unit: "h", expected: "≥ 4 h (o secondo costruttore)", limitVal: 4, invertPass: true, value: "" },
+]
+},
+]
+},
+"ecografo": {
+label: "Ecografo", icon: "ECO", norm: "IEC 60601-2-37:2007+AMD1:2015",
+sections: [
+{
+id: "ispezione", title: "Ispezione visiva",
+items: [
+{ id: "cavo_al", text: "Cavo alimentazione: integro" },
+{ id: "involucro", text: "Carrello/console: integrità strutturale, stabilità" },
+{ id: "sonde", text: "Sonde: nessuna cricca, scheggia o delaminazione del trasduttore" },
+{ id: "cavi_sonde", text: "Cavi sonde: isolamento integro, connettori puliti e funzionanti" },
+{ id: "monitor", text: "Monitor: nessun pixel morto, luminosità adeguata" },
+{ id: "gel", text: "Gel ecografico: disponibile e adeguato" },
+]
+},
+{
+id: "funz_eco", title: "Verifica funzionale",
+note: "Usare fantoccio ecografico (phantom) per verifica accuratezza. Se non disponibile, documentare verifica su soggetto/mano.",
+items: [
+{ id: "accensione", text: "Accensione: nessun errore, autotest OK" },
+{ id: "b_mode", text: "Modalità B-mode: immagine acquisita, risoluzione adeguata" },
+{ id: "m_mode", text: "Modalità M-mode (se presente): tracciato tempo/movimento corretto" },
+{ id: "doppler_col", text: "Color Doppler (se presente): flusso visualizzato correttamente" },
+{ id: "doppler_pw", text: "PW/CW Doppler (se presente): spettro Doppler corretto" },
+{ id: "misure", text: "Misure caliper (distanza/area): funzionanti" },
+{ id: "stampa_arch", text: "Stampa/archiviazione immagini: funzionante" },
+{ id: "selezione_sonde", text: "Selezione sonde (se multiple): tutte riconosciute" },
+]
+},
+{
+id: "phantom", title: "Verifica con fantoccio (phantom test)",
+note: "Se disponibile fantoccio calibrato, verificare risoluzione assiale/laterale e accuratezza distanze.",
+measures: [
+{ id: "dist_10mm", name: "Distanza misurata — target 10 mm", unit: "mm", expected: "10 ±1 mm (±10%)", limitVal: 11, limitMin: 9, value: "" },
+{ id: "dist_50mm", name: "Distanza misurata — target 50 mm", unit: "mm", expected: "50 ±5 mm (±10%)", limitVal: 55, limitMin: 45, value: "" },
+{ id: "profondita", name: "Profondità massima immagine", unit: "cm", expected: "secondo costruttore", value: "" },
+]
+},
+]
+},
+"letto_elettrico": {
+label: "Letto elettrico / barella motorizzata", icon: "LET", norm: "IEC 60601-2-38:2014",
+sections: [
+{
+id: "ispezione", title: "Ispezione visiva e meccanica",
+items: [
+{ id: "cavo_al", text: "Cavo alimentazione e spina: integri, nessun danno" },
+{ id: "struttura", text: "Struttura, sponde e materasso: integrità, nessun spigolo tagliente" },
+{ id: "freni", text: "Freni ruote: funzionanti su tutti i punti di frenatura" },
+{ id: "comandi", text: "Comandi paziente e infermiere: tutti funzionanti, etichettati" },
+{ id: "cavo_comandi", text: "Cavo telecomando: integro, connettore OK" },
+{ id: "fine_corsa", text: "Fine corsa meccanici e elettrici: presenti e funzionanti" },
+{ id: "giunti", text: "Giunti, snodi e meccanismi di articolazione: lubrificati, nessun gioco anomalo" },
+]
+},
+{
+id: "movimenti", title: "Verifica movimenti (IEC 60601-2-38 cl.201.15)",
+note: "Verificare assenza di movimenti inattesi, vibrazioni, rumori anomali. Velocità massima limitata da norma.",
+items: [
+{ id: "schienale_su", text: "Alzata schienale: movimento fluido, senza scatti, fine corsa funzionante" },
+{ id: "schienale_giu", text: "Abbassamento schienale: corretto" },
+{ id: "trendelenburg", text: "Trendelenburg (se presente): movimento fluido, fine corsa OK" },
+{ id: "antitrendel", text: "Anti-Trendelenburg (se presente): corretto" },
+{ id: "alzata_letto", text: "Alzata/abbassamento altezza letto: fluido, nessun bloccaggio" },
+{ id: "sponde_el", text: "Sponde elettriche (se presenti): alzata/abbassamento corretti" },
+{ id: "posizione_card", text: "Posizione cardiaca/sedia (se presente): funzionante" },
+{ id: "posizione_prone", text: "Posizione prona (se presente): corretta" },
+],
+measures: [
+{ id: "altezza_min", name: "Altezza minima dal suolo", unit: "cm", expected: "≤ 40 cm (accessibilità)", value: "" },
+{ id: "altezza_max", name: "Altezza massima dal suolo", unit: "cm", expected: "secondo costruttore", value: "" },
+{ id: "angolo_schienale", name: "Angolo massimo schienale", unit: "°", expected: "≥ 75°", limitVal: 75, invertPass: true, value: "" },
+]
+},
+{
+id: "sicurezza_letto", title: "Sicurezza e carichi",
+items: [
+{ id: "carico_max", text: "Carico massimo: etichetta presente e leggibile" },
+{ id: "arresto_emerg", text: "Tasto di arresto emergenza (se presente): funzionante" },
+{ id: "sovraccarico", text: "Protezione da sovraccarico: attiva" },
+{ id: "cpe", text: "Sistema CPR/RCP (tasto emergenza schienale piatto): funzionante e raggiungibile" },
+]
+},
+]
+},
+"generico": {
+label: "Apparecchio generico", icon: "›", norm: "IEC 60601-1 generale",
+sections: [
+{
+id: "ispezione", title: "Ispezione visiva e meccanica",
+items: [
+{ id: "cavo_al", text: "Cavo alimentazione e spina: integri" },
+{ id: "involucro", text: "Involucro: privo di danni meccanici visibili" },
+{ id: "acc", text: "Accessori e cavi paziente: integrità isolamento e connettori" },
+{ id: "etichette", text: "Etichette identificazione, classe, tensione: presenti e leggibili" },
+{ id: "ventilazione", text: "Aperture di ventilazione: libere, non ostruite" },
+]
+},
+{
+id: "funz_gen", title: "Verifica funzionale generale",
+items: [
+{ id: "accensione", text: "Accensione regolare: nessun messaggio di errore" },
+{ id: "autotest", text: "Autotest (se previsto): superato" },
+{ id: "funzione_1", text: "Funzione principale 1: operativa e conforme alle specifiche" },
+{ id: "funzione_2", text: "Funzione principale 2: operativa" },
+{ id: "allarmi", text: "Sistema allarmi: funzionante (visivo e acustico)" },
+{ id: "display", text: "Display e interfaccia: leggibili e funzionanti" },
+]
+},
+{
+id: "misure_gen", title: "Misure (compilare secondo tipo apparecchio)",
+measures: [
+{ id: "misura_1", name: "Misura 1 (specificare)", unit: "", expected: "secondo costruttore", value: "" },
+{ id: "misura_2", name: "Misura 2 (specificare)", unit: "", expected: "secondo costruttore", value: "" },
+{ id: "misura_3", name: "Misura 3 (specificare)", unit: "", expected: "secondo costruttore", value: "" },
+]
+},
+]
+},
+};
+const FUNC_TEMPLATE_MAP = [
+{ keys: ["pulsossimetro", "pulsossimetria", "saturimetro", "spo2", "ossimetro", "pulse ox"], id: "pulsossimetro" },
+{ keys: ["defibrillatore manuale", "defib manual", "cardioversore"], id: "defibrillatore" },
+{ keys: ["dae", "aed", "defibrillatore automatico", "defibrillatore semiautomatico"], id: "dae" },
+{ keys: ["aspiratore chirurgico", "aspiratore mucosità", "aspiratore secreti", "aspiratore"], id: "aspiratore_chirurgico" },
+{ keys: ["elettrobisturi", "bisturi elettrico", "hf chirurgico", "chirurgia hf"], id: "elettrobisturi" },
+{ keys: ["monitor multipar", "monitor paziente", "multiparametrico", "bedside monitor"], id: "monitor_multipar" },
+{ keys: ["ventilatore", "respiratore", "polmonare"], id: "ventilatore" },
+{ keys: ["pompa infus", "siringa infus", "infusore", "syringe pump"], id: "pompa_infusionale" },
+{ keys: ["ecografo", "ecografia", "ultrasound"], id: "ecografo" },
+{ keys: ["letto elettr", "barella motor"], id: "letto_elettrico" },
+];
+function guessTemplate(assetName) {
+if (!assetName)
+return "generico";
+const n = assetName.toLowerCase();
+for (const { keys, id } of FUNC_TEMPLATE_MAP) {
+if (keys.some(k => n.includes(k)))
+return id;
+}
+return "generico";
+}
+const CUSTOM_TPL_KEY = "medtrace-custom-templates";
+function loadCustomTemplates() {
+try {
+const r = localStorage.getItem(CUSTOM_TPL_KEY);
+return r ? JSON.parse(r) : {};
+}
+catch (e) {
+return {};
+}
+}
+function saveCustomTemplates(tpls) {
+try {
+localStorage.setItem(CUSTOM_TPL_KEY, JSON.stringify(tpls));
+return true;
+}
+catch (e) {
+return false;
+}
+}
+function getAllTemplates(custom) {
+const merged = Object.assign({}, FUNC_TEMPLATES);
+const c = custom || {};
+for (const k in c) {
+merged[k] = Object.assign(Object.assign({}, c[k]), { isCustom: true });
+}
+return merged;
+}
+function blankTemplate() {
+return {
+id: "custom_" + Date.now(),
+label: "", icon: "›", norm: "",
+isCustom: true,
+sections: [
+{ id: "sez1", title: "Ispezione visiva", items: [{ id: "item1", text: "" }], measures: [] },
+],
+};
+}
+const HELP_SECTIONS = [
+{
+icon: "◈", title: "Dashboard", color: "#2DD4BF",
+steps: [
+"Quando apri l'app vedi 5 pillole con i numeri principali: apparecchi totali, job aperti, verifiche di sicurezza elettrica, verifiche funzionali, clienti. Clicca una pillola per andare alla sezione.",
+"Sotto le pillole c'è la sezione 'DA FARE' con tutte le cose da prendere in carico: job urgenti, manutenzioni scadute, scadenze entro 7 giorni, parti sotto scorta. Ogni voce è cliccabile e ti porta dritto al filtro giusto.",
+"Più in basso 'CRITICO' mostra le emergenze (job urgenti aperti + manutenzioni scadute), e 'PROSSIMI 30 GIORNI' è il calendario delle manutenzioni imminenti ordinate per data.",
+"La riga finale è il riepilogo discreto: operativi, in manutenzione, fuori servizio, garanzie in scadenza, preventivi aperti — tutto cliccabile."
+]
+},
+{
+icon: "›", title: "Apparecchi (Parco Macchine)", color: "#2DD4BF",
+steps: [
+"Premi '+ Nuovo' in alto a destra per aggiungere un apparecchio. Compila: nome, marca, modello, S/N, cliente, ubicazione, classe di rischio, norma IEC, classe elettrica (I/II/III), tipo parte applicata (B/BF/CF), date acquisto/garanzia/prossimo servizio.",
+"Mobile: tocca una card per aprire la scheda dettaglio. I 4 pulsanti in basso sono: ⚡ Sicur. (verifica sicurezza elettrica), ✓ Funz. (verifica funzionale), ✏ Mod. (modifica), ✕ (sposta nel cestino, da cui puoi ripristinare).",
+"CODICE IN EVIDENZA: ogni apparecchio mostra in grande il suo codice leggibile (es. COO-001) e il numero di serie — così riconosci subito QUALE macchina è, non solo il tipo. Il tipo (es. 'Sollevamalati') è l'informazione secondaria.",
+"VISTA SCHEDE / TABELLA (mobile e tablet): in alto trovi l'interruttore '▤ Tabella / ▦ Schede'. La Tabella è una vista tipo Excel con filtri sotto ogni colonna, ordinamento toccando l'intestazione, ricerca e export — comoda per filtrare al volo senza il pannello filtri. La scelta resta memorizzata.",
+"Sopra le card hai anche la ricerca testuale e il pulsante 'Filtri' per filtrare per marca, modello, ubicazione, stato, cliente o classe di rischio.",
+"GESTO MOBILE: swipe a sinistra su una card per spostarla nel cestino (con conferma).",
+"Desktop: doppio clic su una riga per aprire la scheda dettaglio. La tabella ha filtri colonna e ricerca globale.",
+"INTERVALLI VERIFICA: ogni apparecchio ha due intervalli indipendenti (in mesi): uno per la Sicurezza Elettrica e uno per la Funzionale. Servono perché spesso hanno periodicità diverse (es. elettrica ogni 12 mesi, funzionale ogni 24 da manuale). Da questi l'app calcola le prossime scadenze e la data sullo sticker. Default 12 mesi entrambi.",
+"STORICO: nella scheda apparecchio la tab '🕑 Storico' mostra tutto ciò che è successo alla macchina (verifiche di sicurezza, funzionali e job) in un'unica linea temporale, dal più recente. Utile quando sei davanti all'apparecchio per capirne la storia a colpo d'occhio.",
+"VISTA COMPATTA: nelle liste mobile (apparecchi e verifiche) il pulsante '≣ Vista compatta / ▤ Vista estesa' alterna righe dense (più elementi a schermo) e schede ampie."
+]
+},
+{
+icon: "›", title: "Job / Interventi", color: "#f59e0b",
+steps: [
+"Un Job è qualsiasi intervento su un apparecchio: correttivo, preventivo, taratura, ecc. Crealo con '+ Nuovo' oppure dalla scheda apparecchio.",
+"Sopra la lista hai 3 tab: APERTI (default, mostra solo job non chiusi), TUTTI, CHIUSI. Ogni tab ha un contatore live.",
+"TIMELINE INTERVENTI: dentro il job, sezione 'Timeline interventi' con pulsante '+ Nuovo passaggio'. Per ogni passaggio scegli tipo (sopralluogo, attesa preventivo, attesa parti, riparazione, test, consegna, chiamata, email, altro), data, ora, durata in minuti, tecnico e descrizione. Il tempo totale lavorato si calcola automaticamente.",
+"Aggiungi le parti usate dal magazzino — costo manodopera (ore × tariffa) + parti calcolato in tempo reale. C'è anche il campo VIAGGIO/TRASFERTA (€) da includere nel preventivo.",
+"SCARICO MAGAZZINO AUTOMATICO: quando porti un job a 'chiuso', le parti usate vengono scaricate automaticamente dalla giacenza. Se riapri il job, le parti rientrano. (Se modifichi le quantità mentre il job è già chiuso, riapri e richiudi per ricalcolare.)",
+"CREA PREVENTIVO DAL JOB: nella scheda dettaglio del job c'è il pulsante '📄 Crea preventivo' che apre un preventivo nuovo già compilato con manodopera, viaggio e parti di quel job. Utile per le correttive.",
+"Esempio uso timeline: 'Lunedì 30min sopralluogo' → 'Martedì 0min attesa preventivo' → 'Giovedì 90min riparazione' → 'Giovedì 15min test funzionale' → 'Giovedì 10min consegna'. Tutto questo appare nel PDF del job."
+]
+},
+{
+icon: "›", title: "Verifiche di Sicurezza Elettrica", color: "#a855f7",
+steps: [
+"Apri da menu 'Sicurezza Elettrica' oppure dalla scheda apparecchio (pulsante ⚡ Sicur.).",
+"Normative supportate: IEC 62353:2014 (test periodico elettromedicali) e IEC 61010-1 (strumenti laboratorio).",
+"STATO VERIFICA — nuovo: in cima al form ci sono due pulsanti: '✓ Verifica completata' oppure '⚠ Apparecchio non disponibile'. Se l'apparecchio è in uso, non si trova o il reparto non autorizza, scegli 'Non disponibile' e compili motivo + reparto + referente + 2 firme. Il sistema genera un report di mancata esecuzione invece della verifica.",
+"Classe apparecchio: I (con PE), II (doppio isolamento, no PE), III (SELV, alimentazione interna).",
+"Tipo parte applicata: B (contatto corpo, no PA isolata), BF (parte isolata, PA ≤5000µA alt.), CF (cardiaco, PA ≤50µA).",
+"Limiti IEC 62353:2014: Equipment Leakage Cl.I ≤500µA (diretto/differenziale) / ≤1000µA (alternativo); Cl.II ≤100µA / ≤500µA. Applied Part Leakage BF ≤5000µA, CF ≤50µA. PE Resistance ≤0.3Ω. Resistenza isolamento ≥2 MΩ.",
+"Tre metodi di misura selezionabili: DIRETTO (apparecchio alimentato, misura corrente da PE verso terra — adatto a stanze standard), DIFFERENZIALE (somma vettoriale L-N — adatto a circuiti con isolamento o trasformatore), ALTERNATIVO (apparecchio scollegato, simula corrente di guasto — adatto a sale operatorie con RCD/sistema IT). Il metodo si sceglie in base alla configurazione della stanza, NON del costruttore.",
+"N° rapporto auto-generato (es. VSE-2026-001) — puoi modificarlo manualmente se serve. Poi data, tecnico, e lo STRUMENTO di misura: una TENDINA elenca gli strumenti che hai registrato (selezionandone uno si compila in automatico anche il N° calibrazione); in alternativa puoi scriverlo a mano.",
+"CORRETTIVA AUTOMATICA: se la verifica viene eseguita e risulta NON CONFORME, l'app crea da sola un job di manutenzione correttiva aperto (priorità alta) collegato all'apparecchio, così resta in lista da sistemare. La verifica di chiusura la rifarai a mano dopo l'intervento.",
+"Ispezione visiva: per ogni voce ✓ OK / ✗ NO / N/D. Poi inserisci i valori misurati nelle caselle — PASS/FAIL si calcola automaticamente. Se un valore è fuori limite la casella diventa rossa e compare un avviso con il limite specifico (es. 'limite ≤ 500 µA'), così te ne accorgi subito.",
+"FIRMA DIGITALE: in fondo al form ci sono due aree firma. Usa la S-Pen del Galaxy o il dito per firmare. È sensibile alla pressione — premi più forte per linea più spessa.",
+"Tipo: 'periodica' (aggiorna la prossima scadenza secondo l'intervallo dell'apparecchio) oppure 'straordinaria' (non aggiorna la pianificazione).",
+"Il PDF include intestazione con nome azienda, dati apparecchio, dati cliente, ispezione visiva, tabella misure con limiti/valori/esito, e DOPPIA FIRMA (tecnico + referente reparto) come immagini scansionate."
+]
+},
+{
+icon: "›", title: "Verifiche Funzionali", color: "#0D9488",
+steps: [
+"Apri dalla scheda apparecchio (pulsante ✓ Funz.) oppure dal menu 'Verifiche Funzionali'.",
+"N° rapporto auto-generato (es. VF-2026-001) — modificabile se serve.",
+"Il template viene auto-rilevato dal nome dell'apparecchio. Template disponibili: Pulsossimetro, Defibrillatore manuale, DAE, Aspiratore chirurgico, Elettrobisturi, Monitor multiparametrico, Ventilatore polmonare, Pompa infusionale, Ecografo, Letto elettrico, Generico.",
+"Sicurezza Elettrica e Funzionale sono INDIPENDENTI. Ogni apparecchio può richiedere solo Sicurezza Elettrica, solo Funzionale, entrambe o nessuna — scegli tu di volta in volta quale eseguire dai pulsanti dedicati.",
+"Per ogni sezione: ✓ OK / ✗ NO / N/A (non applicabile) / — (non testato). Inserisci i valori numerici delle misure dove richiesti.",
+"Anche qui hai lo stato 'Apparecchio non disponibile', la TENDINA per scegliere lo strumento tra quelli registrati, e le DUE FIRME DIGITALI (tecnico + referente reparto).",
+"L'esito CONFORME/NON CONFORME/NON ESEGUITA si aggiorna man mano che compili. Se eseguita e NON CONFORME, viene creato automaticamente un job correttivo aperto collegato all'apparecchio.",
+"Il PDF segue lo stesso formato della sicurezza elettrica, con le sezioni specifiche del template scelto.",
+"TEMPLATE PERSONALIZZATI: col pulsante '⚙ Template' puoi creare i tuoi modelli di verifica (es. EN 60601-2-14, EN 62745) con sezioni, controlli sì/no e misure numeriche con limiti. Appaiono nel menu con una ★.",
+"STICKER QR (opzionale): puoi stampare uno sticker adesivo con QR e data della prossima scadenza da applicare sull'apparecchio. Di default NON viene chiesto al salvataggio (molti tecnici usano etichette scritte a mano); per fartelo proporre dopo ogni verifica attiva l'interruttore in Impostazioni → Preferenze. Lo trovi sempre col pulsante 🏷 nelle liste. Da scansionare con qualsiasi telefono; con il cloud attivo il QR apre il report online."
+]
+},
+{
+icon: "›", title: "Magazzino, Ordini, Scarichi", color: "#a855f7",
+steps: [
+"Stock Parti: ogni parte ha codice, nome, marca, ubicazione, quantità attuale, quantità minima, prezzo acquisto, prezzo vendita.",
+"Il bordo della card mobile è colorato: verde (stock OK), giallo (sotto soglia minima), rosso (esaurita).",
+"Filtri mobile: pulsante 'Filtri' per filtrare per marca o ubicazione.",
+"Pulsante '↓ Scarica' sulla card mobile apre il modulo scarico veloce: collega la parte a un apparecchio e registra l'uscita.",
+"Ordini Fornitori: crea ordine → al ricevimento clicca '✓ Ricevuto' per aggiornare automaticamente lo stock (entrata).",
+"SCARICO AUTOMATICO: quando un job collegato viene CHIUSO, le parti che ha usato escono automaticamente dalla giacenza (uscita). Riaprendo il job rientrano.",
+"Scarichi: storico di tutte le uscite con apparecchio, data, quantità.",
+"LOTTI A PREZZI DIVERSI: se ricevi lo stesso ricambio in lotti a costo diverso (es. 2 pezzi a 5€ lo scorso anno, 2 a 6€ quest'anno) e vuoi distinguerli, per ora crea due voci separate (es. 'Filtro X — lotto 2024' e 'Filtro X — lotto 2025')."
+]
+},
+{
+icon: "›", title: "Preventivi", color: "#2DD4BF",
+steps: [
+"Crea un preventivo con '+ Nuovo'. Il form è SNELLO: in cima solo l'essenziale (cliente + data + righe + totale). Numero, stato, scadenza, modalità di pagamento e note sono raccolti in 'Altri dettagli', una sezione richiudibile che apri solo se ti serve.",
+"Ogni voce: descrizione, quantità, prezzo unitario, aliquota IVA. Totali calcolati in tempo reale.",
+"SERVIZIO IN BLOCCO (contratti): nel riquadro 'Aggiungi servizio in blocco' scrivi un servizio (ci sono suggerimenti: verifica elettrica, funzionale, manutenzione…), il numero di macchine e il prezzo a macchina, e con '+ Aggiungi' crei una riga sola tipo 'Verifica di sicurezza elettrica (× 30 macchine)'. Comodo per i contratti su tante macchine, senza doverle scegliere una per una.",
+"DA UN JOB: puoi importare le righe da un job chiuso del cliente, oppure partire direttamente dal job (pulsante '📄 Crea preventivo' nella scheda del job), che porta manodopera, viaggio e parti.",
+"Stati: bozza → emessa → pagata → scaduta → annullato. Filtri per stato o cliente.",
+"Pulsante PDF genera il preventivo A4 con intestazione azienda, dati cliente, tabella voci, imponibile/IVA/totale, IBAN per pagamento.",
+"NOTA: l'app gestisce i PREVENTIVI (le fatture vere si emettono col tuo gestionale fiscale)."
+]
+},
+{
+icon: "🗑", title: "Cestino", color: "#5EEAD4",
+steps: [
+"Quando elimini qualcosa (apparecchio, job, verifica, cliente, ricambio, preventivo, procedura) non sparisce per sempre: viene SPOSTATO nel cestino.",
+"Apri il cestino da Impostazioni → 🗑 Cestino. Vedi gli elementi raggruppati per tipo con la data di cancellazione.",
+"Per ogni elemento puoi RIPRISTINARLO (torna nelle liste) oppure ELIMINARLO definitivamente (con doppia conferma, non più recuperabile).",
+"Gli elementi nel cestino si svuotano automaticamente dopo 90 giorni.",
+"Nella versione online il cestino è condiviso e sincronizzato: se un collega cestina qualcosa lo vedi anche tu, e gli elementi cestinati non riappaiono dopo una sincronizzazione."
+]
+},
+{
+icon: "›", title: "Strumenti di Misura", color: "#2DD4BF",
+steps: [
+"Registra i tuoi analizzatori/simulatori/multimetri: marca, modello, n° serie, codice interno, certificato calibrazione, data e scadenza calibrazione.",
+"Stato calibrazione: verde (valida), giallo (in scadenza <30gg), rosso (scaduta).",
+"Quando esegui una verifica (sicurezza elettrica o funzionale) scegli lo strumento usato da una TENDINA con questi strumenti registrati — garantisce la rintracciabilità. Sulla sicurezza elettrica, selezionarlo compila in automatico anche il N° calibrazione."
+]
+},
+{
+icon: "›", title: "Procedure / Knowledge Base", color: "#2DD4BF",
+steps: [
+"Repository delle tue procedure di test, riparazione e manutenzione stile iFixit.",
+"Ogni procedura ha categoria, descrizione, lista passi numerati con descrizione + valore atteso + foto.",
+"Crea le procedure standard una volta sola, poi le usi come check-list quando lavori."
+]
+},
+{
+icon: "›", title: "Agenda & Pianificazione Annuale", color: "#f59e0b",
+steps: [
+"Agenda: vista unificata di tutte le attività future (manutenzioni programmate, job aperti, verifiche).",
+"Pianificazione Annuale: tutti gli apparecchi con prossimo servizio nell'anno selezionato, raggruppati per mese.",
+"Si popola automaticamente quando salvi una verifica completata, usando gli intervalli dell'apparecchio (vedi sotto).",
+"Esporta in Excel (.xlsx) per avere il piano annuale pronto da gestire."
+]
+},
+{
+icon: "›", title: "Gesti Mobile e PWA", color: "#2DD4BF",
+steps: [
+"L'app è installabile come PWA: su Chrome Android tocca menu ⋮ → 'Installa app'. Su iPhone Safari → Condividi → 'Aggiungi a schermata Home'.",
+"Una volta installata funziona offline e si comporta come un'app nativa.",
+"Gesto: swipe a sinistra su una card per eliminarla (con conferma).",
+"Tasto BACK Android: chiude prima il modal aperto, poi il menu, poi torna alla Dashboard, poi esce dall'app."
+]
+},
+{
+icon: "›", title: "Impostazioni Azienda", color: "#64748b",
+steps: [
+"Apri Impostazioni dal pulsante ⚙ in alto a destra (mobile) o in fondo alla sidebar (desktop).",
+"Le impostazioni sono divise in card chiare: Dati azienda, Sincronizzazione cloud, Backup, Account, Zona pericolo.",
+"Compila Nome azienda, Sottotitolo, Indirizzo, P.IVA, IBAN, prefisso preventivi — questi dati appaiono in TUTTI i PDF generati.",
+"IMPORTANTE: se il campo 'Nome azienda' è vuoto, i PDF mostreranno 'Documento' come placeholder."
+]
+},
+{
+icon: "›", title: "Backup, Importazione, Reset", color: "#64748b",
+steps: [
+"Impostazioni → 'Esporta backup' scarica direttamente un file .json con tutti i tuoi dati (apparecchi, job, parti, clienti, preventivi, verifiche, strumenti, procedure).",
+"Importa backup: seleziona il file .json salvato — sostituisce TUTTI i dati attuali.",
+"Unisci backup: aggiunge i dati del file ai tuoi senza sostituirli (utile per importare un altro archivio).",
+"Reset totale: cancella tutti i dati. Triplice conferma con parola 'CANCELLA' da digitare per sicurezza.",
+"I dati sono salvati sul dispositivo. Fai backup regolari — se svuoti la cache i dati spariscono (a meno che tu non usi il cloud)."
+]
+},
+{
+icon: "›", title: "Account e Sincronizzazione Cloud", color: "#2DD4BF",
+steps: [
+"Se usi la versione online, all'avvio devi fare il LOGIN con email e password. Una volta entrato, la sessione resta valida anche offline sul tuo dispositivo — puoi lavorare sul campo senza connessione.",
+"SINCRONIZZAZIONE: in Impostazioni → Sincronizzazione cloud. 'Carica su cloud' invia i dati locali al server; 'Scarica da cloud' li recupera sul dispositivo. Non serve inserire URL o chiavi: è già tutto configurato.",
+"Lavori offline-first: i dati restano sempre sul dispositivo e sono immediati. Sincronizzi col cloud quando hai rete, quando vuoi.",
+"La sincronizzazione UNISCE i dati (non sovrascrive): sui conflitti vince la versione modificata più di recente, e niente va perso. Anche le eliminazioni si propagano correttamente (chi cestini finisce nel cestino anche per i colleghi, senza riapparire).",
+"DISCONNETTI: in Impostazioni → Account. Dopo il logout serve di nuovo il login (con connessione) per rientrare."
+]
+},
+{
+icon: "›", title: "Report parco macchine (per cliente)", color: "#2DD4BF",
+steps: [
+"Nella pagina Clienti, il pulsante 📋 genera un report completo del parco macchine di quel cliente.",
+"Si apre prima un'anteprima a schermo con statistiche (apparecchi, operativi, fuori servizio, verifiche scadute) e l'elenco di tutti gli apparecchi ordinati per scadenza.",
+"Dal pulsante 'Scarica PDF' ottieni il documento professionale da stampare o inviare al cliente."
+]
+},
+{
+icon: "›", title: "Filtri e Ricerca", color: "#2DD4BF",
+steps: [
+"Ogni lista mobile ha sopra una BARRA DI RICERCA testuale con contatore X/Y a destra.",
+"Sotto la ricerca trovi il pulsante ' Filtri': cliccalo per espandere il pannello con tutti i filtri disponibili per quella sezione (marca, modello, stato, cliente, ecc.).",
+"NEGLI APPARECCHI puoi anche passare alla vista TABELLA (interruttore '▤ Tabella' in alto): lì filtri direttamente sotto ogni colonna, tipo Excel, senza aprire il pannello — comodo quando vuoi restare nel flusso.",
+"Il badge color teal accanto al pulsante Filtri mostra quanti filtri sono attivi.",
+"Ricerca e filtri si combinano: vedi solo gli elementi che soddisfano TUTTI i criteri.",
+"Pulsante '✕ Pulisci tutti i filtri' in fondo al pannello per resettare."
+]
+},
+{
+icon: "🔐", title: "Ruoli e permessi", color: "#5EEAD4",
+steps: [
+"L'app prevede quattro ruoli: Superuser, Admin, Finance, Tecnico. Ogni ruolo vede solo le sezioni che gli competono.",
+"SUPERUSER: vede e fa tutto. È l'unico che può gestire i ruoli/permessi degli altri e modificare i dati fiscali dell'azienda (ragione sociale, P.IVA, IBAN).",
+"ADMIN: gestione operativa completa (apparecchi, verifiche, job, clienti, magazzino, preventivi). Non può cambiare i permessi degli altri né i dati fiscali.",
+"FINANCE: parte economica — preventivi e fatture, più i job in lettura per fatturare ore e ricambi. Se lavori a contratto (canone che include tutte le macchine) puoi togliergli i job dalla matrice.",
+"TECNICO: il campo — verifiche di sicurezza elettrica e funzionali, job, apparecchi, agenda, magazzino, procedure. Vede i clienti in lettura.",
+"MATRICE PERMESSI: il Superuser, da Impostazioni → 'Ruoli e permessi', può spuntare esattamente quali sezioni vede ogni ruolo. La configurazione è flessibile e si adatta a come è organizzata la tua azienda.",
+"Nelle versioni offline e demo sei sempre Superuser (uso personale). I ruoli distinti hanno effetto pieno nella versione online con login, dove ogni persona ha il proprio account."
+]
+},
+{
+icon: "🛡", title: "Privacy, dati e note legali", color: "#2DD4BF",
+steps: [
+"DOVE STANNO I DATI: nella versione offline i dati restano solo su questo dispositivo (memoria del browser), non vengono inviati da nessuna parte. Nella versione online i dati sono salvati anche sul cloud (Supabase) per la sincronizzazione tra dispositivi e tra colleghi della stessa organizzazione.",
+"DATI DI TERZI: l'app può contenere dati di clienti e referenti (nomi, strutture, contatti). Sei tu il titolare del trattamento di questi dati: trattali secondo il GDPR (base giuridica, conservazione limitata, diritto di accesso/cancellazione su richiesta).",
+"BACKUP: da Impostazioni puoi esportare un backup completo dei dati e reimportarlo. Fai backup regolari, soprattutto in modalità offline dove i dati vivono solo sul dispositivo.",
+"CESTINO: gli elementi eliminati finiscono nel cestino (Impostazioni → 🗑 Cestino), da cui puoi ripristinarli o eliminarli definitivamente; si svuotano da soli dopo 90 giorni.",
+"CANCELLAZIONE TOTALE: puoi azzerare tutti i dati locali da Impostazioni → Zona pericolo. In modalità online la rimozione dal cloud dipende dalla configurazione della tua organizzazione.",
+"COPYRIGHT: il software, il codice, la grafica e i template sono protetti dal diritto d'autore e concessi in licenza d'uso, non in proprietà. I testi completi di Privacy e Termini d'uso/licenza (con la sezione copyright e segnalazioni) sono richiamabili dai due pulsanti qui sotto.",
+"NOTA: MedTrace è uno strumento di supporto gestionale. Non sostituisce le valutazioni del tecnico qualificato né le responsabilità di legge. I valori e i limiti normativi vanno sempre verificati sulle norme vigenti e sui manuali dei costruttori."
+]
+}
+];
+const PRIVACY_TEXT = `Ultimo aggiornamento: giugno 2026
+Questa informativa spiega in modo semplice come MedTrace tratta i dati. Non costituisce consulenza legale: per un uso professionale (soprattutto se offri il software a clienti) è necessario farla rivedere da un consulente privacy e predisporre un accordo sul trattamento dei dati (DPA) con ciascun cliente.
+1. CHI TRATTA I DATI
+MedTrace è uno strumento gestionale che usi tu (o la tua azienda). Sei tu il titolare del trattamento dei dati che inserisci, inclusi i dati di clienti, referenti e apparecchiature.
+2. QUALI DATI
+• Dati delle apparecchiature (marca, modello, matricola, ubicazione, scadenze).
+• Dati dei clienti e dei referenti (denominazione, indirizzo, contatti, nominativi).
+• Dati delle verifiche e degli interventi (misure, esiti, firme, note).
+• Dati aziendali tuoi (ragione sociale, P.IVA, IBAN, logo) usati per i documenti.
+3. DOVE SONO CONSERVATI
+• Versione offline: i dati restano esclusivamente su questo dispositivo, nella memoria locale del browser. Non vengono trasmessi a server esterni.
+• Versione online: oltre al dispositivo, i dati sono salvati su un servizio cloud (Supabase, con infrastruttura nell'Unione Europea) per consentire login, sincronizzazione tra dispositivi e condivisione tra i membri della stessa organizzazione.
+4. FINALITÀ
+I dati sono trattati solo per il funzionamento del gestionale: registrare apparecchiature e verifiche, produrre documenti (rapporti, preventivi), pianificare le scadenze e, nella versione online, sincronizzare il lavoro del team.
+5. CONSERVAZIONE E CESTINO
+I dati restano finché li mantieni nell'app. Quando elimini un elemento finisce nel Cestino, da cui puoi ripristinarlo o eliminarlo definitivamente; gli elementi nel cestino si svuotano automaticamente dopo 90 giorni. Puoi inoltre esportare, modificare o cancellare i dati in qualsiasi momento dalle Impostazioni. Conserva i dati personali solo per il tempo necessario alle tue finalità e agli obblighi di legge.
+6. DIRITTI DEGLI INTERESSATI (GDPR)
+Le persone i cui dati sono registrati (es. referenti dei clienti) hanno diritto di accesso, rettifica, cancellazione e limitazione. In quanto titolare, sei tu a dare seguito a queste richieste. MedTrace ti fornisce gli strumenti per esportare e cancellare i dati.
+7. SICUREZZA
+Nella versione online l'accesso è protetto da autenticazione e i dati di ogni organizzazione sono separati. Mantieni riservate le credenziali. Nella versione offline la sicurezza dipende dalla protezione del tuo dispositivo: fai backup regolari.
+8. CONDIVISIONE E RESPONSABILI
+MedTrace non vende né cede i tuoi dati a terzi. Nella versione online il fornitore dell'infrastruttura cloud (Supabase) agisce come responsabile del trattamento per la sola conservazione tecnica. Se distribuisci l'app a clienti, dovrai indicare i sub-responsabili e firmare un DPA con ciascun cliente.
+Per domande su questa informativa, contatta chi gestisce la tua installazione di MedTrace.`;
+const TERMS_TEXT = `Ultimo aggiornamento: giugno 2026
+Questi termini regolano l'uso di MedTrace. Non costituiscono consulenza legale: per un uso professionale è consigliabile farli rivedere da un legale.
+1. OGGETTO
+MedTrace è un'applicazione gestionale per la manutenzione e le verifiche di apparecchiature elettromedicali e di laboratorio. È uno strumento di supporto al lavoro del tecnico.
+2. USO CORRETTO
+Ti impegni a usare l'app in modo lecito, inserendo dati di cui hai titolo a disporre e nel rispetto delle norme applicabili (incluse quelle su privacy e dispositivi medici).
+3. RESPONSABILITÀ TECNICA
+MedTrace non sostituisce il giudizio del tecnico qualificato. I valori di misura, i limiti normativi e gli esiti delle verifiche devono sempre essere verificati sulle norme vigenti (es. IEC 62353, IEC 60601, IEC 61010) e sui manuali dei costruttori. L'esito calcolato dall'app è un ausilio, non una certificazione.
+4. NESSUNA GARANZIA
+L'app è fornita "così com'è", senza garanzie di assenza di errori o di idoneità a uno scopo specifico. Pur con la massima cura, non si garantisce che i calcoli automatici siano privi di imprecisioni: la verifica finale spetta all'utente.
+5. LIMITAZIONE DI RESPONSABILITÀ
+Nei limiti di legge, chi fornisce MedTrace non è responsabile per danni derivanti dall'uso o dal mancato funzionamento dell'app, inclusa la perdita di dati. Fai backup regolari dei tuoi dati.
+6. DATI E BACKUP
+Sei responsabile della conservazione e del backup dei tuoi dati. Nella versione offline i dati risiedono solo sul tuo dispositivo: la loro perdita (guasto, cancellazione, cambio dispositivo) è a tuo carico se non hai un backup.
+7. PROPRIETÀ INTELLETTUALE E COPYRIGHT
+I dati che inserisci restano tuoi. Il software MedTrace, il suo codice sorgente, la grafica, i testi e i template di verifica sono opera dell'ingegno protetta dal diritto d'autore (L. 633/1941 e Direttiva UE 2001/29/CE) e restano di proprietà esclusiva di chi lo ha sviluppato. L'uso ti è concesso in licenza, non in proprietà, per le sole finalità gestionali previste. Non sono consentiti, senza autorizzazione scritta: copia, redistribuzione, rivendita, decompilazione, reverse engineering o creazione di opere derivate, salvo i diritti inderogabili di legge.
+8. SEGNALAZIONI COPYRIGHT (DMCA / EU)
+Se ritieni che un contenuto presente nel software violi un tuo diritto d'autore, puoi inviare una segnalazione a chi gestisce MedTrace indicando: (a) l'opera protetta che ritieni violata; (b) il contenuto contestato e dove si trova; (c) i tuoi recapiti; (d) una dichiarazione di buona fede; (e) la tua firma. Verificheremo e, se la segnalazione è fondata, rimuoveremo o disabiliteremo il contenuto. Questa procedura richiama il meccanismo "notice and takedown" del DMCA statunitense e si applica, per quanto compatibile, anche nel quadro europeo; la procedura non sostituisce eventuali rimedi di legge.
+9. CONTENUTI DI TERZI
+Sei responsabile dei contenuti che carichi (loghi, nomi, dati dei clienti): devi avere titolo a usarli. Non caricare materiale protetto da copyright altrui senza diritto.
+10. MODIFICHE
+Le funzionalità dell'app possono evolvere nel tempo. Questi termini possono essere aggiornati: la versione corrente è quella mostrata qui.
+11. LEGGE APPLICABILE
+Salvo diverso accordo, si applica la legge italiana.
+Usando MedTrace accetti questi termini.`;
+function ScadenzePage({ scadenze, company, onEmail, onOpenAsset }) {
+const [range, setRange] = React.useState(60);
+const visibili = scadenze.filter(s => s.days <= range);
+const fmt = d => { try {
+return new Date(d).toLocaleDateString("it-IT");
+}
+catch (e) {
+return "—";
+} };
+const colorFor = days => days < 0 ? "#ef4444" : days <= 7 ? "#f97316" : days <= 30 ? "#f59e0b" : "#2DD4BF";
+const gruppi = React.useMemo(() => {
+const m = new Map();
+visibili.forEach(s => {
+var _a;
+const key = ((_a = s.customer) === null || _a === void 0 ? void 0 : _a.id) || "__none__";
+if (!m.has(key))
+m.set(key, { customer: s.customer, items: [] });
+m.get(key).items.push(s);
+});
+return [...m.values()]
+.map(g => (Object.assign(Object.assign({}, g), { items: g.items.sort((a, b) => a.days - b.days), minDays: Math.min(...g.items.map(i => i.days)) })))
+.sort((a, b) => a.minDays - b.minDays);
+}, [visibili]);
+const toRow = s => {
+var _a;
+return ({
+cliente: ((_a = s.customer) === null || _a === void 0 ? void 0 : _a.name) || "—",
+apparecchio: s.assetName || "",
+marca: s.brand || "",
+modello: s.model || "",
+serial: s.serial || "",
+tipo: s.tipo,
+ultima: s.lastDate || "",
+scadenza: (() => { try {
+return new Date(s.dueDate).toISOString().slice(0, 10);
+}
+catch (e) {
+return "";
+} })(),
+stato: s.days < 0 ? "SCADUTA" : (s.days === 0 ? "oggi" : "tra " + s.days + " gg"),
+});
+};
+const XLS_COLS = [
+{ key: "cliente", label: "Cliente" }, { key: "apparecchio", label: "Apparecchio" },
+{ key: "marca", label: "Marca" }, { key: "modello", label: "Modello" }, { key: "serial", label: "Matricola" },
+{ key: "tipo", label: "Tipo verifica" }, { key: "ultima", label: "Ultima verifica" },
+{ key: "scadenza", label: "Prossima scadenza" }, { key: "stato", label: "Stato" },
+];
+const exportAll = () => {
+if (typeof downloadXLSX === "function")
+downloadXLSX("scadenze_tutte.xlsx", visibili.map(toRow), XLS_COLS, "Scadenze");
+};
+const exportCustomer = (g) => {
+var _a;
+const nome = (((_a = g.customer) === null || _a === void 0 ? void 0 : _a.name) || "cliente").replace(/[^a-zA-Z0-9]/g, "_").slice(0, 40);
+if (typeof downloadXLSX === "function")
+downloadXLSX("scadenze_" + nome + ".xlsx", g.items.map(toRow), XLS_COLS, "Scadenze");
+};
+const Row = (s, i) => {
+const col = colorFor(s.days);
+const label = s.days < 0 ? "scaduta da " + Math.abs(s.days) + " gg" : s.days === 0 ? "scade oggi" : "tra " + s.days + " gg";
+return (React.createElement("div", { key: s.assetId + s.tipoKind + i, style: { background: "#141418", borderTop: "1px solid #1a1a24", borderLeft: "3px solid " + col, padding: "10px 13px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 } },
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+React.createElement("div", { style: { display: "flex", gap: 7, alignItems: "center", flexWrap: "wrap", marginBottom: 2 } },
+React.createElement("span", { style: { fontSize: 13, fontWeight: 700, color: "#e2e8f0" } }, s.assetName),
+React.createElement("span", { style: { fontSize: 9, fontWeight: 700, color: s.tipoKind === "iec" ? "#c084fc" : "#5EEAD4", background: (s.tipoKind === "iec" ? "#a855f7" : "#0D9488") + "22", border: "1px solid " + (s.tipoKind === "iec" ? "#a855f7" : "#0D9488") + "44", borderRadius: 4, padding: "1px 6px" } }, s.tipoKind === "iec" ? "Sic. Elettrica" : "Funzionale")),
+React.createElement("div", { style: { fontSize: 11, color: "#64748b" } },
+s.serial ? "S/N " + s.serial + " · " : "",
+"Scade ",
+React.createElement("strong", { style: { color: col } }, fmt(s.dueDate)),
+" \u00B7 ",
+label)),
+React.createElement("button", { onClick: () => onOpenAsset(s.assetId), style: { background: "transparent", border: "1px solid #2a3040", borderRadius: 6, color: "#94a3b8", padding: "5px 10px", fontSize: 11, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 } }, "Scheda \u203A")));
+};
+return (React.createElement("div", { style: { maxWidth: 900, margin: "0 auto" } },
+React.createElement("div", { style: { marginBottom: 18 } },
+React.createElement("h1", { style: { margin: "0 0 4px", fontSize: 22, fontWeight: 900, color: "#F0F0F5" } }, "Scadenze & Promemoria"),
+React.createElement("p", { style: { color: "#5A5A70", margin: 0, fontSize: 13 } }, "Verifiche in scadenza calcolate dagli intervalli di ogni apparecchio, raggruppate per cliente.")),
+React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 12 } }, [30, 60, 90].map(g => {
+const on = range === g;
+return (React.createElement("button", { key: g, onClick: () => setRange(g), style: {
+flex: 1, background: on ? "#0D9488" : "#16161e", border: "1px solid " + (on ? "#2DD4BF" : "#2a3344"),
+borderRadius: 9, padding: "10px 8px", cursor: "pointer", color: on ? "#04201C" : "#cbd5e1",
+fontSize: 13, fontWeight: on ? 800 : 600
+} },
+"Prossimi ",
+g,
+" giorni"));
+})),
+visibili.length > 0 && (React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, gap: 10, flexWrap: "wrap" } },
+React.createElement("span", { style: { fontSize: 12, color: "#64748b" } },
+visibili.length,
+" scadenze \u00B7 ",
+gruppi.length,
+" clienti"),
+React.createElement("button", { onClick: exportAll, style: { background: "#2DD4BF15", border: "1px solid #2DD4BF44", borderRadius: 7, color: "#2DD4BF", padding: "8px 13px", fontSize: 12, fontWeight: 700, cursor: "pointer" } }, "\uD83D\uDCCA Esporta tutto in Excel"))),
+visibili.length === 0 ? (React.createElement("div", { style: { textAlign: "center", padding: "40px 20px", color: "#475569", background: "#141418", border: "1px solid #1e2a3a", borderRadius: 10 } },
+"Nessuna verifica in scadenza nei prossimi ",
+range,
+" giorni. \uD83D\uDC4D")) : (gruppi.map((g, gi) => {
+var _a, _b, _c;
+const hasCust = !!g.customer;
+return (React.createElement("div", { key: ((_a = g.customer) === null || _a === void 0 ? void 0 : _a.id) || "none" + gi, style: { marginBottom: 16, border: "1px solid #1e2a3a", borderRadius: 10, overflow: "hidden" } },
+React.createElement("div", { style: { background: "#16161e", padding: "11px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexWrap: "wrap" } },
+React.createElement("div", { style: { minWidth: 0 } },
+React.createElement("div", { style: { fontSize: 14, fontWeight: 800, color: hasCust ? "#e2e8f0" : "#94a3b8" } }, ((_b = g.customer) === null || _b === void 0 ? void 0 : _b.name) || "Cliente non assegnato"),
+React.createElement("div", { style: { fontSize: 11, color: "#64748b" } },
+g.items.length,
+" ",
+g.items.length === 1 ? "apparecchio" : "apparecchi",
+" in scadenza",
+((_c = g.customer) === null || _c === void 0 ? void 0 : _c.email) ? " · " + g.customer.email : "")),
+React.createElement("div", { style: { display: "flex", gap: 6, flexShrink: 0 } },
+React.createElement("button", { onClick: () => exportCustomer(g), title: "Scarica Excel di questo cliente", style: { background: "#2DD4BF12", border: "1px solid #2DD4BF44", borderRadius: 6, color: "#2DD4BF", padding: "6px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" } }, "\uD83D\uDCCA Excel"),
+React.createElement("button", { onClick: () => onEmail(g), disabled: !hasCust, title: hasCust ? "Email al cliente con elenco in scadenza" : "Nessun cliente assegnato", style: { background: hasCust ? "#2DD4BF15" : "#1a1a22", border: "1px solid " + (hasCust ? "#2DD4BF44" : "#2a3040"), borderRadius: 6, color: hasCust ? "#2DD4BF" : "#475569", padding: "6px 10px", fontSize: 11, fontWeight: 700, cursor: hasCust ? "pointer" : "default", whiteSpace: "nowrap" } }, "\u2709 Promemoria"))),
+g.items.map(Row)));
+}))));
+}
+function ScadenzaEmailModal({ sc, company, onClose }) {
+const fmt = d => { try {
+return new Date(d).toLocaleDateString("it-IT");
+}
+catch (e) {
+return "";
+} };
+const azienda = (company && company.name) || "la nostra azienda";
+const customer = sc.customer || null;
+const items = sc.items || [];
+const ref = (customer && customer.name) || "Spett.le Cliente";
+const elenco = items.map(it => {
+const m = [it.assetName, it.serial ? ("S/N " + it.serial) : ""].filter(Boolean).join(" ");
+const t = it.tipoKind === "iec" ? "sicurezza elettrica" : "verifica funzionale";
+return "• " + m + " — " + t + " (scadenza " + fmt(it.dueDate) + ")";
+}).join("\n");
+const subjectDefault = items.length === 1
+? "Promemoria scadenza verifica - " + items[0].assetName
+: "Promemoria scadenze verifiche - " + items.length + " apparecchiature";
+const bodyDefault = "Gentile " + ref + ",\n\n" +
+(items.length === 1
+? "Le ricordiamo che per la seguente apparecchiatura e' prevista una verifica in scadenza:\n\n"
+: "Le ricordiamo che per le seguenti apparecchiature sono previste verifiche in scadenza:\n\n") +
+elenco + "\n\n" +
+(items.length > 1 ? "In allegato trova l'elenco completo delle apparecchiature in scadenza.\n\n" : "") +
+"Per organizzare gli interventi e mantenere le apparecchiature conformi, La invitiamo a contattarci per concordare un appuntamento.\n\n" +
+"Restiamo a disposizione per qualsiasi chiarimento.\n\n" +
+"Cordiali saluti,\n" + azienda;
+const [subject, setSubject] = React.useState(subjectDefault);
+const [body, setBody] = React.useState(bodyDefault);
+const [copied, setCopied] = React.useState("");
+const emailTo = (customer && (customer.email || customer.contactEmail)) || "";
+const mailtoUrl = "mailto:" + encodeURIComponent(emailTo) +
+"?subject=" + encodeURIComponent(subject) +
+"&body=" + encodeURIComponent(body);
+const copy = (text, what) => {
+try {
+navigator.clipboard.writeText(text);
+setCopied(what);
+setTimeout(() => setCopied(""), 1800);
+}
+catch (e) { }
+};
+const exportExcel = () => {
+const rows = items.map(s => ({
+apparecchio: s.assetName || "", marca: s.brand || "", modello: s.model || "", serial: s.serial || "",
+tipo: s.tipoKind === "iec" ? "Sicurezza Elettrica" : "Verifica Funzionale",
+ultima: s.lastDate || "",
+scadenza: (() => { try {
+return new Date(s.dueDate).toISOString().slice(0, 10);
+}
+catch (e) {
+return "";
+} })(),
+}));
+const cols = [{ key: "apparecchio", label: "Apparecchio" }, { key: "marca", label: "Marca" }, { key: "modello", label: "Modello" }, { key: "serial", label: "Matricola" }, { key: "tipo", label: "Tipo verifica" }, { key: "ultima", label: "Ultima verifica" }, { key: "scadenza", label: "Prossima scadenza" }];
+const nome = ((customer === null || customer === void 0 ? void 0 : customer.name) || "cliente").replace(/[^a-zA-Z0-9]/g, "_").slice(0, 40);
+if (typeof downloadXLSX === "function")
+downloadXLSX("scadenze_" + nome + ".xlsx", rows, cols, "Scadenze");
+};
+const FLD = { background: "#16161e", border: "1px solid #2a3344", borderRadius: 8, color: "#e2e8f0", fontSize: 13, padding: "9px 11px", outline: "none", width: "100%", boxSizing: "border-box", fontFamily: "inherit" };
+return (React.createElement("div", null,
+React.createElement("div", { style: { fontSize: 11.5, color: "#94a3b8", lineHeight: 1.5, marginBottom: 14 } },
+"Email pronta per ",
+React.createElement("strong", { style: { color: "#e2e8f0" } }, ref),
+" \u2014 ",
+items.length,
+" ",
+items.length === 1 ? "apparecchio" : "apparecchi",
+" in scadenza.",
+items.length > 1 && React.createElement("span", { style: { display: "block", marginTop: 4 } }, "Scarica l'Excel e allegalo all'email (la posta non permette di allegare file in automatico)."),
+!emailTo && React.createElement("span", { style: { display: "block", color: "#f59e0b", marginTop: 4 } }, "Nessuna email salvata per questo cliente: aprendo la posta dovrai inserire il destinatario a mano. Puoi aggiungerla nell'anagrafica del cliente.")),
+items.length > 1 && (React.createElement("div", { style: { marginBottom: 14 } },
+React.createElement("button", { onClick: exportExcel, style: { background: "#2DD4BF15", border: "1px solid #2DD4BF44", borderRadius: 8, color: "#2DD4BF", padding: "10px 14px", fontSize: 12.5, fontWeight: 700, cursor: "pointer", width: "100%" } },
+"\uD83D\uDCCA Scarica Excel da allegare (",
+items.length,
+" apparecchi)"))),
+React.createElement("div", { style: { marginBottom: 12 } },
+React.createElement("div", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .6, fontWeight: 700, marginBottom: 5 } }, "Oggetto"),
+React.createElement("input", { value: subject, onChange: e => setSubject(e.target.value), style: FLD })),
+React.createElement("div", { style: { marginBottom: 14 } },
+React.createElement("div", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .6, fontWeight: 700, marginBottom: 5 } }, "Testo"),
+React.createElement("textarea", { value: body, onChange: e => setBody(e.target.value), rows: 12, style: Object.assign(Object.assign({}, FLD), { resize: "vertical", lineHeight: 1.5 }) })),
+React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" } },
+React.createElement("button", { onClick: () => copy(body, "testo"), style: { background: "transparent", border: "1px solid #2a3040", borderRadius: 7, color: "#94a3b8", padding: "9px 13px", fontSize: 12, fontWeight: 700, cursor: "pointer" } }, copied === "testo" ? "✓ Copiato" : "Copia testo"),
+React.createElement("a", { href: mailtoUrl, style: { background: "#2DD4BF", border: "none", borderRadius: 7, color: "#04201C", padding: "9px 15px", fontSize: 12.5, fontWeight: 800, cursor: "pointer", textDecoration: "none" } }, "\u2709 Apri nell'app email"))));
+}
+function HelpTab({ helpOpen, setHelpOpen }) {
+const [legal, setLegal] = React.useState(null);
+return (React.createElement("div", { style: { maxWidth: 860, margin: "0 auto" } },
+React.createElement("div", { style: { marginBottom: 24 } },
+React.createElement("h1", { style: { margin: "0 0 4px", fontSize: 22, fontWeight: 900, color: "#F0F0F5" } }, " Guida all'uso"),
+React.createElement("p", { style: { color: "#5A5A70", margin: 0, fontSize: 13 } }, "Tutorial completo per usare MedTrace \u2014 clicca una sezione per espanderla")),
+HELP_SECTIONS.map((section, si) => {
+const isOpen = helpOpen[si] !== false && (helpOpen[si] === true || si === 0);
+return (React.createElement("div", { key: si, style: { marginBottom: 10, background: "#141418", border: "1px solid #2A2A38", borderRadius: 12, overflow: "hidden" } },
+React.createElement("button", { onClick: () => setHelpOpen(o => (Object.assign(Object.assign({}, o), { [si]: !isOpen }))), style: { width: "100%", background: "none", border: "none", padding: "14px 18px", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, textAlign: "left" } },
+React.createElement("span", { style: { fontSize: 20 } }, section.icon),
+React.createElement("span", { style: { flex: 1, fontSize: 14, fontWeight: 700, color: "#F0F0F5" } }, section.title),
+React.createElement("span", { style: { color: "#5A5A70", fontSize: 16, transition: "transform .2s", transform: isOpen ? "rotate(180deg)" : "none" } }, "\u25BE")),
+isOpen && (React.createElement("div", { style: { padding: "0 18px 16px 18px", borderTop: "1px solid #2A2A38" } },
+React.createElement("ol", { style: { margin: "12px 0 0", paddingLeft: 20, display: "flex", flexDirection: "column", gap: 8 } }, section.steps.map((step, i) => (React.createElement("li", { key: i, style: { fontSize: 13, color: "#9090A8", lineHeight: 1.6, paddingLeft: 4 } },
+React.createElement("span", { style: { color: "#F0F0F5" } }, step)))))))));
+}),
+React.createElement("div", { style: { marginTop: 20, background: "#0D948818", border: "1px solid #0D948844", borderRadius: 10, padding: "14px 18px" } },
+React.createElement("div", { style: { fontWeight: 700, color: "#2DD4BF", marginBottom: 6, fontSize: 13 } }, "Nota"),
+React.createElement("p", { style: { color: "#9090A8", fontSize: 12, margin: 0, lineHeight: 1.7 } },
+"Per ogni apparecchio il flusso ideale \u00E8: ",
+React.createElement("strong", { style: { color: "#F0F0F5" } }, "1. Crea apparecchio"),
+" \u2192 ",
+React.createElement("strong", { style: { color: "#F0F0F5" } }, "2. Esegui Verifica di Sicurezza Elettrica"),
+" \u2192 ",
+React.createElement("strong", { style: { color: "#F0F0F5" } }, "3. Esegui Verifica Funzionale"),
+" \u2192 il sistema crea automaticamente i job e pianifica le prossime scadenze in base agli intervalli dell'apparecchio.")),
+React.createElement("div", { style: { marginTop: 16, display: "flex", gap: 10, flexWrap: "wrap" } },
+React.createElement("button", { onClick: () => setLegal("privacy"), style: { flex: 1, minWidth: 150, background: "#141418", border: "1px solid #2A2A38", borderRadius: 10, padding: "12px 16px", cursor: "pointer", color: "#e2e8f0", fontSize: 13, fontWeight: 700, textAlign: "left" } },
+"\uD83D\uDEE1 Informativa Privacy",
+React.createElement("span", { style: { display: "block", fontSize: 11, color: "#64748b", marginTop: 3, fontWeight: 400 } }, "Come vengono trattati i dati")),
+React.createElement("button", { onClick: () => setLegal("terms"), style: { flex: 1, minWidth: 150, background: "#141418", border: "1px solid #2A2A38", borderRadius: 10, padding: "12px 16px", cursor: "pointer", color: "#e2e8f0", fontSize: 13, fontWeight: 700, textAlign: "left" } },
+"\uD83D\uDCC4 Termini d'uso e licenza",
+React.createElement("span", { style: { display: "block", fontSize: 11, color: "#64748b", marginTop: 3, fontWeight: 400 } }, "Condizioni e responsabilit\u00E0"))),
+legal && (React.createElement(Modal, { title: legal === "privacy" ? "Informativa sulla Privacy" : "Termini d'uso e licenza", onClose: () => setLegal(null) },
+React.createElement("div", { style: { fontSize: 12.5, color: "#9090A8", lineHeight: 1.7, whiteSpace: "pre-line", maxHeight: "70vh", overflow: "auto" } }, legal === "privacy" ? PRIVACY_TEXT : TERMS_TEXT)))));
+}
+const TH_S = { background: "#0F0F14", color: "#64748b", padding: "8px 10px", textAlign: "left", fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: .7, borderBottom: "2px solid #1e2a3a", borderRight: "1px solid #141e2e", whiteSpace: "nowrap", cursor: "pointer", userSelect: "none", position: "sticky", top: 0, zIndex: 2 };
+const TD_S = { padding: "7px 10px", borderBottom: "1px solid #1A1A24", borderRight: "1px solid #1A1A24", fontSize: 12, color: "#C8C8D8", whiteSpace: "nowrap", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", verticalAlign: "middle" };
+function ExcelTable({ cols, rows, onEdit, onDelete, actions, defaultSort, rowBg, onRowClick, exportName }) {
+var _a;
+const isMobile = useMedia("(max-width:900px)");
+const [sort, setSort] = React.useState({ key: defaultSort || ((_a = cols[0]) === null || _a === void 0 ? void 0 : _a.key), dir: "asc" });
+const [filters, setFilters] = React.useState({});
+const [gs, setGs] = React.useState("");
+const setF = (k, v) => setFilters(f => (Object.assign(Object.assign({}, f), { [k]: v })));
+const clearF = () => { setFilters({}); setGs(""); };
+const hasF = Object.values(filters).some(v => v) || gs;
+const filtered = React.useMemo(() => {
+let r = rows;
+if (gs) {
+const q = gs.toLowerCase();
+r = r.filter(row => cols.some(c => String(row[c.key] || "").toLowerCase().includes(q)));
+}
+Object.entries(filters).forEach(([k, v]) => { if (!v)
+return; r = r.filter(row => String(row[k] || "").toLowerCase().includes(v.toLowerCase())); });
+return [...r].sort((a, b) => {
+let av = a[sort.key] || "", bv = b[sort.key] || "";
+if (!isNaN(av) && !isNaN(bv)) {
+av = +av;
+bv = +bv;
+}
+if (av < bv)
+return sort.dir === "asc" ? -1 : 1;
+if (av > bv)
+return sort.dir === "asc" ? 1 : -1;
+return 0;
+});
+}, [rows, filters, gs, sort]);
+const toggleSort = k => setSort(s => s.key === k ? Object.assign(Object.assign({}, s), { dir: s.dir === "asc" ? "desc" : "asc" }) : { key: k, dir: "asc" });
+return (React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center", padding: "8px 10px", background: "#0F0F14", border: "1px solid #1e2a3a", borderBottom: "none", borderRadius: "10px 10px 0 0", flexWrap: "wrap" } },
+React.createElement("input", { placeholder: " Cerca\u2026", value: gs, onChange: e => setGs(e.target.value), style: { background: "#16161C", border: "1px solid #1e2a3a", borderRadius: 6, padding: "5px 10px", color: "#e2e8f0", fontSize: 12, outline: "none", width: 200 } }),
+hasF && React.createElement("button", { onClick: clearF, style: { background: "none", border: "1px solid #ef444433", borderRadius: 5, color: "#ef4444", padding: "4px 10px", cursor: "pointer", fontSize: 11, fontWeight: 700 } }, "\u2715 Azzera"),
+React.createElement("span", { style: { marginLeft: "auto", fontSize: 11, color: "#475569", fontFamily: "monospace" } },
+filtered.length,
+"/",
+rows.length),
+exportName && filtered.length > 0 && (React.createElement("button", { onClick: () => {
+const expCols = cols.map(c => ({ key: c.key, label: c.label }));
+downloadXLSX(exportName + ".xlsx", filtered, expCols, exportName);
+}, style: { background: "#2DD4BF15", border: "1px solid #2DD4BF44", borderRadius: 5, color: "#2DD4BF", padding: "5px 10px", fontSize: 11, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }, title: "Esporta in Excel i risultati filtrati" }, "\u2B07 Excel"))),
+React.createElement("div", { style: { overflowX: isMobile ? "auto" : "visible", overflowY: "auto", border: "1px solid #1e2a3a", borderRadius: "0 0 10px 10px", background: "#111116", maxHeight: "68vh" } },
+React.createElement("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: isMobile ? 12 : 12.5, fontFamily: "inherit" } },
+React.createElement("thead", null,
+React.createElement("tr", null,
+cols.map(c => (React.createElement("th", { key: c.key, style: Object.assign(Object.assign({}, TH_S), { color: sort.key === c.key ? "#5EEAD4" : "#64748b", whiteSpace: isMobile ? "nowrap" : "normal" }), onClick: () => toggleSort(c.key) },
+c.label,
+" ",
+React.createElement("span", { style: { fontSize: 9, opacity: .6 } }, sort.key === c.key ? (sort.dir === "asc" ? "▲" : "▼") : "⇅")))),
+(onEdit || onDelete || actions) && React.createElement("th", { style: Object.assign(Object.assign({}, TH_S), { cursor: "default" }) }, "Azioni")),
+React.createElement("tr", null,
+cols.map(c => (React.createElement("td", { key: c.key, style: { padding: "3px 5px", background: "#090910", borderBottom: "2px solid #2563eb" } }, c.opts ? (React.createElement("select", { value: filters[c.key] || "", onChange: e => setF(c.key, e.target.value), style: { background: "#16161C", border: "1px solid #1e2a3a", borderRadius: 4, padding: "3px 6px", color: "#e2e8f0", fontSize: 11, width: "100%", outline: "none" } },
+React.createElement("option", { value: "" }, "Tutti"),
+c.opts.map(o => React.createElement("option", { key: o, value: o }, o)))) : (React.createElement("input", { placeholder: "\u2026", value: filters[c.key] || "", onChange: e => setF(c.key, e.target.value), style: { background: "#16161C", border: "1px solid #1e2a3a", borderRadius: 4, padding: "3px 6px", color: "#e2e8f0", fontSize: 11, width: "100%", outline: "none" } }))))),
+(onEdit || onDelete || actions) && React.createElement("td", { style: { padding: "3px 5px", background: "#090910", borderBottom: "2px solid #2563eb" } }))),
+React.createElement("tbody", null, filtered.length === 0 ? (React.createElement("tr", null,
+React.createElement("td", { colSpan: cols.length + (onEdit || onDelete || actions ? 1 : 0), style: { textAlign: "center", padding: 32, color: "#475569" } }, "Nessun risultato"))) : filtered.map((row, i) => {
+const bg = rowBg ? rowBg(row) : (i % 2 === 1 ? "#0d0d13" : "transparent");
+return (React.createElement("tr", { key: row.id || i, className: "mt-table-row", style: { background: bg, cursor: onRowClick ? "pointer" : undefined }, onDoubleClick: onRowClick ? () => onRowClick(row) : undefined },
+cols.map(c => (React.createElement("td", { key: c.key, style: Object.assign(Object.assign({}, TD_S), { whiteSpace: isMobile ? "nowrap" : "normal", maxWidth: isMobile ? 200 : 280, wordBreak: "normal", overflowWrap: "anywhere" }), title: String(row[c.key] || "") }, c.render ? c.render(row[c.key], row) : String(row[c.key] || "—")))),
+(onEdit || onDelete || actions) && (React.createElement("td", { style: Object.assign(Object.assign({}, TD_S), { whiteSpace: "nowrap" }) },
+React.createElement("div", { style: { display: "flex", gap: 4 } },
+actions && actions(row),
+onEdit && React.createElement("button", { onClick: () => onEdit(row), style: { background: "#202028", border: "1px solid #2a3040", borderRadius: 5, color: "#94a3b8", padding: "3px 8px", cursor: "pointer", fontSize: 11 } }, "\u270F"),
+onDelete && React.createElement("button", { onClick: () => onDelete(row.id), style: { background: "#ef444415", border: "1px solid #ef444430", borderRadius: 5, color: "#ef4444", padding: "3px 8px", cursor: "pointer", fontSize: 11 } }, "\u2715"))))));
+}))))));
+}
+function AlertChip({ days }) {
+if (days === null || days === undefined)
+return React.createElement("span", { style: { color: "#475569", fontSize: 11 } }, "\u2014");
+const [bg, col, label] = days < 0 ? ["#ef444420", "#ef4444", "SCAD." + (Math.abs(days)) + "gg"] : days === 0 ? ["#ef444420", "#ef4444", "OGGI"] : days <= 7 ? ["#f9730020", "#f97316", "⚠" + (days) + "gg"] : days <= 30 ? ["#f59e0b20", "#f59e0b", (days) + "gg"] : ["#22c55e20", "#22c55e", (days) + "gg"];
+return React.createElement("span", { style: { background: bg, color: col, border: "1px solid " + (col) + "44", borderRadius: 5, padding: "2px 7px", fontSize: 10, fontWeight: 700, fontFamily: "monospace", whiteSpace: "nowrap" } }, label);
+}
+const Badge = ({ text, color }) => (React.createElement("span", { style: { background: color + "18", color, border: "1px solid " + (color) + "40", borderRadius: 20, padding: "2px 10px", fontSize: 10, fontWeight: 700, letterSpacing: .5, textTransform: "uppercase", whiteSpace: "nowrap" } }, text));
+const FieldError = ({ error }) => {
+if (!error)
+return null;
+return (React.createElement("div", { style: {
+fontSize: 11,
+color: "#ef4444",
+marginTop: 4,
+display: "flex",
+alignItems: "center",
+gap: 4,
+lineHeight: 1.3
+} },
+React.createElement("span", { style: { fontSize: 10 } }, "\u26A0"),
+React.createElement("span", null, error)));
+};
+const errorBorderStyle = (baseStyle, hasError) => {
+if (!hasError)
+return baseStyle;
+return Object.assign(Object.assign({}, baseStyle), { borderColor: "#ef4444", background: "#ef444408" });
+};
+const ErrorSummary = ({ errors }) => {
+const ref = React.useRef(null);
+const [shake, setShake] = React.useState(0);
+const errorList = Object.entries(errors).filter(([k, v]) => v);
+React.useEffect(() => {
+if (errorList.length > 0 && ref.current) {
+try {
+ref.current.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+catch (e) {
+ref.current.scrollIntoView(true);
+}
+setShake(s => s + 1);
+if (navigator.vibrate)
+try {
+navigator.vibrate([30, 50, 30]);
+}
+catch (e) { }
+}
+}, [Object.keys(errors).join(",")]);
+if (errorList.length === 0)
+return null;
+return (React.createElement("div", { ref: ref, key: shake, style: {
+background: "#ef444415",
+border: "1px solid #ef4444aa",
+borderRadius: 8,
+padding: "12px 16px",
+marginBottom: 8,
+fontSize: 12,
+color: "#ef4444",
+boxShadow: "0 0 0 3px #ef444422",
+animation: "mtShake .45s cubic-bezier(.36,.07,.19,.97) both"
+} },
+React.createElement("div", { style: { fontWeight: 800, marginBottom: 6, fontSize: 13, display: "flex", alignItems: "center", gap: 6 } },
+React.createElement("span", { style: { fontSize: 16 } }, "\u26A0"),
+React.createElement("span", null, errorList.length === 1 ? "Un campo da completare prima di salvare" : errorList.length + " campi da completare prima di salvare")),
+React.createElement("ul", { style: { margin: 0, paddingLeft: 22, fontSize: 12, lineHeight: 1.7, color: "#fca5a5" } }, errorList.map(([k, v]) => React.createElement("li", { key: k }, v)))));
+};
+const Spinner = ({ size = 18, color = "#2DD4BF" }) => (React.createElement("span", { style: {
+display: "inline-block",
+width: size,
+height: size,
+border: `2px solid ${color}33`,
+borderTopColor: color,
+borderRadius: "50%",
+animation: "mtSpin .7s linear infinite",
+verticalAlign: "middle"
+} }));
+const LoadingOverlay = ({ message = "Caricamento…" }) => (React.createElement("div", { style: {
+position: "fixed",
+inset: 0,
+background: "rgba(10,10,14,0.75)",
+backdropFilter: "blur(2px)",
+zIndex: 5000,
+display: "flex",
+flexDirection: "column",
+alignItems: "center",
+justifyContent: "center",
+gap: 16
+} },
+React.createElement(Spinner, { size: 40 }),
+React.createElement("div", { style: { color: "#e2e8f0", fontSize: 14, fontWeight: 600 } }, message)));
+const Hint = ({ text }) => {
+const [open, setOpen] = React.useState(false);
+const ref = React.useRef(null);
+React.useEffect(() => {
+if (!open)
+return;
+const handler = (e) => { if (ref.current && !ref.current.contains(e.target))
+setOpen(false); };
+document.addEventListener("mousedown", handler);
+document.addEventListener("touchstart", handler);
+return () => {
+document.removeEventListener("mousedown", handler);
+document.removeEventListener("touchstart", handler);
+};
+}, [open]);
+return (React.createElement("span", { ref: ref, style: { position: "relative", display: "inline-flex", alignItems: "center" } },
+React.createElement("button", { type: "button", onClick: (e) => { e.stopPropagation(); e.preventDefault(); setOpen(o => !o); }, style: {
+marginLeft: 5, width: 14, height: 14, borderRadius: "50%",
+background: open ? "#2DD4BF" : "transparent",
+border: "1px solid " + (open ? "#2DD4BF" : "#475569"),
+color: open ? "#0a0a0e" : "#94a3b8",
+fontSize: 9, fontWeight: 800, lineHeight: 1, padding: 0,
+cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center",
+touchAction: "manipulation", WebkitTapHighlightColor: "transparent"
+} }, "?"),
+open && (React.createElement("span", { style: {
+position: "absolute",
+top: "100%",
+left: 0,
+marginTop: 6,
+background: "#0F0F14",
+border: "1px solid #2DD4BF66",
+borderRadius: 8,
+padding: "10px 12px",
+fontSize: 11,
+color: "#e2e8f0",
+lineHeight: 1.5,
+width: 280,
+maxWidth: "calc(100vw - 40px)",
+zIndex: 2000,
+boxShadow: "0 6px 20px rgba(0,0,0,0.5)",
+fontWeight: 400,
+textTransform: "none",
+letterSpacing: "normal",
+whiteSpace: "normal"
+} }, text))));
+};
+const EmptyState = ({ icon, title, subtitle, actions = [], compact = false }) => {
+return (React.createElement("div", { style: {
+textAlign: "center",
+padding: compact ? "30px 18px" : "48px 24px",
+background: "#0F0F14",
+borderRadius: 14,
+border: "1px dashed #2a3040",
+maxWidth: 460,
+margin: "12px auto"
+} },
+icon && (React.createElement("div", { style: {
+fontSize: compact ? 36 : 48,
+marginBottom: 14,
+opacity: 0.4,
+filter: "grayscale(0.3)"
+} }, icon)),
+title && (React.createElement("div", { style: {
+fontSize: compact ? 14 : 16,
+fontWeight: 700,
+color: "#e2e8f0",
+marginBottom: subtitle ? 6 : 16
+} }, title)),
+subtitle && (React.createElement("div", { style: {
+fontSize: 12,
+color: "#64748b",
+lineHeight: 1.6,
+marginBottom: actions.length > 0 ? 20 : 0,
+maxWidth: 360,
+marginLeft: "auto",
+marginRight: "auto"
+} }, subtitle)),
+actions.length > 0 && (React.createElement("div", { style: {
+display: "flex",
+gap: 10,
+justifyContent: "center",
+flexWrap: "wrap"
+} }, actions.map((a, i) => (React.createElement("button", { key: i, onClick: a.onClick, style: {
+background: a.primary ? "#2DD4BF" : "transparent",
+color: a.primary ? "#0a0a0e" : "#94a3b8",
+border: a.primary ? "none" : "1px solid #2a3040",
+borderRadius: 8,
+padding: "9px 18px",
+fontSize: 13,
+fontWeight: 700,
+cursor: "pointer",
+touchAction: "manipulation",
+WebkitTapHighlightColor: "transparent",
+transition: "all .15s"
+} }, a.label)))))));
+};
+const SignaturePad = ({ value, onChange, label, height = 140 }) => {
+const canvasRef = React.useRef(null);
+const isDrawing = React.useRef(false);
+const lastPoint = React.useRef(null);
+const [hasContent, setHasContent] = React.useState(!!value);
+React.useEffect(() => {
+const canvas = canvasRef.current;
+if (!canvas)
+return;
+const rect = canvas.getBoundingClientRect();
+const dpr = window.devicePixelRatio || 1;
+canvas.width = rect.width * dpr;
+canvas.height = rect.height * dpr;
+const ctx = canvas.getContext("2d");
+ctx.scale(dpr, dpr);
+ctx.lineCap = "round";
+ctx.lineJoin = "round";
+ctx.strokeStyle = "#000";
+ctx.lineWidth = 2;
+ctx.fillStyle = "#fff";
+ctx.fillRect(0, 0, rect.width, rect.height);
+if (value) {
+const img = new Image();
+img.onload = () => ctx.drawImage(img, 0, 0, rect.width, rect.height);
+img.src = value;
+}
+}, [height]);
+const getXY = (e) => {
+const canvas = canvasRef.current;
+const rect = canvas.getBoundingClientRect();
+if (e.touches && e.touches.length > 0) {
+return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+}
+return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+};
+const start = (e) => {
+e.preventDefault();
+isDrawing.current = true;
+lastPoint.current = getXY(e);
+};
+const draw = (e) => {
+if (!isDrawing.current)
+return;
+e.preventDefault();
+const canvas = canvasRef.current;
+const ctx = canvas.getContext("2d");
+const p = getXY(e);
+let pressure = 0.5;
+if (e.pointerType === "pen" && e.pressure)
+pressure = e.pressure;
+else if (e.touches && e.touches[0] && e.touches[0].force)
+pressure = e.touches[0].force;
+ctx.lineWidth = 1 + pressure * 2.5;
+ctx.beginPath();
+ctx.moveTo(lastPoint.current.x, lastPoint.current.y);
+ctx.lineTo(p.x, p.y);
+ctx.stroke();
+lastPoint.current = p;
+setHasContent(true);
+};
+const end = (e) => {
+if (!isDrawing.current)
+return;
+isDrawing.current = false;
+const canvas = canvasRef.current;
+const b64 = canvas.toDataURL("image/png");
+onChange && onChange(b64);
+};
+const clear = () => {
+const canvas = canvasRef.current;
+const ctx = canvas.getContext("2d");
+const rect = canvas.getBoundingClientRect();
+ctx.fillStyle = "#fff";
+ctx.fillRect(0, 0, rect.width, rect.height);
+setHasContent(false);
+onChange && onChange("");
+};
+return (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } },
+label && React.createElement("label", { style: { fontSize: 11, color: "#94a3b8", fontWeight: 600 } }, label),
+React.createElement("div", { style: { position: "relative", border: "1px solid #2a3040", borderRadius: 8, background: "#fff", overflow: "hidden" } },
+React.createElement("canvas", { ref: canvasRef, style: { display: "block", width: "100%", height: height + "px", touchAction: "none", cursor: "crosshair" }, onMouseDown: start, onMouseMove: draw, onMouseUp: end, onMouseLeave: end, onTouchStart: start, onTouchMove: draw, onTouchEnd: end, onPointerDown: start, onPointerMove: draw, onPointerUp: end }),
+!hasContent && (React.createElement("div", { style: { position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none", color: "#94a3b8", fontSize: 13, fontStyle: "italic" } }, "Firma qui (usa S-Pen o dito)"))),
+React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", gap: 6 } },
+React.createElement("button", { type: "button", onClick: clear, style: { background: "transparent", border: "1px solid #2a3040", color: "#94a3b8", borderRadius: 6, padding: "4px 10px", fontSize: 11, fontWeight: 600, cursor: "pointer", touchAction: "manipulation" } }, "Cancella firma"))));
+};
+const MobileSearch = ({ value, onChange, count, total, placeholder }) => (React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, background: "#0F0F14", border: "1px solid #1e2a3a", borderRadius: 10, padding: "8px 12px", marginBottom: 10 } },
+React.createElement("span", { style: { fontSize: 14, color: "#64748b" } }, "\uD83D\uDD0D"),
+React.createElement("input", { "data-mt-search": "1", value: value, onChange: e => onChange(e.target.value), placeholder: placeholder || "Cerca…", style: { flex: 1, background: "transparent", border: "none", color: "#e2e8f0", fontSize: 14, outline: "none", minWidth: 0 } }),
+value && (React.createElement("button", { onClick: () => onChange(""), style: { background: "none", border: "none", color: "#64748b", fontSize: 16, cursor: "pointer", padding: "0 4px", touchAction: "manipulation" } }, "\u2715")),
+React.createElement("span", { style: { fontSize: 10, color: "#475569", fontFamily: "monospace", whiteSpace: "nowrap" } },
+count,
+"/",
+total)));
+const SwipeableCard = ({ children, onDelete, threshold = 80 }) => {
+const [dx, setDx] = React.useState(0);
+const [startX, setStartX] = React.useState(null);
+const [startY, setStartY] = React.useState(null);
+const [locked, setLocked] = React.useState(false);
+const onTouchStart = (e) => {
+const t = e.touches[0];
+setStartX(t.clientX);
+setStartY(t.clientY);
+setLocked(false);
+};
+const onTouchMove = (e) => {
+if (startX === null)
+return;
+const t = e.touches[0];
+const deltaX = t.clientX - startX;
+const deltaY = t.clientY - startY;
+if (!locked) {
+if (Math.abs(deltaX) > 8 && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
+setLocked(true);
+}
+else if (Math.abs(deltaY) > 8) {
+setStartX(null);
+setStartY(null);
+setDx(0);
+return;
+}
+}
+if (locked) {
+if (deltaX < 0)
+setDx(Math.max(deltaX, -140));
+else
+setDx(0);
+}
+};
+const onTouchEnd = () => {
+if (dx < -threshold) {
+setDx(-100);
+setTimeout(() => { onDelete && onDelete(); setDx(0); }, 80);
+}
+else {
+setDx(0);
+}
+setStartX(null);
+setStartY(null);
+setLocked(false);
+};
+return (React.createElement("div", { style: { position: "relative", overflow: "hidden", borderRadius: 12 } },
+React.createElement("div", { style: { position: "absolute", inset: 0, background: "linear-gradient(90deg, transparent 0%, #ef4444 60%)", display: "flex", alignItems: "center", justifyContent: "flex-end", padding: "0 20px", pointerEvents: "none" } },
+React.createElement("span", { style: { color: "#fff", fontSize: 14, fontWeight: 800, opacity: dx < -30 ? 1 : 0, transition: "opacity .15s" } }, "\u2715 Elimina")),
+React.createElement("div", { onTouchStart: onTouchStart, onTouchMove: onTouchMove, onTouchEnd: onTouchEnd, style: {
+transform: `translateX(${dx}px)`,
+transition: startX === null ? "transform .2s ease" : "none",
+position: "relative",
+background: "transparent",
+} }, children)));
+};
+const FilterDropdown = ({ filters, onChange, onClearAll }) => {
+const [open, setOpen] = React.useState(false);
+const activeCount = Object.values(filters).filter(f => f.value).length;
+return (React.createElement("div", { style: { marginBottom: 10 } },
+React.createElement("button", { onClick: () => setOpen(o => !o), style: {
+width: "100%",
+display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
+background: activeCount > 0 ? "#2DD4BF15" : "#0F0F14",
+border: "1px solid " + (activeCount > 0 ? "#2DD4BF55" : "#1e2a3a"),
+borderRadius: 10, padding: "9px 14px",
+color: activeCount > 0 ? "#2DD4BF" : "#94a3b8", fontSize: 13, fontWeight: 700,
+cursor: "pointer", touchAction: "manipulation", WebkitTapHighlightColor: "transparent"
+} },
+React.createElement("span", { style: { display: "flex", alignItems: "center", gap: 8 } },
+"Filtri ",
+activeCount > 0 && React.createElement("span", { style: { background: "#2DD4BF", color: "#000", borderRadius: 10, padding: "1px 8px", fontSize: 11, fontWeight: 800 } }, activeCount)),
+React.createElement("span", { style: { fontSize: 11, transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" } }, "\u25BC")),
+open && (React.createElement("div", { style: { marginTop: 8, background: "#0D0D12", border: "1px solid #1e2a3a", borderRadius: 10, padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 } },
+Object.entries(filters).map(([key, fdef]) => (React.createElement("div", { key: key },
+React.createElement("div", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700, marginBottom: 5 } }, fdef.label),
+React.createElement("select", { value: fdef.value, onChange: e => onChange(key, e.target.value), style: {
+width: "100%", background: "#16161C", border: "1px solid #2a3040", borderRadius: 6,
+padding: "7px 10px", color: "#e2e8f0", fontSize: 13, outline: "none",
+fontFamily: "inherit", appearance: "none", paddingRight: 30,
+} },
+React.createElement("option", { value: "" }, "\u2014 Tutti \u2014"),
+fdef.options.map(opt => (React.createElement("option", { key: opt, value: opt }, opt))))))),
+activeCount > 0 && (React.createElement("button", { onClick: onClearAll, style: { background: "transparent", color: "#ef4444", border: "1px solid #ef444433", borderRadius: 6, padding: "7px 10px", cursor: "pointer", fontSize: 12, fontWeight: 700, marginTop: 4, touchAction: "manipulation" } }, "\u2715 Pulisci tutti i filtri"))))));
+};
+const AssetCombobox = ({ value, onChange, assets, customers, placeholder = "Cerca apparecchio…", error, autoFocus = false }) => {
+const [open, setOpen] = React.useState(false);
+const [query, setQuery] = React.useState("");
+const [highlighted, setHighlighted] = React.useState(0);
+const wrapperRef = React.useRef(null);
+const inputRef = React.useRef(null);
+const selected = assets.find(a => a.id === value);
+const filtered = React.useMemo(() => {
+if (!query.trim())
+return assets.slice(0, 50);
+const q = query.toLowerCase();
+return assets.filter(a => {
+var _a;
+const cust = ((_a = customers === null || customers === void 0 ? void 0 : customers.find(c => c.id === a.customerId)) === null || _a === void 0 ? void 0 : _a.name) || "";
+return [a.name, a.brand, a.model, a.serial, a.location, a.id, cust]
+.filter(Boolean)
+.some(f => String(f).toLowerCase().includes(q));
+}).slice(0, 100);
+}, [query, assets, customers]);
+React.useEffect(() => {
+if (!open)
+return;
+const handler = (e) => {
+if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+setOpen(false);
+setQuery("");
+}
+};
+document.addEventListener("mousedown", handler);
+document.addEventListener("touchstart", handler);
+return () => {
+document.removeEventListener("mousedown", handler);
+document.removeEventListener("touchstart", handler);
+};
+}, [open]);
+React.useEffect(() => {
+if (open && inputRef.current)
+inputRef.current.focus();
+}, [open]);
+React.useEffect(() => { setHighlighted(0); }, [query]);
+const handleSelect = (asset) => {
+onChange(asset.id);
+setOpen(false);
+setQuery("");
+};
+const handleKey = (e) => {
+if (e.key === "ArrowDown") {
+e.preventDefault();
+setHighlighted(h => Math.min(h + 1, filtered.length - 1));
+}
+else if (e.key === "ArrowUp") {
+e.preventDefault();
+setHighlighted(h => Math.max(h - 1, 0));
+}
+else if (e.key === "Enter") {
+e.preventDefault();
+if (filtered[highlighted])
+handleSelect(filtered[highlighted]);
+}
+else if (e.key === "Escape") {
+setOpen(false);
+setQuery("");
+}
+};
+const INP_BASE = {
+background: "#141418",
+border: "1px solid " + (error ? "#ef4444" : "#2a3040"),
+borderRadius: 8,
+padding: "9px 11px",
+color: "#e2e8f0",
+fontSize: 13,
+outline: "none",
+width: "100%",
+boxSizing: "border-box",
+cursor: "pointer"
+};
+return (React.createElement("div", { ref: wrapperRef, style: { position: "relative", width: "100%" } }, !open ? (React.createElement("div", { onClick: () => setOpen(true), style: Object.assign(Object.assign({}, INP_BASE), { display: "flex", alignItems: "center", gap: 8, minHeight: 38 }) }, selected ? (React.createElement(React.Fragment, null,
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+React.createElement("div", { style: { color: "#e2e8f0", fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, selected.name),
+React.createElement("div", { style: { color: "#64748b", fontSize: 11, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } },
+[selected.brand, selected.model].filter(Boolean).join(" "),
+selected.serial && React.createElement("span", { style: { fontFamily: "monospace", marginLeft: 6 } },
+"\u00B7 S/N: ",
+selected.serial))),
+React.createElement("button", { type: "button", onClick: (e) => { e.stopPropagation(); onChange(""); }, title: "Rimuovi selezione", style: { background: "none", border: "none", color: "#64748b", fontSize: 14, cursor: "pointer", padding: "2px 6px", touchAction: "manipulation" } }, "\u2715"),
+React.createElement("span", { style: { color: "#64748b", fontSize: 11 } }, "\u25BE"))) : (React.createElement(React.Fragment, null,
+React.createElement("span", { style: { flex: 1, color: "#64748b", fontSize: 13 } }, placeholder),
+React.createElement("span", { style: { color: "#64748b", fontSize: 11 } }, "\u25BE"))))) : (React.createElement(React.Fragment, null,
+React.createElement("input", { ref: inputRef, type: "text", value: query, onChange: e => setQuery(e.target.value), onKeyDown: handleKey, placeholder: "Cerca per nome, marca, modello, S/N, ubicazione\u2026", style: Object.assign(Object.assign({}, INP_BASE), { cursor: "text" }) }),
+React.createElement("div", { style: {
+position: "absolute",
+top: "calc(100% + 4px)",
+left: 0,
+right: 0,
+background: "#0F0F14",
+border: "1px solid #2a3040",
+borderRadius: 8,
+maxHeight: 320,
+overflowY: "auto",
+zIndex: 1000,
+boxShadow: "0 8px 24px rgba(0,0,0,0.4)"
+} }, filtered.length === 0 ? (React.createElement("div", { style: { padding: "16px", textAlign: "center", color: "#64748b", fontSize: 12 } }, assets.length === 0 ? "Nessun apparecchio registrato" : "Nessun risultato per \"" + query + "\"")) : (React.createElement(React.Fragment, null,
+!query.trim() && assets.length > 50 && (React.createElement("div", { style: { padding: "6px 12px", fontSize: 10, color: "#64748b", borderBottom: "1px solid #1e2a3a", background: "#0a0a0e", fontStyle: "italic" } },
+"Mostro primi 50 \u00B7 digita per cercare tra tutti i ",
+assets.length)),
+filtered.map((a, i) => {
+var _a;
+const cust = (_a = customers === null || customers === void 0 ? void 0 : customers.find(c => c.id === a.customerId)) === null || _a === void 0 ? void 0 : _a.name;
+const isHigh = i === highlighted;
+const isSel = a.id === value;
+return (React.createElement("div", { key: a.id, onClick: () => handleSelect(a), onMouseEnter: () => setHighlighted(i), style: {
+padding: "9px 12px",
+cursor: "pointer",
+borderBottom: "1px solid #14182a",
+background: isHigh ? "#2DD4BF11" : (isSel ? "#1e2a3a" : "transparent"),
+borderLeft: isSel ? "3px solid #2DD4BF" : "3px solid transparent",
+transition: "all .1s"
+} },
+React.createElement("div", { style: { color: "#e2e8f0", fontSize: 13, fontWeight: 600, lineHeight: 1.3 } }, a.name),
+React.createElement("div", { style: { color: "#64748b", fontSize: 11, marginTop: 2, lineHeight: 1.4 } },
+[a.brand, a.model].filter(Boolean).join(" "),
+a.serial && React.createElement("span", { style: { fontFamily: "monospace", marginLeft: 6 } },
+"\u00B7 S/N: ",
+a.serial),
+a.location && React.createElement("span", { style: { marginLeft: 6 } },
+"\u00B7 ",
+a.location)),
+cust && React.createElement("div", { style: { color: "#94a3b8", fontSize: 10, marginTop: 2 } }, cust)));
+}),
+filtered.length === 100 && (React.createElement("div", { style: { padding: "6px 12px", fontSize: 10, color: "#64748b", textAlign: "center", borderTop: "1px solid #1e2a3a", fontStyle: "italic" } }, "Solo primi 100 risultati \u00B7 affina la ricerca per vedere pi\u00F9 specifico")))))))));
+};
+const Pill = ({ label, value, color, sub, onClick }) => {
+const c = color || "#2DD4BF";
+const clickable = !!onClick;
+return (React.createElement("div", { onClick: onClick, style: {
+background: "linear-gradient(135deg, #16161D 0%, #121218 100%)",
+border: "1px solid #2A2A38",
+borderLeft: "3px solid " + c,
+borderRadius: 10,
+padding: "13px 16px",
+flex: 1,
+minWidth: 120,
+boxShadow: "0 2px 10px #0007, inset 0 1px 0 #ffffff05",
+position: "relative",
+overflow: "hidden",
+cursor: clickable ? "pointer" : "default",
+transition: "transform .15s ease, border-color .15s ease, box-shadow .15s ease",
+WebkitTapHighlightColor: "transparent",
+touchAction: "manipulation",
+}, onMouseEnter: clickable ? (e) => { e.currentTarget.style.borderColor = c + "66"; e.currentTarget.style.transform = "translateY(-1px)"; e.currentTarget.style.boxShadow = "0 4px 14px #0009, 0 0 0 1px " + c + "22, inset 0 1px 0 #ffffff08"; } : undefined, onMouseLeave: clickable ? (e) => { e.currentTarget.style.borderColor = "#2A2A38"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 2px 10px #0007, inset 0 1px 0 #ffffff05"; } : undefined },
+React.createElement("div", { style: {
+position: "absolute", top: 0, right: 0, width: 60, height: 60,
+background: "radial-gradient(circle at top right, " + c + "15, transparent 70%)",
+pointerEvents: "none"
+} }),
+React.createElement("div", { style: { fontSize: 22, fontWeight: 900, color: c, lineHeight: 1, fontFamily: "monospace", letterSpacing: -0.5 } }, value),
+React.createElement("div", { style: { fontSize: 10, color: "#7A7A8E", marginTop: 6, textTransform: "uppercase", letterSpacing: .8, fontWeight: 700 } }, label),
+sub && React.createElement("div", { style: { fontSize: 9, color: "#4A4A60", marginTop: 2 } }, sub),
+clickable && React.createElement("div", { style: { position: "absolute", bottom: 6, right: 9, fontSize: 11, color: c + "99", fontWeight: 600 } }, "\u203A")));
+};
+function Btn(_a) {
+var { children, variant = "primary", sm } = _a, props = __rest(_a, ["children", "variant", "sm"]);
+const base = { borderRadius: 9, cursor: "pointer", fontWeight: 700, transition: "all .15s", border: "none", display: "inline-flex", alignItems: "center", gap: 6, letterSpacing: .2 };
+const vars = {
+primary: { background: "linear-gradient(135deg,#2DD4BF,#0D9488)", color: "#fff", boxShadow: "0 2px 10px #2DD4BF3a" },
+success: { background: "#15803d22", color: "#22c55e", border: "1px solid #22c55e44" },
+danger: { background: "#ef444422", color: "#ef4444", border: "1px solid #ef444433" },
+ghost: { background: "transparent", color: "#9090A8", border: "1px solid #3a3a4a" },
+warning: { background: "#f59e0b22", color: "#f59e0b", border: "1px solid #f59e0b44" },
+};
+return (React.createElement("button", Object.assign({}, props, { style: Object.assign(Object.assign(Object.assign(Object.assign({}, base), vars[variant]), { padding: sm ? "6px 12px" : "9px 18px", fontSize: sm ? 12 : 13 }), props.style) }), children));
+}
+function Inp(_a) {
+var { label, hint } = _a, p = __rest(_a, ["label", "hint"]);
+return (React.createElement("label", { style: { display: "flex", flexDirection: "column", gap: 5 } },
+label && React.createElement("span", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700, display: "flex", alignItems: "center" } },
+label,
+hint && React.createElement(Hint, { text: hint })),
+React.createElement("input", Object.assign({}, p, { style: Object.assign({ background: "#141418", border: "1px solid #2a3040", borderRadius: 8, padding: "10px 12px", color: "#e2e8f0", outline: "none", width: "100%", boxSizing: "border-box" }, (p.style || {})) }))));
+}
+function Sel(_a) {
+var { label, hint, children } = _a, p = __rest(_a, ["label", "hint", "children"]);
+return (React.createElement("label", { style: { display: "flex", flexDirection: "column", gap: 5 } },
+label && React.createElement("span", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700, display: "flex", alignItems: "center" } },
+label,
+hint && React.createElement(Hint, { text: hint })),
+React.createElement("select", Object.assign({}, p, { style: { background: "#141418", border: "1px solid #2a3040", borderRadius: 8, padding: "10px 12px", color: "#e2e8f0", outline: "none", width: "100%", boxSizing: "border-box" } }), children)));
+}
+function Txt(_a) {
+var { label } = _a, p = __rest(_a, ["label"]);
+return (React.createElement("label", { style: { display: "flex", flexDirection: "column", gap: 5 } },
+label && React.createElement("span", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700 } }, label),
+React.createElement("textarea", Object.assign({}, p, { style: { background: "#141418", border: "1px solid #2a3040", borderRadius: 8, padding: "10px 12px", color: "#e2e8f0", outline: "none", width: "100%", boxSizing: "border-box", resize: "vertical", minHeight: 64 } }))));
+}
+function Modal({ title, onClose, wide, children }) {
+return (React.createElement("div", { style: { position: "fixed", inset: 0, background: "#000c", zIndex: 900, display: "flex", alignItems: "center", justifyContent: "center", padding: 12 }, onClick: e => e.target === e.currentTarget && onClose() },
+React.createElement("div", { style: { background: "#16161D", border: "1px solid #2a3040", borderRadius: 16, width: wide ? "min(820px,97vw)" : "min(620px,97vw)", maxHeight: "93vh", overflowY: "auto", padding: 0, boxSizing: "border-box", animation: "mtFadeIn .2s ease", boxShadow: "0 20px 60px rgba(0,0,0,0.5)" }, onClick: e => e.stopPropagation() },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 24px", borderBottom: "1px solid #1e2a3a", position: "sticky", top: 0, background: "#16161D", zIndex: 5, borderRadius: "16px 16px 0 0" } },
+React.createElement("span", { style: { fontWeight: 800, fontSize: 16 } }, title),
+React.createElement("button", { onClick: onClose, style: { background: "none", border: "none", color: "#64748b", fontSize: 24, cursor: "pointer", lineHeight: 1, padding: 0 } }, "\u00D7")),
+React.createElement("div", { style: { padding: 24 } }, children))));
+}
+function Grid({ cols, gap = 14, children }) {
+const isMobile = useMedia("(max-width:600px)");
+return React.createElement("div", { style: { display: "grid", gridTemplateColumns: isMobile ? "1fr" : cols, gap } }, children);
+}
+function Span2({ children }) {
+const isMobile = useMedia("(max-width:600px)");
+return React.createElement("div", { style: { gridColumn: isMobile ? "span 1" : "span 2" } }, children);
+}
+function BarChart({ data, height = 160, color = "#2DD4BF" }) {
+if (!data.length)
+return null;
+const max = Math.max(...data.map(d => d.value), 1);
+return (React.createElement("div", { style: { display: "flex", alignItems: "flex-end", gap: 6, height, padding: "10px 0" } }, data.map((d, i) => (React.createElement("div", { key: i, style: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, minWidth: 0 } },
+React.createElement("div", { style: { fontSize: 10, color: "#94a3b8", fontWeight: 700 } }, d.value > 0 ? "€" + (d.value.toFixed(0)) : ""),
+React.createElement("div", { style: { width: "100%", maxWidth: 40, background: color, opacity: .7, height: ((d.value / max) * 100) + "%", minHeight: 2, borderRadius: "4px 4px 0 0", transition: "height .3s" } }),
+React.createElement("div", { style: { fontSize: 10, color: "#64748b", textAlign: "center", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" } }, d.label))))));
+}
+function AssetCard({ a, customer, onEdit, onDelete, onHistory }) {
+return (React.createElement("div", { style: { background: "#1E1E28", borderRadius: 12, padding: "14px 16px", border: "1px solid #2a3040", marginBottom: 8 } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, gap: 10 } },
+React.createElement("div", { style: { minWidth: 0 } },
+React.createElement("div", { style: { fontWeight: 700, fontSize: 15 } }, a.name),
+React.createElement("div", { style: { fontSize: 11, color: "#64748b", marginTop: 2 } },
+a.assetCode || a.id,
+" \u00B7 ",
+a.brand,
+" ",
+a.model)),
+React.createElement(Badge, { text: a.status, color: STATUS_COLOR[a.status] || "#64748b" })),
+React.createElement("div", { style: { display: "flex", gap: 14, fontSize: 12, color: "#94a3b8", flexWrap: "wrap", marginBottom: 12 } },
+(customer === null || customer === void 0 ? void 0 : customer.name) && React.createElement("span", null,
+" ",
+customer.name),
+a.location && React.createElement("span", null,
+"\u00B7 ",
+a.location),
+a.nextService && React.createElement("span", null,
+" ",
+a.nextService)),
+React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } },
+React.createElement(Btn, { sm: true, variant: "ghost", onClick: () => onHistory(a) }, " Storico"),
+React.createElement(Btn, { sm: true, variant: "ghost", onClick: () => onEdit(a) }, "\u270F Modifica"),
+React.createElement(Btn, { sm: true, variant: "danger", onClick: () => onDelete(a.id) }, "\u2715"))));
+}
+function CustomerForm({ initial, onSave, onClose }) {
+const blank = { name: "", vat: "", fiscalCode: "", address: "", contact: "", email: "", phone: "", notes: "" };
+const [f, setF] = React.useState(initial ? Object.assign(Object.assign({}, blank), initial) : blank);
+const [errors, setErrors] = React.useState({});
+const s = k => e => setF(x => (Object.assign(Object.assign({}, x), { [k]: e.target.value })));
+return (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14 } },
+React.createElement(ErrorSummary, { errors: errors }),
+React.createElement(Grid, { cols: "1fr 1fr" },
+React.createElement(Span2, null,
+React.createElement(Inp, { label: "Ragione sociale", value: f.name, onChange: s("name") })),
+React.createElement(Inp, { label: "Partita IVA", value: f.vat, onChange: s("vat") }),
+React.createElement(Inp, { label: "Codice fiscale", value: f.fiscalCode, onChange: s("fiscalCode") }),
+React.createElement(Span2, null,
+React.createElement(Inp, { label: "Indirizzo", value: f.address, onChange: s("address") })),
+React.createElement(Inp, { label: "Referente", value: f.contact, onChange: s("contact") }),
+React.createElement(Inp, { label: "Email", value: f.email, onChange: s("email") }),
+React.createElement(Inp, { label: "Telefono", value: f.phone, onChange: s("phone") }),
+React.createElement("div", null),
+React.createElement(Span2, null,
+React.createElement(Txt, { label: "Note", value: f.notes, onChange: s("notes") }))),
+React.createElement("div", { style: { display: "flex", gap: 10, justifyContent: "flex-end" } },
+React.createElement(Btn, { variant: "ghost", onClick: onClose }, "Annulla"),
+React.createElement(Btn, { onClick: () => {
+var _a;
+const errs = {};
+if (!((_a = f.name) === null || _a === void 0 ? void 0 : _a.trim()))
+errs.name = "La ragione sociale è obbligatoria";
+if (f.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email))
+errs.email = "Email non valida";
+setErrors(errs);
+if (Object.keys(errs).length > 0)
+return;
+onSave(f);
+} }, "Salva"))));
+}
+function AssetForm({ initial, customers, assets = [], onSave, onClose }) {
+const blank = { name: "", brand: "", model: "", serial: "", location: "", customerId: "", status: "operativo", lastService: "", nextService: "", serviceInterval: 6, intervalIec: 12, intervalFunc: 12, notes: "" };
+const [f, setF] = React.useState(() => {
+if (!initial)
+return blank;
+const merged = Object.assign(Object.assign({}, blank), initial);
+if (initial.intervalIec === undefined)
+merged.intervalIec = initial.serviceInterval || 12;
+if (initial.intervalFunc === undefined)
+merged.intervalFunc = initial.serviceInterval || 12;
+return merged;
+});
+const [errors, setErrors] = React.useState({});
+const [showAdv, setShowAdv] = React.useState(!!initial);
+const s = k => e => setF(x => (Object.assign(Object.assign({}, x), { [k]: e.target.value })));
+const uniq = (key) => Array.from(new Set((assets || []).map(a => a[key]).filter(v => v && v.trim()))).sort();
+const nameOptions = uniq("name");
+const brandOptions = uniq("brand");
+const modelOptions = uniq("model");
+const autofillFrom = (field, val) => {
+const v = (val || "").trim().toLowerCase();
+if (!v)
+return;
+const match = (assets || []).find(a => field === "model"
+? (a.model || "").trim().toLowerCase() === v
+: (a.name || "").trim().toLowerCase() === v);
+if (!match)
+return;
+setF(x => {
+const copy = Object.assign({}, x);
+const inherit = ["name", "brand", "model", "serviceInterval", "intervalIec", "intervalFunc", "iecNorm", "iecClass", "patientType", "riskClass", "leakageMethod"];
+let filledAdvanced = false;
+const advFields = ["iecNorm", "iecClass", "patientType", "riskClass", "leakageMethod"];
+inherit.forEach(k => {
+const cur = copy[k];
+const isEmpty = cur === "" || cur === undefined || cur === null || (k === "serviceInterval" && (cur === 6));
+if (isEmpty && match[k] !== undefined && match[k] !== "" && match[k] !== null) {
+copy[k] = match[k];
+if (advFields.includes(k))
+filledAdvanced = true;
+}
+});
+if (filledAdvanced)
+setShowAdv(true);
+return copy;
+});
+};
+return (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14 } },
+React.createElement(ErrorSummary, { errors: errors }),
+React.createElement(Grid, { cols: "1fr 1fr" },
+React.createElement(Inp, { label: "Nome / Tipo apparecchio", value: f.name, onChange: s("name"), onBlur: e => autofillFrom("name", e.target.value), placeholder: "es. Defibrillatore" }),
+React.createElement(Inp, { label: "Marca", value: f.brand, onChange: s("brand") }),
+React.createElement(Inp, { label: "Modello", value: f.model, onChange: s("model"), onBlur: e => autofillFrom("model", e.target.value), hint: "Scrivi un modello gi\u00E0 inserito: marca, tipo e norma si compilano da soli." }),
+React.createElement(Inp, { label: "Numero di serie", value: f.serial, onChange: s("serial") }),
+React.createElement(Sel, { label: "Cliente / Struttura", value: f.customerId, onChange: s("customerId") },
+React.createElement("option", { value: "" }, "\u2014 Nessuno \u2014"),
+customers.map(c => React.createElement("option", { key: c.id, value: c.id }, c.name))),
+React.createElement(Inp, { label: "Ubicazione", value: f.location, onChange: s("location") }),
+React.createElement(Sel, { label: "Stato", value: f.status, onChange: s("status") }, ["operativo", "in manutenzione", "fuori servizio"].map(v => React.createElement("option", { key: v }, v))),
+React.createElement(Inp, { label: "Interv. Sicurezza Elettrica (mesi)", type: "number", value: f.intervalIec, onChange: s("intervalIec") }),
+React.createElement(Inp, { label: "Interv. Funzionale (mesi)", type: "number", value: f.intervalFunc, onChange: s("intervalFunc") })),
+React.createElement("button", { onClick: () => setShowAdv(v => !v), style: { background: "transparent", border: "1px dashed #2a3040", borderRadius: 8, color: "#94a3b8", padding: "9px", cursor: "pointer", fontSize: 12.5, fontWeight: 700 } }, showAdv ? "− Nascondi dettagli avanzati" : "+ Mostra dettagli avanzati (date, norma, garanzia…)"),
+showAdv && React.createElement(Grid, { cols: "1fr 1fr" },
+React.createElement(Inp, { label: "Ultimo servizio", type: "date", value: f.lastService, onChange: s("lastService") }),
+React.createElement(Inp, { label: "Prossimo servizio", type: "date", value: f.nextService, onChange: s("nextService") }),
+React.createElement(Sel, { label: "Norma sicurezza", hint: "IEC 62353: apparecchiature elettromedicali (defibrillatori, monitor, ventilatori). IEC 61010-1: strumenti da laboratorio e misura (oscilloscopi, alimentatori, sonde). Definisce i limiti delle dispersioni e i test da effettuare.", value: f.iecNorm || "62353", onChange: e => setF(x => (Object.assign(Object.assign({}, x), { iecNorm: e.target.value }))) },
+React.createElement("option", { value: "62353" }, "IEC 62353 \u2014 Elettromedicale"),
+React.createElement("option", { value: "61010" }, "IEC 61010-1 \u2014 Laboratorio"),
+React.createElement("option", { value: "" }, "Non applicabile")),
+React.createElement(Sel, { label: "Classe di rischio", hint: "Classificazione MDR (Reg. UE 2017/745): A = basso rischio (es. termometri non invasivi), B = medio (monitor, pompe), C = alto (defibrillatori, ventilatori vita-critici), D = altissimo (impiantabili). Determina la frequenza delle verifiche e la severit\u00E0.", value: f.riskClass || "", onChange: s("riskClass") },
+React.createElement("option", { value: "" }, "\u2014"),
+React.createElement("option", { value: "A" }, "Classe A \u2014 Basso rischio"),
+React.createElement("option", { value: "B" }, "Classe B \u2014 Medio rischio"),
+React.createElement("option", { value: "C" }, "Classe C \u2014 Alto rischio")),
+React.createElement(Inp, { label: "Data acquisto", type: "date", value: f.purchaseDate || "", onChange: s("purchaseDate") }),
+React.createElement(Inp, { label: "Scadenza garanzia", type: "date", value: f.warrantyExpiry || "", onChange: s("warrantyExpiry") }),
+React.createElement(Span2, null,
+React.createElement(Inp, { label: "Contratto assistenza / Fornitore servizio", value: f.serviceContract || "", onChange: s("serviceContract") })),
+React.createElement(Inp, { label: "Data di fabbricazione", type: "date", value: f.manufactureDate || "", onChange: s("manufactureDate") }),
+React.createElement(Inp, { label: "Data di messa in servizio", type: "date", value: f.commissionDate || "", onChange: s("commissionDate") }),
+React.createElement(Inp, { label: "Costo d'acquisto (\u20AC)", type: "number", step: "0.01", value: f.purchaseCost || "", onChange: s("purchaseCost") }),
+React.createElement(Inp, { label: "Fornitore (chi l'ha venduto)", value: f.supplier || "", onChange: s("supplier") }),
+React.createElement(Inp, { label: "Data sostituzione prevista / fine vita", type: "date", value: f.replacementDate || "", onChange: s("replacementDate") }),
+React.createElement(Inp, { label: "Data ultimo cambio batteria", type: "date", value: f.batteryDate || "", onChange: s("batteryDate") }),
+React.createElement(Span2, null,
+React.createElement("div", { onClick: () => setF(x => (Object.assign(Object.assign({}, x), { batteryChanged: !x.batteryChanged }))), style: { display: "flex", alignItems: "center", gap: 12, cursor: "pointer", padding: "4px 0" } },
+React.createElement("div", { style: { width: 46, height: 27, borderRadius: 14, flexShrink: 0, background: f.batteryChanged ? "#2DD4BF" : "#3a4151", position: "relative", transition: "background .15s" } },
+React.createElement("div", { style: { position: "absolute", top: 3, left: f.batteryChanged ? 22 : 3, width: 21, height: 21, borderRadius: "50%", background: "#fff", transition: "left .15s", boxShadow: "0 1px 3px rgba(0,0,0,.4)" } })),
+React.createElement("span", { style: { fontSize: 13, color: "#e2e8f0" } }, "Batteria sostituita"))),
+React.createElement(Span2, null,
+React.createElement(Txt, { label: "Note", value: f.notes, onChange: s("notes") }))),
+React.createElement("div", { style: { display: "flex", gap: 10, justifyContent: "flex-end" } },
+React.createElement(Btn, { variant: "ghost", onClick: onClose }, "Annulla"),
+React.createElement(Btn, { onClick: () => {
+var _a;
+const errs = {};
+if (!((_a = f.name) === null || _a === void 0 ? void 0 : _a.trim()))
+errs.name = "Il nome dell'apparecchio è obbligatorio";
+setErrors(errs);
+if (Object.keys(errs).length > 0)
+return;
+onSave(Object.assign(Object.assign({}, f), { serviceInterval: +f.serviceInterval, intervalIec: +f.intervalIec || 12, intervalFunc: +f.intervalFunc || 12 }));
+} }, "Salva"))));
+}
+function PartForm({ initial, assets, onSave, onClose }) {
+const blank = { code: "", name: "", brand: "", compatible: [], qty: 0, minQty: 0, unitPrice: 0, sellPrice: 0, markupPct: 30, location: "", notes: "" };
+const [f, setF] = React.useState(initial ? Object.assign(Object.assign(Object.assign({}, blank), initial), { sellPrice: initial.sellPrice || initial.unitPrice, markupPct: initial.markupPct || 0, compatible: initial.compatible || [] }) : blank);
+const s = k => e => setF(x => (Object.assign(Object.assign({}, x), { [k]: e.target.value })));
+const toggle = id => setF(x => (Object.assign(Object.assign({}, x), { compatible: x.compatible.includes(id) ? x.compatible.filter(c => c !== id) : [...x.compatible, id] })));
+const applyMarkup = () => {
+const cost = +f.unitPrice;
+const pct = +f.markupPct;
+setF(x => (Object.assign(Object.assign({}, x), { sellPrice: +(cost * (1 + pct / 100)).toFixed(2) })));
+};
+return (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14 } },
+React.createElement(Grid, { cols: "1fr 1fr" },
+React.createElement(Inp, { label: "Codice parte", value: f.code, onChange: s("code") }),
+React.createElement(Inp, { label: "Nome", value: f.name, onChange: s("name") }),
+React.createElement(Inp, { label: "Marca", value: f.brand, onChange: s("brand") }),
+React.createElement(Inp, { label: "Ubicazione magazzino", value: f.location, onChange: s("location") }),
+React.createElement(Inp, { label: "Quantit\u00E0", type: "number", value: f.qty, onChange: s("qty") }),
+React.createElement(Inp, { label: "Quantit\u00E0 minima", type: "number", value: f.minQty, onChange: s("minQty") }),
+React.createElement(Inp, { label: "Prezzo di acquisto (\u20AC)", type: "number", step: "0.01", value: f.unitPrice, onChange: s("unitPrice") }),
+React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "end" } },
+React.createElement("div", { style: { flex: 1 } },
+React.createElement(Inp, { label: "Markup %", type: "number", value: f.markupPct, onChange: s("markupPct") })),
+React.createElement(Btn, { sm: true, variant: "ghost", onClick: applyMarkup, style: { padding: "10px 12px" } }, "Applica")),
+React.createElement(Span2, null,
+React.createElement(Inp, { label: "Prezzo di vendita (\u20AC)", type: "number", step: "0.01", value: f.sellPrice, onChange: s("sellPrice") })),
+assets.length > 0 && (React.createElement(Span2, null,
+React.createElement("span", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700, display: "block", marginBottom: 8 } }, "Apparecchi compatibili"),
+React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 8 } }, assets.map(a => (React.createElement("button", { key: a.id, onClick: () => toggle(a.id), style: { background: f.compatible.includes(a.id) ? "#2DD4BF22" : "#1E1E28", border: "1px solid " + (f.compatible.includes(a.id) ? "#2DD4BF" : "#32323F"), color: f.compatible.includes(a.id) ? "#5EEAD4" : "#64748b", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontSize: 12 } },
+(a.assetCode || a.id),
+" \u2014 ",
+a.name)))))),
+React.createElement(Span2, null,
+React.createElement(Txt, { label: "Note", value: f.notes, onChange: s("notes") }))),
+React.createElement("div", { style: { display: "flex", gap: 10, justifyContent: "flex-end" } },
+React.createElement(Btn, { variant: "ghost", onClick: onClose }, "Annulla"),
+React.createElement(Btn, { onClick: () => onSave(Object.assign(Object.assign({}, f), { qty: +f.qty, minQty: +f.minQty, unitPrice: +f.unitPrice, sellPrice: +f.sellPrice, markupPct: +f.markupPct })) }, "Salva"))));
+}
+function JobForm({ initial, assets, parts, customers, technicians, onSave, onClose }) {
+var _a;
+const blank = { assetId: ((_a = assets[0]) === null || _a === void 0 ? void 0 : _a.id) || "", customerId: "", type: "correttiva", priority: "normale", status: "aperto", assignee: "", openDate: new Date().toISOString().slice(0, 10), closeDate: "", description: "", parts: [], laborHours: 0, laborRate: 55, travelCost: 0, notes: "", timeline: [], photos: [] };
+const [f, setF] = React.useState(initial ? Object.assign(Object.assign(Object.assign({}, blank), initial), { timeline: initial.timeline || [], photos: initial.photos || [], parts: initial.parts || [] }) : blank);
+const [errors, setErrors] = React.useState({});
+const s = k => e => setF(x => (Object.assign(Object.assign({}, x), { [k]: e.target.value })));
+React.useEffect(() => {
+if (f.assetId && !f.customerId) {
+const a = assets.find(x => x.id === f.assetId);
+if (a === null || a === void 0 ? void 0 : a.customerId)
+setF(x => (Object.assign(Object.assign({}, x), { customerId: a.customerId })));
+}
+}, [f.assetId]);
+const addPart = () => setF(x => { var _a; return (Object.assign(Object.assign({}, x), { parts: [...x.parts, { partId: ((_a = parts[0]) === null || _a === void 0 ? void 0 : _a.id) || "", qty: 1 }] })); });
+const remPart = i => setF(x => (Object.assign(Object.assign({}, x), { parts: x.parts.filter((_, idx) => idx !== i) })));
+const setPart = (i, k, v) => setF(x => { const a = [...x.parts]; a[i] = Object.assign(Object.assign({}, a[i]), { [k]: k === "qty" ? +v : v }); return Object.assign(Object.assign({}, x), { parts: a }); });
+const addStep = () => setF(x => (Object.assign(Object.assign({}, x), { timeline: [...(x.timeline || []), {
+id: "T" + Date.now(),
+date: new Date().toISOString().slice(0, 10),
+time: new Date().toTimeString().slice(0, 5),
+type: "sopralluogo",
+description: "",
+durationMin: 30,
+technician: x.assignee || ""
+}] })));
+const remStep = i => setF(x => (Object.assign(Object.assign({}, x), { timeline: (x.timeline || []).filter((_, idx) => idx !== i) })));
+const setStep = (i, k, v) => setF(x => { const a = [...(x.timeline || [])]; a[i] = Object.assign(Object.assign({}, a[i]), { [k]: k === "durationMin" ? +v : v }); return Object.assign(Object.assign({}, x), { timeline: a }); });
+const partsTot = f.parts.reduce((s, p) => { const pt = parts.find(x => x.id === p.partId); return s + (pt ? (pt.sellPrice || pt.unitPrice) * p.qty : 0); }, 0);
+const laborTot = +f.laborHours * +f.laborRate;
+if (assets.length === 0) {
+return (React.createElement("div", { style: { textAlign: "center", padding: "20px 0", color: "#94a3b8" } },
+"Devi prima registrare almeno un apparecchio.",
+React.createElement("div", { style: { marginTop: 14 } },
+React.createElement(Btn, { variant: "ghost", onClick: onClose }, "Chiudi"))));
+}
+return (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14 } },
+React.createElement(ErrorSummary, { errors: errors }),
+React.createElement(Grid, { cols: "1fr 1fr" },
+React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 5 } },
+React.createElement("label", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700 } }, "Apparecchio"),
+React.createElement(AssetCombobox, { value: f.assetId, onChange: id => setF(x => (Object.assign(Object.assign({}, x), { assetId: id }))), assets: assets, customers: customers, placeholder: "Seleziona apparecchio" })),
+React.createElement(Sel, { label: "Cliente (opzionale)", value: f.customerId, onChange: s("customerId") },
+React.createElement("option", { value: "" }, "\u2014 Auto da apparecchio \u2014"),
+customers.map(c => React.createElement("option", { key: c.id, value: c.id }, c.name))),
+React.createElement(Sel, { label: "Tipo", value: f.type, onChange: s("type") }, ["correttiva", "preventiva", "verifica", "calibrazione"].map(v => React.createElement("option", { key: v }, v))),
+React.createElement(Sel, { label: "Priorit\u00E0", value: f.priority, onChange: s("priority") }, ["urgente", "alta", "normale", "bassa"].map(v => React.createElement("option", { key: v }, v))),
+React.createElement(Sel, { label: "Stato", value: f.status, onChange: s("status") }, ["aperto", "in corso", "chiuso"].map(v => React.createElement("option", { key: v }, v))),
+React.createElement(TecnicoPicker, { label: "Tecnico/i", value: f.assignee, onChange: v => setF(x => (Object.assign(Object.assign({}, x), { assignee: v }))), technicians: technicians }),
+React.createElement(Inp, { label: "Data apertura", type: "date", value: f.openDate, onChange: s("openDate") }),
+React.createElement(Inp, { label: "Data chiusura", type: "date", value: f.closeDate, onChange: s("closeDate") }),
+React.createElement(Span2, null,
+React.createElement(Txt, { label: "Descrizione", value: f.description, onChange: s("description") }))),
+parts.length > 0 && (React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 } },
+React.createElement("span", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700 } }, "Parti"),
+React.createElement(Btn, { sm: true, variant: "ghost", onClick: addPart }, "+ Aggiungi")),
+f.parts.map((p, i) => (React.createElement("div", { key: i, style: { display: "grid", gridTemplateColumns: "1fr 80px auto", gap: 8, marginBottom: 8 } },
+React.createElement("select", { value: p.partId, onChange: e => setPart(i, "partId", e.target.value), style: { background: "#141418", border: "1px solid #2a3040", borderRadius: 8, padding: "9px 10px", color: "#e2e8f0" } }, parts.map(pt => React.createElement("option", { key: pt.id, value: pt.id },
+pt.code,
+" \u2014 ",
+pt.name,
+" (\u20AC",
+pt.sellPrice || pt.unitPrice,
+")"))),
+React.createElement("input", { type: "number", min: 1, value: p.qty, onChange: e => setPart(i, "qty", e.target.value), style: { background: "#141418", border: "1px solid #2a3040", borderRadius: 8, padding: "9px 10px", color: "#e2e8f0" } }),
+React.createElement(Btn, { variant: "danger", sm: true, onClick: () => remPart(i) }, "\u2715")))))),
+React.createElement(Grid, { cols: "1fr 1fr" },
+React.createElement(Inp, { label: "Ore manodopera", type: "number", step: "0.5", value: f.laborHours, onChange: s("laborHours") }),
+React.createElement(Inp, { label: "Tariffa oraria (\u20AC)", type: "number", value: f.laborRate, onChange: s("laborRate") }),
+React.createElement(Inp, { label: "Viaggio / trasferta (\u20AC)", type: "number", step: "0.01", value: f.travelCost, onChange: s("travelCost") }),
+React.createElement("div", null)),
+React.createElement("div", { style: { background: "#0D0D12", borderRadius: 10, padding: "12px 16px", display: "flex", flexWrap: "wrap", gap: 20 } },
+React.createElement("span", { style: { color: "#64748b", fontSize: 12 } },
+"Parti: ",
+React.createElement("strong", { style: { color: "#e2e8f0" } },
+"\u20AC",
+partsTot.toFixed(2))),
+React.createElement("span", { style: { color: "#64748b", fontSize: 12 } },
+"Manodopera: ",
+React.createElement("strong", { style: { color: "#e2e8f0" } },
+"\u20AC",
+laborTot.toFixed(2))),
+React.createElement("span", { style: { color: "#64748b", fontSize: 12 } },
+"Totale: ",
+React.createElement("strong", { style: { color: "#22c55e", fontSize: 15 } },
+"\u20AC",
+(partsTot + laborTot).toFixed(2)))),
+React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 } },
+React.createElement("span", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700 } }, " Timeline interventi"),
+React.createElement(Btn, { sm: true, variant: "ghost", onClick: addStep }, "+ Nuovo passaggio")),
+(f.timeline || []).length === 0 ? (React.createElement("div", { style: { padding: "14px 16px", background: "#0D0D12", border: "1px dashed #2a3040", borderRadius: 8, fontSize: 12, color: "#64748b", textAlign: "center" } }, "Nessun passaggio registrato. Aggiungi sopralluogo, attesa parti, riparazione, test finale...")) : (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } },
+f.timeline.map((step, i) => (React.createElement("div", { key: step.id || i, style: { background: "#0D0D12", border: "1px solid #1e2a3a", borderLeft: "3px solid #2DD4BF", borderRadius: 8, padding: "10px 12px" } },
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 } },
+React.createElement("input", { type: "date", value: step.date, onChange: e => setStep(i, "date", e.target.value), style: { background: "#141418", border: "1px solid #2a3040", borderRadius: 6, padding: "6px 9px", color: "#e2e8f0", fontSize: 12 } }),
+React.createElement("input", { type: "time", value: step.time, onChange: e => setStep(i, "time", e.target.value), style: { background: "#141418", border: "1px solid #2a3040", borderRadius: 6, padding: "6px 9px", color: "#e2e8f0", fontSize: 12 } })),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 90px", gap: 8, marginBottom: 8 } },
+React.createElement("select", { value: step.type, onChange: e => setStep(i, "type", e.target.value), style: { background: "#141418", border: "1px solid #2a3040", borderRadius: 6, padding: "6px 9px", color: "#e2e8f0", fontSize: 12 } },
+React.createElement("option", { value: "sopralluogo" }, "Sopralluogo / Diagnosi"),
+React.createElement("option", { value: "attesa_preventivo" }, "Attesa preventivo"),
+React.createElement("option", { value: "attesa_parti" }, "Attesa parti / ricambi"),
+React.createElement("option", { value: "attesa_autorizzazione" }, "Attesa autorizzazione cliente"),
+React.createElement("option", { value: "riparazione" }, "Riparazione / Intervento"),
+React.createElement("option", { value: "test" }, "Test funzionale"),
+React.createElement("option", { value: "verifica_sicurezza" }, "Verifica sicurezza elettrica"),
+React.createElement("option", { value: "consegna" }, "Consegna / Riconsegna"),
+React.createElement("option", { value: "chiamata" }, "Chiamata cliente"),
+React.createElement("option", { value: "email" }, "Email / Comunicazione"),
+React.createElement("option", { value: "altro" }, "Altro")),
+React.createElement("input", { type: "number", min: 0, step: 5, value: step.durationMin, onChange: e => setStep(i, "durationMin", e.target.value), placeholder: "min", style: { background: "#141418", border: "1px solid #2a3040", borderRadius: 6, padding: "6px 9px", color: "#e2e8f0", fontSize: 12, fontFamily: "monospace" } })),
+React.createElement("input", { type: "text", value: step.description, onChange: e => setStep(i, "description", e.target.value), placeholder: "Descrizione (cosa \u00E8 stato fatto / cosa si attende)", style: { width: "100%", background: "#141418", border: "1px solid #2a3040", borderRadius: 6, padding: "6px 9px", color: "#e2e8f0", fontSize: 12, marginBottom: 8 } }),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr auto", gap: 8, alignItems: "center" } },
+React.createElement("input", { type: "text", value: step.technician || "", onChange: e => setStep(i, "technician", e.target.value), placeholder: "Tecnico", style: { background: "#141418", border: "1px solid #2a3040", borderRadius: 6, padding: "6px 9px", color: "#e2e8f0", fontSize: 12 } }),
+React.createElement(Btn, { variant: "danger", sm: true, onClick: () => remStep(i) }, "\u2715"))))),
+f.timeline.length > 0 && (React.createElement("div", { style: { padding: "8px 12px", background: "#141418", borderRadius: 6, fontSize: 11, color: "#64748b", textAlign: "right" } },
+"Tempo totale lavorato: ",
+React.createElement("strong", { style: { color: "#22c55e", fontFamily: "monospace" } },
+(f.timeline.reduce((s, t) => s + (+t.durationMin || 0), 0) / 60).toFixed(1),
+"h"),
+" (",
+f.timeline.reduce((s, t) => s + (+t.durationMin || 0), 0),
+" min)"))))),
+React.createElement(Txt, { label: "Note", value: f.notes, onChange: s("notes") }),
+React.createElement("div", { style: { display: "flex", gap: 10, justifyContent: "flex-end" } },
+React.createElement(Btn, { variant: "ghost", onClick: onClose }, "Annulla"),
+React.createElement(Btn, { onClick: () => {
+var _a;
+const errs = {};
+if (!f.assetId)
+errs.assetId = "Seleziona un apparecchio";
+if (!((_a = f.description) === null || _a === void 0 ? void 0 : _a.trim()))
+errs.description = "Descrizione del lavoro obbligatoria";
+if (!f.openDate)
+errs.openDate = "Inserisci la data di apertura";
+if (f.status === "chiuso" && !f.closeDate)
+errs.closeDate = "Data chiusura obbligatoria se lo stato è chiuso";
+setErrors(errs);
+if (Object.keys(errs).length > 0)
+return;
+onSave(Object.assign(Object.assign({}, f), { laborHours: +f.laborHours, laborRate: +f.laborRate, travelCost: +f.travelCost || 0 }));
+} }, "Salva"))));
+}
+function OrderForm({ initial, parts, onSave, onClose }) {
+var _a;
+const blank = { supplier: "", partId: ((_a = parts[0]) === null || _a === void 0 ? void 0 : _a.id) || "", qty: 1, unitPrice: 0, status: "in attesa", orderDate: new Date().toISOString().slice(0, 10), expectedDate: "", notes: "" };
+const [f, setF] = React.useState(initial ? Object.assign(Object.assign({}, blank), initial) : blank);
+const s = k => e => setF(x => (Object.assign(Object.assign({}, x), { [k]: e.target.value })));
+React.useEffect(() => { if (!initial) {
+const pt = parts.find(x => x.id === f.partId);
+if (pt)
+setF(x => (Object.assign(Object.assign({}, x), { unitPrice: pt.unitPrice })));
+} }, [f.partId]);
+if (parts.length === 0) {
+return (React.createElement("div", { style: { textAlign: "center", padding: "20px 0", color: "#94a3b8" } },
+"Devi prima registrare almeno una parte.",
+React.createElement("div", { style: { marginTop: 14 } },
+React.createElement(Btn, { variant: "ghost", onClick: onClose }, "Chiudi"))));
+}
+return (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14 } },
+React.createElement(Grid, { cols: "1fr 1fr" },
+React.createElement(Inp, { label: "Fornitore", value: f.supplier, onChange: s("supplier") }),
+React.createElement(Sel, { label: "Parte", value: f.partId, onChange: s("partId") }, parts.map(p => React.createElement("option", { key: p.id, value: p.id },
+p.code,
+" \u2014 ",
+p.name))),
+React.createElement(Inp, { label: "Quantit\u00E0", type: "number", value: f.qty, onChange: s("qty") }),
+React.createElement(Inp, { label: "Prezzo unitario (\u20AC)", type: "number", step: "0.01", value: f.unitPrice, onChange: s("unitPrice") }),
+React.createElement(Sel, { label: "Stato ordine", value: f.status, onChange: s("status") }, ["in attesa", "confermato", "spedito", "ricevuto", "annullato"].map(v => React.createElement("option", { key: v }, v))),
+React.createElement("div", null),
+React.createElement(Inp, { label: "Data ordine", type: "date", value: f.orderDate, onChange: s("orderDate") }),
+React.createElement(Inp, { label: "Data prevista consegna", type: "date", value: f.expectedDate, onChange: s("expectedDate") }),
+React.createElement(Span2, null,
+React.createElement(Txt, { label: "Note", value: f.notes, onChange: s("notes") }))),
+React.createElement("div", { style: { background: "#0D0D12", borderRadius: 10, padding: "12px 16px" } },
+React.createElement("span", { style: { color: "#64748b", fontSize: 12 } },
+"Valore ordine: ",
+React.createElement("strong", { style: { color: "#a855f7", fontSize: 15 } },
+"\u20AC",
+(+f.qty * (+f.unitPrice)).toFixed(2)))),
+React.createElement("div", { style: { display: "flex", gap: 10, justifyContent: "flex-end" } },
+React.createElement(Btn, { variant: "ghost", onClick: onClose }, "Annulla"),
+React.createElement(Btn, { onClick: () => onSave(Object.assign(Object.assign({}, f), { qty: +f.qty, unitPrice: +f.unitPrice })) }, "Salva"))));
+}
+function InvoiceForm({ initial, customers, jobs, assets, parts, generateNumber, onSave, onClose }) {
+var _a;
+const blank = {
+number: generateNumber(),
+customerId: ((_a = customers[0]) === null || _a === void 0 ? void 0 : _a.id) || "",
+date: new Date().toISOString().slice(0, 10),
+dueDate: "",
+status: "bozza",
+items: [],
+jobIds: [],
+paymentTerms: "Bonifico bancario a 30gg data preventivo",
+notes: ""
+};
+const [f, setF] = React.useState(initial ? Object.assign(Object.assign(Object.assign({}, blank), initial), { items: initial.items || [], jobIds: initial.jobIds || [] }) : blank);
+const [showDetails, setShowDetails] = React.useState(false);
+const [bulkSvc, setBulkSvc] = React.useState("");
+const [bulkN, setBulkN] = React.useState("");
+const [bulkPrice, setBulkPrice] = React.useState("");
+const SERVIZI_COMUNI = ["Verifica di sicurezza elettrica", "Verifica funzionale", "Manutenzione preventiva", "Taratura", "Controllo periodico", "Collaudo di accettazione"];
+const addBulk = () => {
+const n = parseInt(bulkN, 10) || 0;
+const pr = parseFloat(bulkPrice) || 0;
+if (!bulkSvc.trim() || n <= 0)
+return;
+setF(x => (Object.assign(Object.assign({}, x), { items: [...x.items, { description: bulkSvc.trim() + " (× " + n + " macchine)", qty: n, unitPrice: pr, vat: IVA_DEFAULT }] })));
+setBulkSvc("");
+setBulkN("");
+setBulkPrice("");
+};
+const s = k => e => setF(x => (Object.assign(Object.assign({}, x), { [k]: e.target.value })));
+const addItem = () => setF(x => (Object.assign(Object.assign({}, x), { items: [...x.items, { description: "", qty: 1, unitPrice: 0, vat: IVA_DEFAULT }] })));
+const remItem = i => setF(x => (Object.assign(Object.assign({}, x), { items: x.items.filter((_, idx) => idx !== i) })));
+const setItem = (i, k, v) => setF(x => { const a = [...x.items]; a[i] = Object.assign(Object.assign({}, a[i]), { [k]: k === "qty" || k === "unitPrice" || k === "vat" ? +v : v }); return Object.assign(Object.assign({}, x), { items: a }); });
+const importFromJob = (jobId) => {
+const job = jobs.find(j => j.id === jobId);
+if (!job)
+return;
+const asset = assets.find(a => a.id === job.assetId);
+const newItems = [];
+(job.parts || []).forEach(p => {
+const pt = parts.find(x => x.id === p.partId);
+if (pt)
+newItems.push({
+description: (pt.name) + " (" + (pt.code) + ")",
+qty: p.qty, unitPrice: pt.sellPrice || pt.unitPrice, vat: IVA_DEFAULT
+});
+});
+if (job.laborHours > 0) {
+newItems.push({
+description: "Manodopera - " + ((asset === null || asset === void 0 ? void 0 : asset.name) || "intervento") + " (rif. " + (job.id) + ")",
+qty: job.laborHours, unitPrice: job.laborRate, vat: IVA_DEFAULT
+});
+}
+setF(x => (Object.assign(Object.assign({}, x), { items: [...x.items, ...newItems], jobIds: x.jobIds.includes(jobId) ? x.jobIds : [...x.jobIds, jobId], customerId: x.customerId || job.customerId || (asset === null || asset === void 0 ? void 0 : asset.customerId) || x.customerId })));
+};
+const subtotal = f.items.reduce((s, it) => s + it.qty * it.unitPrice, 0);
+const totalVAT = f.items.reduce((s, it) => s + (it.qty * it.unitPrice * it.vat / 100), 0);
+const grandTotal = subtotal + totalVAT;
+const customerJobs = jobs.filter(j => {
+if (j.status !== "chiuso")
+return false;
+const asset = assets.find(a => a.id === j.assetId);
+return (j.customerId || (asset === null || asset === void 0 ? void 0 : asset.customerId)) === f.customerId;
+});
+return (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14 } },
+React.createElement(Grid, { cols: "1fr 1fr" },
+React.createElement(Sel, { label: "Cliente", value: f.customerId, onChange: s("customerId") },
+React.createElement("option", { value: "" }, "\u2014 Seleziona \u2014"),
+customers.map(c => React.createElement("option", { key: c.id, value: c.id }, c.name))),
+React.createElement(Inp, { label: "Data preventivo", type: "date", value: f.date, onChange: s("date") })),
+f.customerId && customerJobs.length > 0 && (React.createElement("div", { style: { background: "#0D0D12", borderRadius: 10, padding: "10px 14px", border: "1px solid #2a3040" } },
+React.createElement("div", { style: { fontSize: 10, color: "#94a3b8", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700, marginBottom: 8 } }, "Importa da un job chiuso del cliente"),
+React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, customerJobs.map(j => {
+const used = f.jobIds.includes(j.id);
+return (React.createElement("button", { key: j.id, onClick: () => !used && importFromJob(j.id), disabled: used, style: {
+background: used ? "#22c55e22" : "#1E1E28",
+border: "1px solid " + (used ? "#22c55e44" : "#32323F"),
+color: used ? "#22c55e" : "#94a3b8", borderRadius: 8, padding: "5px 10px", cursor: used ? "default" : "pointer", fontSize: 11
+} },
+used ? "✓ " : "+ ",
+j.id));
+})))),
+React.createElement("div", { style: { background: "#0D0D12", borderRadius: 10, padding: "12px 14px", border: "1px solid #2a3040" } },
+React.createElement("div", { style: { fontSize: 10, color: "#94a3b8", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700, marginBottom: 8 } }, "Aggiungi servizio in blocco (es. contratto per tot macchine)"),
+React.createElement("datalist", { id: "servizi-comuni" }, SERVIZI_COMUNI.map(sv => React.createElement("option", { key: sv, value: sv }))),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 80px 100px auto", gap: 6, alignItems: "center" } },
+React.createElement("input", { list: "servizi-comuni", value: bulkSvc, onChange: e => setBulkSvc(e.target.value), placeholder: "Servizio (es. Verifica sicurezza elettrica)", style: { background: "#1E1E28", border: "1px solid #2a3040", borderRadius: 6, padding: "8px 10px", color: "#e2e8f0", outline: "none", minWidth: 0 } }),
+React.createElement("input", { type: "number", value: bulkN, onChange: e => setBulkN(e.target.value), placeholder: "N\u00B0 macch.", style: { background: "#1E1E28", border: "1px solid #2a3040", borderRadius: 6, padding: "8px 10px", color: "#e2e8f0", outline: "none" } }),
+React.createElement("input", { type: "number", step: "0.01", value: bulkPrice, onChange: e => setBulkPrice(e.target.value), placeholder: "\u20AC/macch.", style: { background: "#1E1E28", border: "1px solid #2a3040", borderRadius: 6, padding: "8px 10px", color: "#e2e8f0", outline: "none" } }),
+React.createElement(Btn, { sm: true, onClick: addBulk }, "+ Aggiungi")),
+(parseInt(bulkN, 10) > 0 && parseFloat(bulkPrice) > 0) && (React.createElement("div", { style: { fontSize: 11, color: "#64748b", marginTop: 7 } },
+"Totale riga: ",
+React.createElement("strong", { style: { color: "#22c55e" } },
+"\u20AC",
+((parseInt(bulkN, 10) || 0) * (parseFloat(bulkPrice) || 0)).toFixed(2)),
+" (",
+bulkN,
+" \u00D7 \u20AC",
+bulkPrice,
+")"))),
+React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 } },
+React.createElement("span", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700 } }, "Righe preventivo"),
+React.createElement(Btn, { sm: true, variant: "ghost", onClick: addItem }, "+ Riga")),
+f.items.map((it, i) => (React.createElement("div", { key: i, style: { background: "#141418", borderRadius: 8, padding: 10, marginBottom: 8, display: "grid", gridTemplateColumns: "1fr 70px 90px 60px auto", gap: 6, alignItems: "center" } },
+React.createElement("input", { value: it.description, onChange: e => setItem(i, "description", e.target.value), placeholder: "Descrizione", style: { background: "#1E1E28", border: "1px solid #2a3040", borderRadius: 6, padding: "7px 9px", color: "#e2e8f0", outline: "none", minWidth: 0 } }),
+React.createElement("input", { type: "number", value: it.qty, onChange: e => setItem(i, "qty", e.target.value), placeholder: "Q.t\u00E0", step: "0.5", style: { background: "#1E1E28", border: "1px solid #2a3040", borderRadius: 6, padding: "7px 9px", color: "#e2e8f0", outline: "none" } }),
+React.createElement("input", { type: "number", value: it.unitPrice, onChange: e => setItem(i, "unitPrice", e.target.value), placeholder: "\u20AC", step: "0.01", style: { background: "#1E1E28", border: "1px solid #2a3040", borderRadius: 6, padding: "7px 9px", color: "#e2e8f0", outline: "none" } }),
+React.createElement("input", { type: "number", value: it.vat, onChange: e => setItem(i, "vat", e.target.value), placeholder: "IVA%", style: { background: "#1E1E28", border: "1px solid #2a3040", borderRadius: 6, padding: "7px 9px", color: "#e2e8f0", outline: "none" } }),
+React.createElement(Btn, { sm: true, variant: "danger", onClick: () => remItem(i) }, "\u2715")))),
+f.items.length === 0 && React.createElement("div", { style: { textAlign: "center", color: "#475569", padding: "16px 0", fontSize: 12 } }, "Nessuna riga. Aggiungi con \"+ Riga\" o importa da un job.")),
+React.createElement("div", { style: { background: "#0D0D12", borderRadius: 10, padding: "14px 16px" } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 6 } },
+React.createElement("span", { style: { color: "#94a3b8" } }, "Imponibile"),
+React.createElement("span", { style: { color: "#e2e8f0", fontWeight: 700 } },
+"\u20AC",
+subtotal.toFixed(2))),
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 13, marginBottom: 6 } },
+React.createElement("span", { style: { color: "#94a3b8" } }, "IVA"),
+React.createElement("span", { style: { color: "#e2e8f0", fontWeight: 700 } },
+"\u20AC",
+totalVAT.toFixed(2))),
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", fontSize: 16, paddingTop: 8, borderTop: "1px solid #2a3040" } },
+React.createElement("span", { style: { color: "#94a3b8", fontWeight: 700 } }, "TOTALE"),
+React.createElement("span", { style: { color: "#22c55e", fontWeight: 800 } },
+"\u20AC",
+grandTotal.toFixed(2)))),
+React.createElement("div", null,
+React.createElement("button", { onClick: () => setShowDetails(v => !v), style: { width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#141418", border: "1px solid #2a3040", borderRadius: 8, padding: "10px 14px", cursor: "pointer", color: "#94a3b8", fontSize: 12.5, fontWeight: 600 } },
+React.createElement("span", null,
+"Altri dettagli ",
+showDetails ? "" : "(numero, stato, scadenza, pagamento, note)"),
+React.createElement("span", { style: { transform: showDetails ? "rotate(90deg)" : "none", transition: "transform .15s" } }, "\u203A")),
+showDetails && (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14, marginTop: 14, padding: "4px 2px" } },
+React.createElement(Grid, { cols: "1fr 1fr" },
+React.createElement(Inp, { label: "Numero preventivo", value: f.number, onChange: s("number") }),
+React.createElement(Sel, { label: "Stato", value: f.status, onChange: s("status") }, ["bozza", "emessa", "pagata", "scaduta", "annullato"].map(v => React.createElement("option", { key: v }, v))),
+React.createElement(Inp, { label: "Data scadenza", type: "date", value: f.dueDate, onChange: s("dueDate") }),
+React.createElement("div", null)),
+React.createElement(Inp, { label: "Modalit\u00E0 di pagamento", value: f.paymentTerms, onChange: s("paymentTerms") }),
+React.createElement(Txt, { label: "Note", value: f.notes, onChange: s("notes") })))),
+React.createElement("div", { style: { display: "flex", gap: 10, justifyContent: "flex-end" } },
+React.createElement(Btn, { variant: "ghost", onClick: onClose }, "Annulla"),
+React.createElement(Btn, { onClick: () => onSave(f) }, "Salva"))));
+}
+function JobDetailModal({ job, assets, parts, customers, company, onEdit, onTimeline, onClose, onCreateQuote }) {
+const asset = assets.find(a => a.id === job.assetId) || {};
+const customer = customers.find(c => c.id === (job.customerId || asset.customerId)) || {};
+const TYPE_COLOR = { correttiva: "#ef4444", preventiva: "#3b82f6", verifica: "#a855f7", calibrazione: "#f59e0b" };
+const STAT_COLOR = { aperto: "#f59e0b", "in corso": "#3b82f6", chiuso: "#22c55e" };
+const PRIO_COLOR = { urgente: "#ef4444", alta: "#f97316", normale: "#64748b", bassa: "#475569" };
+const sortedSteps = [...(job.timeline || [])].sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+const totMin = sortedSteps.reduce((s, t) => s + (+t.durationMin || +t.hours * 60 || 0), 0);
+const partsTot = (job.parts || []).reduce((s, p) => { const pt = parts.find(x => x.id === p.partId); return s + (pt ? (pt.sellPrice || pt.unitPrice || 0) * p.qty : 0); }, 0);
+const laborTot = (+job.laborHours || 0) * (+job.laborRate || 0);
+const Badge = ({ txt, color }) => (React.createElement("span", { style: { fontSize: 11, fontWeight: 800, padding: "3px 10px", borderRadius: 20, background: color + "1e", color: color, border: "1px solid " + color + "44", textTransform: "capitalize" } }, txt));
+const Field = ({ label, value }) => (React.createElement("div", null,
+React.createElement("div", { style: { fontSize: 9.5, color: "#5A5A70", textTransform: "uppercase", letterSpacing: .6, fontWeight: 700, marginBottom: 2 } }, label),
+React.createElement("div", { style: { fontSize: 13.5, color: "#e2e8f0", fontWeight: 600 } }, value || "—")));
+return (React.createElement(Modal, { title: "Intervento", wide: true, onClose: onClose },
+React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 18 } },
+React.createElement("div", { style: { background: "#141418", borderRadius: 12, padding: "16px 18px", border: "1px solid #24242F" } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" } },
+React.createElement("div", { style: { minWidth: 0 } },
+React.createElement("div", { style: { fontSize: 18, fontWeight: 900, color: "#fff", lineHeight: 1.2 } }, asset.name || "Apparecchio"),
+React.createElement("div", { style: { fontSize: 12, color: "#94a3b8", marginTop: 3 } },
+[asset.brand, asset.model].filter(Boolean).join(" "),
+asset.serial ? " · SN " + asset.serial : ""),
+customer.name && React.createElement("div", { style: { fontSize: 12, color: "#64748b", marginTop: 2 } },
+"Cliente: ",
+customer.name)),
+React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" } },
+React.createElement(Badge, { txt: job.type || "—", color: TYPE_COLOR[job.type] || "#64748b" }),
+React.createElement(Badge, { txt: job.status || "—", color: STAT_COLOR[job.status] || "#64748b" }),
+job.priority && React.createElement(Badge, { txt: job.priority, color: PRIO_COLOR[job.priority] || "#64748b" })))),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 14 } },
+React.createElement(Field, { label: "Data apertura", value: job.openDate }),
+React.createElement(Field, { label: "Data chiusura", value: job.closeDate }),
+React.createElement(Field, { label: "Tecnico", value: job.assignee }),
+React.createElement(Field, { label: "Verifica collegata", value: job.iecReportId || job.funcReportId ? "Sì" : "—" })),
+job.description && (React.createElement("div", null,
+React.createElement("div", { style: { fontSize: 9.5, color: "#5A5A70", textTransform: "uppercase", letterSpacing: .6, fontWeight: 700, marginBottom: 5 } }, "Descrizione lavoro"),
+React.createElement("div", { style: { fontSize: 13.5, color: "#e2e8f0", lineHeight: 1.5, background: "#141418", borderRadius: 8, padding: "12px 14px", border: "1px solid #24242F" } }, job.description))),
+job.notes && (React.createElement("div", null,
+React.createElement("div", { style: { fontSize: 9.5, color: "#5A5A70", textTransform: "uppercase", letterSpacing: .6, fontWeight: 700, marginBottom: 5 } }, "Note"),
+React.createElement("div", { style: { fontSize: 13, color: "#cbd5e1", lineHeight: 1.5, fontStyle: "italic" } }, job.notes))),
+(partsTot > 0 || laborTot > 0) && (React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } },
+laborTot > 0 && React.createElement("div", { style: { flex: 1, minWidth: 120, background: "#141418", borderRadius: 10, padding: "10px 14px", border: "1px solid #24242F" } },
+React.createElement("div", { style: { fontSize: 9.5, color: "#5A5A70", textTransform: "uppercase", letterSpacing: .6, fontWeight: 700 } }, "Manodopera"),
+React.createElement("div", { style: { fontSize: 16, fontWeight: 900, color: "#a855f7", marginTop: 3 } },
+"\u20AC ",
+laborTot.toFixed(2)),
+React.createElement("div", { style: { fontSize: 10, color: "#64748b" } },
+job.laborHours,
+"h \u00D7 \u20AC",
+job.laborRate)),
+partsTot > 0 && React.createElement("div", { style: { flex: 1, minWidth: 120, background: "#141418", borderRadius: 10, padding: "10px 14px", border: "1px solid #24242F" } },
+React.createElement("div", { style: { fontSize: 9.5, color: "#5A5A70", textTransform: "uppercase", letterSpacing: .6, fontWeight: 700 } }, "Ricambi"),
+React.createElement("div", { style: { fontSize: 16, fontWeight: 900, color: "#3b82f6", marginTop: 3 } },
+"\u20AC ",
+partsTot.toFixed(2)),
+React.createElement("div", { style: { fontSize: 10, color: "#64748b" } },
+(job.parts || []).length,
+" pezzi")),
+React.createElement("div", { style: { flex: 1, minWidth: 120, background: "#2DD4BF12", borderRadius: 10, padding: "10px 14px", border: "1px solid #2DD4BF33" } },
+React.createElement("div", { style: { fontSize: 9.5, color: "#5EEAD4", textTransform: "uppercase", letterSpacing: .6, fontWeight: 700 } }, "Totale"),
+React.createElement("div", { style: { fontSize: 16, fontWeight: 900, color: "#2DD4BF", marginTop: 3 } },
+"\u20AC ",
+(partsTot + laborTot).toFixed(2))))),
+React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 } },
+React.createElement("span", { style: { fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700 } },
+"Storico interventi ",
+sortedSteps.length > 0 && "· " + sortedSteps.length + " voci"),
+totMin > 0 && React.createElement("span", { style: { fontSize: 12, color: "#a855f7", fontWeight: 700 } },
+(totMin / 60).toFixed(1),
+"h totali")),
+sortedSteps.length === 0 ? (React.createElement("div", { style: { textAlign: "center", color: "#475569", padding: "20px 0", fontSize: 12.5, background: "#0F0F14", borderRadius: 10, border: "1px dashed #24242F" } }, "Nessuna voce nello storico. Usa \"Modifica cronologia\" per aggiungere cosa \u00E8 stato fatto, quando e da chi.")) : (React.createElement("div", null, sortedSteps.map((step, i) => (React.createElement("div", { key: step.id || i, style: { display: "flex", gap: 14, marginBottom: 14 } },
+React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center" } },
+React.createElement("div", { style: { width: 34, height: 34, borderRadius: "50%", background: "#2DD4BF22", border: "1px solid #2DD4BF44", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0 } }, TIMELINE_ICON[step.type] || "·"),
+i < sortedSteps.length - 1 && React.createElement("div", { style: { width: 2, flex: 1, background: "#2a3040", marginTop: 4, minHeight: 14 } })),
+React.createElement("div", { style: { flex: 1, background: "#141418", borderRadius: 8, padding: "10px 14px", border: "1px solid #24242F", marginBottom: 2 } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4, gap: 8, flexWrap: "wrap" } },
+React.createElement("span", { style: { color: "#5EEAD4", fontWeight: 700, fontSize: 13 } }, TIMELINE_LABEL[step.type] || step.type),
+React.createElement("span", { style: { color: "#64748b", fontSize: 11 } },
+step.date,
+(step.hours > 0 || step.durationMin > 0) ? " · " + (step.hours || (step.durationMin / 60).toFixed(1)) + "h" : "")),
+step.note && React.createElement("div", { style: { color: "#e2e8f0", fontSize: 13, lineHeight: 1.45 } }, step.note)))))))),
+(job.photos || []).length > 0 && (React.createElement("div", null,
+React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700, marginBottom: 10 } },
+"Foto (",
+job.photos.length,
+")"),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: 8 } }, job.photos.map(photo => (React.createElement("div", { key: photo.id, style: { aspectRatio: "1", borderRadius: 8, overflow: "hidden", border: "1px solid #24242F", cursor: "pointer" }, onClick: () => window.open(photo.data, "_blank") },
+React.createElement("img", { src: photo.data, alt: photo.name || "", style: { width: "100%", height: "100%", objectFit: "cover" } }))))))),
+React.createElement("div", { style: { display: "flex", gap: 10, justifyContent: "flex-end", flexWrap: "wrap", borderTop: "1px solid #24242F", paddingTop: 16 } },
+React.createElement(Btn, { variant: "ghost", onClick: onClose }, "Chiudi"),
+onCreateQuote && React.createElement(Btn, { variant: "ghost", onClick: onCreateQuote }, "\uD83D\uDCC4 Crea preventivo"),
+React.createElement(Btn, { variant: "ghost", onClick: onTimeline }, "\uD83D\uDD50 Modifica cronologia"),
+React.createElement(Btn, { onClick: onEdit }, "\u270F Modifica dati"),
+React.createElement(Btn, { variant: "ghost", onClick: () => generateJobPDF(job, assets, parts, customers, company) }, "\uD83D\uDCC4 PDF")))));
+}
+function TimelineModal({ job, parts, onSave, onClose }) {
+const [steps, setSteps] = React.useState(job.timeline || []);
+const [photos, setPhotos] = React.useState(job.photos || []);
+const [newStep, setNewStep] = React.useState({ date: new Date().toISOString().slice(0, 10), type: "intervento", note: "", hours: 0 });
+const [uploading, setUploading] = React.useState(false);
+const fileInputRef = React.useRef();
+const addStep = () => {
+if (!newStep.note.trim()) {
+return;
+}
+setSteps(s => [...s, Object.assign(Object.assign({}, newStep), { id: Date.now() + "-" + Math.random().toString(36).slice(2, 7), hours: +newStep.hours })]);
+setNewStep({ date: new Date().toISOString().slice(0, 10), type: newStep.type, note: "", hours: 0 });
+};
+const removeStep = id => setSteps(s => s.filter(x => x.id !== id));
+const uploadPhotos = (e) => __awaiter(this, void 0, void 0, function* () {
+const files = Array.from(e.target.files || []);
+if (!files.length)
+return;
+setUploading(true);
+try {
+const newPhotos = [];
+for (const file of files) {
+if (!file.type.startsWith("image/")) {
+continue;
+}
+try {
+const dataUrl = yield compressImage(file);
+newPhotos.push({ id: Date.now() + Math.random(), name: file.name, data: dataUrl, date: new Date().toISOString().slice(0, 10) });
+}
+catch (err) {
+console.error("Errore compressione", err);
+}
+}
+setPhotos(p => [...p, ...newPhotos]);
+}
+finally {
+setUploading(false);
+if (fileInputRef.current)
+fileInputRef.current.value = "";
+}
+});
+const removePhoto = id => setPhotos(p => p.filter(x => x.id !== id));
+const sortedSteps = [...steps].sort((a, b) => a.date.localeCompare(b.date));
+return (React.createElement(Modal, { title: "Timeline & Foto — " + (job.id), wide: true, onClose: onClose },
+React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 18 } },
+React.createElement("div", null,
+React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700, marginBottom: 10 } }, "\u00B7 Cronologia Intervento"),
+sortedSteps.length === 0 && React.createElement("div", { style: { textAlign: "center", color: "#475569", padding: "16px 0", fontSize: 12 } }, "Nessuno step ancora."),
+sortedSteps.map((step, i) => (React.createElement("div", { key: step.id, style: { display: "flex", gap: 14, marginBottom: 14, position: "relative" } },
+React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center" } },
+React.createElement("div", { style: { width: 36, height: 36, borderRadius: "50%", background: "#2DD4BF22", border: "1px solid #2563eb44", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 } }, TIMELINE_ICON[step.type] || "·"),
+i < sortedSteps.length - 1 && React.createElement("div", { style: { width: 2, flex: 1, background: "#32323F", marginTop: 4 } })),
+React.createElement("div", { style: { flex: 1, background: "#141418", borderRadius: 8, padding: "10px 14px", border: "1px solid #2a3040" } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4, gap: 8, flexWrap: "wrap" } },
+React.createElement("div", null,
+React.createElement("span", { style: { color: "#5EEAD4", fontWeight: 700, fontSize: 13 } }, TIMELINE_LABEL[step.type] || step.type),
+React.createElement("span", { style: { color: "#64748b", fontSize: 11, marginLeft: 8 } }, step.date)),
+React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center" } },
+step.hours > 0 && React.createElement("span", { style: { color: "#a855f7", fontSize: 11, fontWeight: 700 } },
+step.hours,
+"h"),
+React.createElement(Btn, { sm: true, variant: "danger", onClick: () => removeStep(step.id), style: { padding: "2px 8px", fontSize: 11 } }, "\u2715"))),
+React.createElement("div", { style: { color: "#e2e8f0", fontSize: 13, lineHeight: 1.4 } }, step.note))))),
+React.createElement("div", { style: { background: "#0D0D12", borderRadius: 10, padding: 14, border: "1px dashed #2a3040", marginTop: 12 } },
+React.createElement("div", { style: { fontSize: 11, color: "#64748b", marginBottom: 10, fontWeight: 700 } }, "+ Nuovo step"),
+React.createElement(Grid, { cols: "1fr 1fr 80px" },
+React.createElement(Sel, { label: "Tipo evento", value: newStep.type, onChange: e => setNewStep(x => (Object.assign(Object.assign({}, x), { type: e.target.value }))) }, Object.entries(TIMELINE_LABEL).map(([k, v]) => React.createElement("option", { key: k, value: k },
+TIMELINE_ICON[k],
+" ",
+v))),
+React.createElement(Inp, { label: "Data", type: "date", value: newStep.date, onChange: e => setNewStep(x => (Object.assign(Object.assign({}, x), { date: e.target.value }))) }),
+React.createElement(Inp, { label: "Ore", type: "number", step: "0.5", value: newStep.hours, onChange: e => setNewStep(x => (Object.assign(Object.assign({}, x), { hours: e.target.value }))) })),
+React.createElement("div", { style: { marginTop: 10 } },
+React.createElement(Txt, { label: "Descrizione", value: newStep.note, onChange: e => setNewStep(x => (Object.assign(Object.assign({}, x), { note: e.target.value }))) })),
+React.createElement("div", { style: { marginTop: 10, textAlign: "right" } },
+React.createElement(Btn, { sm: true, onClick: addStep }, "+ Aggiungi step")))),
+React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 } },
+React.createElement("span", { style: { fontSize: 11, color: "#94a3b8", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700 } },
+" Foto Allegate (",
+photos.length,
+")"),
+React.createElement("label", null,
+React.createElement("input", { ref: fileInputRef, type: "file", accept: "image/*", multiple: true, onChange: uploadPhotos, style: { display: "none" } }),
+React.createElement("span", { style: { background: "#1E1E28", color: "#94a3b8", border: "1px solid #2a3040", borderRadius: 8, padding: "6px 12px", cursor: "pointer", fontSize: 12, fontWeight: 600, display: "inline-block" } }, uploading ? "Caricamento..." : "+ Aggiungi foto"))),
+photos.length === 0 ? (React.createElement("div", { style: { textAlign: "center", color: "#475569", padding: "16px 0", fontSize: 12 } }, "Nessuna foto. Le foto vengono compresse automaticamente per risparmiare memoria.")) : (React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: 8 } }, photos.map(photo => (React.createElement("div", { key: photo.id, style: { position: "relative", aspectRatio: "1", borderRadius: 8, overflow: "hidden", border: "1px solid #2a3040" } },
+React.createElement("img", { src: photo.data, alt: photo.name, style: { width: "100%", height: "100%", objectFit: "cover", cursor: "pointer" }, onClick: () => window.open(photo.data, "_blank") }),
+React.createElement("button", { onClick: () => removePhoto(photo.id), style: { position: "absolute", top: 4, right: 4, background: "#ef4444", border: "none", color: "#fff", borderRadius: "50%", width: 24, height: 24, cursor: "pointer", fontSize: 14, fontWeight: 700 } }, "\u00D7"))))))),
+React.createElement("div", { style: { display: "flex", gap: 10, justifyContent: "flex-end" } },
+React.createElement(Btn, { variant: "ghost", onClick: onClose }, "Annulla"),
+React.createElement(Btn, { variant: "success", onClick: () => onSave({ timeline: steps, photos }) }, "\u2713 Salva tutto")))));
+}
+function WithdrawalModal({ parts, assets, preselectPartId, onWithdraw, onClose }) {
+var _a, _b;
+const [items, setItems] = React.useState([{ partId: preselectPartId || ((_a = parts[0]) === null || _a === void 0 ? void 0 : _a.id) || "", qty: 1 }]);
+const [errors, setErrors] = React.useState({});
+const [reason, setReason] = React.useState("");
+const [assetId, setAssetId] = React.useState(((_b = assets[0]) === null || _b === void 0 ? void 0 : _b.id) || "");
+const [tech, setTech] = React.useState("");
+const addRow = () => setItems(i => { var _a; return [...i, { partId: ((_a = parts[0]) === null || _a === void 0 ? void 0 : _a.id) || "", qty: 1 }]; });
+const remRow = i => setItems(a => a.filter((_, idx) => idx !== i));
+const setRow = (i, k, v) => setItems(a => { const r = [...a]; r[i] = Object.assign(Object.assign({}, r[i]), { [k]: k === "qty" ? +v : v }); return r; });
+const total = items.reduce((s, r) => { const p = parts.find(x => x.id === r.partId); return s + (p ? p.unitPrice * r.qty : 0); }, 0);
+const submit = () => {
+const errs = {};
+if (!assetId)
+errs.assetId = "Seleziona l'apparecchio";
+items.forEach((r, idx) => {
+const p = parts.find(x => x.id === r.partId);
+if (!p) {
+errs["item_" + idx] = "Parte non trovata alla riga " + (idx + 1);
+return;
+}
+if (r.qty < 1)
+errs["item_" + idx] = "Quantità deve essere ≥1 alla riga " + (idx + 1) + " (" + p.name + ")";
+else if (r.qty > p.qty)
+errs["item_" + idx] = "Quantità " + r.qty + " > disponibili " + p.qty + " (" + p.name + ")";
+});
+setErrors(errs);
+if (Object.keys(errs).length > 0)
+return;
+onWithdraw({ items, reason, assetId, tech, date: new Date().toISOString().slice(0, 10), total });
+};
+if (parts.length === 0 || assets.length === 0) {
+return (React.createElement(Modal, { title: " Scarico Stock", onClose: onClose },
+React.createElement("div", { style: { textAlign: "center", padding: "20px 0", color: "#94a3b8" } },
+"Servono almeno un apparecchio e una parte.",
+React.createElement("div", { style: { marginTop: 14 } },
+React.createElement(Btn, { variant: "ghost", onClick: onClose }, "Chiudi")))));
+}
+return (React.createElement(Modal, { title: " Scarico Stock", wide: true, onClose: onClose },
+React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14 } },
+React.createElement(ErrorSummary, { errors: errors }),
+React.createElement(Grid, { cols: "1fr 1fr" },
+React.createElement(Sel, { label: "Apparecchio", value: assetId, onChange: e => setAssetId(e.target.value) }, assets.map(a => React.createElement("option", { key: a.id, value: a.id },
+(a.assetCode || a.id),
+" \u2014 ",
+a.name))),
+React.createElement(Inp, { label: "Tecnico", value: tech, onChange: e => setTech(e.target.value) }),
+React.createElement(Span2, null,
+React.createElement(Inp, { label: "Motivo / Riferimento", value: reason, onChange: e => setReason(e.target.value) }))),
+React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 8 } },
+React.createElement("span", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700 } }, "Parti"),
+React.createElement(Btn, { sm: true, variant: "ghost", onClick: addRow }, "+ Aggiungi")),
+items.map((row, i) => {
+const p = parts.find(x => x.id === row.partId);
+return (React.createElement("div", { key: i, style: { display: "grid", gridTemplateColumns: "1fr 70px 80px auto", gap: 6, marginBottom: 8, alignItems: "center" } },
+React.createElement("select", { value: row.partId, onChange: e => setRow(i, "partId", e.target.value), style: { background: "#141418", border: "1px solid #2a3040", borderRadius: 8, padding: "9px 10px", color: "#e2e8f0", minWidth: 0 } }, parts.map(pt => React.createElement("option", { key: pt.id, value: pt.id },
+pt.code,
+" \u2014 ",
+pt.name))),
+React.createElement("input", { type: "number", value: row.qty, min: 1, max: p === null || p === void 0 ? void 0 : p.qty, onChange: e => setRow(i, "qty", e.target.value), style: { background: "#141418", border: "1px solid #2a3040", borderRadius: 8, padding: "9px 10px", color: "#e2e8f0" } }),
+React.createElement("span", { style: { color: "#a855f7", fontWeight: 700, fontSize: 12 } },
+"\u20AC",
+p ? (p.unitPrice * row.qty).toFixed(2) : "0"),
+React.createElement(Btn, { sm: true, variant: "danger", onClick: () => remRow(i) }, "\u2715")));
+}),
+React.createElement("div", { style: { textAlign: "right", marginTop: 8 } },
+React.createElement("span", { style: { color: "#64748b", fontSize: 12 } }, "Totale: "),
+React.createElement("span", { style: { color: "#22c55e", fontWeight: 800, fontSize: 16 } },
+"\u20AC",
+total.toFixed(2)))),
+React.createElement("div", { style: { display: "flex", gap: 10, justifyContent: "flex-end" } },
+React.createElement(Btn, { variant: "ghost", onClick: onClose }, "Annulla"),
+React.createElement(Btn, { variant: "success", onClick: submit }, "\u2713 Conferma")))));
+}
+function AssetDetailModal({ asset, jobs, parts, iecReports, funcReports, customers, onClose, onEditAsset, onNewJob, onNewIec, onNewFunc, onAssetSticker, onOpenJob, onQuickLocation, company, generateJobPDF, generateIECPDF, generateFuncPDF, templates }) {
+const [tab, setTab] = React.useState("overview");
+const customer = customers.find(c => c.id === asset.customerId) || null;
+const assetJobs = jobs
+.filter(j => j.assetId === asset.id)
+.sort((a, b) => b.openDate.localeCompare(a.openDate));
+const assetIec = iecReports
+.filter(r => r.assetId === asset.id)
+.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+const assetFunc = funcReports
+.filter(r => r.assetId === asset.id)
+.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+const timelineEvents = (() => {
+const ev = [];
+assetIec.forEach(r => ev.push({
+kind: "iec", date: r.date || "", color: r.overallPass ? "#22c55e" : "#ef4444",
+icon: "⚡", title: "Sicurezza elettrica", sub: (r.reportNumber || r.id) + (r.technician ? " · " + r.technician : ""),
+ok: r.overallPass, badge: r.overallPass ? "CONFORME" : "NON CONF."
+}));
+assetFunc.forEach(r => ev.push({
+kind: "func", date: r.date || "", color: r.overallPass ? "#22c55e" : "#ef4444",
+icon: "🩺", title: "Verifica funzionale", sub: (r.reportNumber || r.id) + (r.technician ? " · " + r.technician : ""),
+ok: r.overallPass, badge: r.overallPass ? "CONFORME" : "NON CONF."
+}));
+assetJobs.forEach(j => ev.push({
+kind: "job", date: j.openDate || "", color: STATUS_COLOR[j.status] || "#64748b",
+icon: "🔧", title: (j.type ? j.type.charAt(0).toUpperCase() + j.type.slice(1) : "Intervento"),
+sub: (j.description || j.id).slice(0, 60), badge: j.status
+}));
+return ev.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+})();
+const totalCost = assetJobs.reduce((s, j) => {
+const p = j.parts.reduce((s2, p) => { const pt = parts.find(x => x.id === p.partId); return s2 + (pt ? (pt.sellPrice || pt.unitPrice) * p.qty : 0); }, 0);
+return s + p + j.laborHours * j.laborRate;
+}, 0);
+const openJobs = assetJobs.filter(j => j.status !== "chiuso");
+const lastIec = assetIec[0] || null;
+const lastFunc = assetFunc[0] || null;
+const warrantyDays = asset.warrantyExpiry ? Math.round((new Date(asset.warrantyExpiry) - new Date()) / 86400000) : null;
+const serviceDays = asset.nextService ? Math.round((new Date(asset.nextService) - new Date()) / 86400000) : null;
+const S = { background: "#141418", border: "1px solid #1e2a3a", borderRadius: 10, padding: "14px 16px" };
+const LBL = { fontSize: 9, color: "#64748b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700, marginBottom: 3 };
+const VAL = { fontSize: 13, color: "#e2e8f0", fontWeight: 600 };
+const TABS = [{ id: "overview", label: " Scheda" }, { id: "timeline", label: "🕑 Storico" }, { id: "jobs", label: " Job (" + assetJobs.length + ")" }, { id: "iec", label: "⚡ Sicurezza (" + assetIec.length + ")" }, { id: "func", label: "Funzionale (" + assetFunc.length + ")" }];
+const riskColor = { A: "#22c55e", B: "#f59e0b", C: "#ef4444" };
+return (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 0, minHeight: 0 } },
+React.createElement("div", { style: { background: "#0D0D12", borderRadius: 10, padding: "14px 16px", marginBottom: 14, border: "1px solid #1e2a3a" } },
+React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 6 } },
+asset.riskClass && React.createElement("span", { style: { background: riskColor[asset.riskClass] + "22", color: riskColor[asset.riskClass], border: "1px solid " + riskColor[asset.riskClass] + "55", borderRadius: 5, padding: "2px 8px", fontSize: 10, fontWeight: 700 } },
+"Cl. ",
+asset.riskClass),
+React.createElement(Badge, { text: asset.status, color: STATUS_COLOR[asset.status] || "#64748b" })),
+React.createElement("div", { style: { fontSize: 14, color: "#94a3b8", marginBottom: 3, fontWeight: 600 } },
+asset.brand,
+" ",
+asset.model),
+React.createElement("div", { style: { fontSize: 11, color: "#64748b", fontFamily: "monospace", marginBottom: customer ? 4 : 10 } },
+"S/N: ",
+asset.serial || "—",
+" \u00B7 Codice: ",
+asset.assetCode || asset.id),
+customer && React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", marginBottom: 10 } },
+"\uD83C\uDFE2 ",
+customer.name),
+React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", marginBottom: 10, display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap" } },
+React.createElement("span", null,
+"\uD83D\uDCCD ",
+asset.location || React.createElement("span", { style: { color: "#64748b" } }, "posizione non impostata")),
+asset.lastSeenAt && React.createElement("span", { style: { color: "#475569", fontSize: 10 } },
+"\u00B7 visto ",
+new Date(asset.lastSeenAt).toLocaleString("it-IT", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }))),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(110px,1fr))", gap: 6 } },
+React.createElement("button", { onClick: onEditAsset, style: { background: "#1E1E28", color: "#e2e8f0", border: "1px solid #2a3040", borderRadius: 7, padding: "8px 6px", cursor: "pointer", fontSize: 12, fontWeight: 700, touchAction: "manipulation", WebkitTapHighlightColor: "transparent" } }, "\u270F Modifica"),
+React.createElement("button", { onClick: onNewJob, style: { background: "#2DD4BF", color: "#0a0a0f", border: "none", borderRadius: 7, padding: "8px 6px", cursor: "pointer", fontSize: 12, fontWeight: 800, touchAction: "manipulation", WebkitTapHighlightColor: "transparent" } }, "+ Job"),
+React.createElement("button", { onClick: onNewIec, style: { background: "#a855f7", color: "#fff", border: "none", borderRadius: 7, padding: "8px 6px", cursor: "pointer", fontSize: 12, fontWeight: 800, touchAction: "manipulation", WebkitTapHighlightColor: "transparent" } }, "\u26A1 Sicurezza"),
+React.createElement("button", { onClick: onNewFunc, style: { background: "#0891b2", color: "#fff", border: "none", borderRadius: 7, padding: "8px 6px", cursor: "pointer", fontSize: 12, fontWeight: 800, touchAction: "manipulation", WebkitTapHighlightColor: "transparent" } }, "\u2713 Funzionale"),
+React.createElement("button", { onClick: onAssetSticker, style: { background: "#1E1E28", color: "#c084fc", border: "1px solid #a855f744", borderRadius: 7, padding: "8px 6px", cursor: "pointer", fontSize: 12, fontWeight: 700, touchAction: "manipulation", WebkitTapHighlightColor: "transparent" } }, "\uD83C\uDFF7 Sticker"),
+React.createElement("button", { onClick: () => { const loc = prompt("Posizione attuale dell'apparecchio:", asset.location || ""); if (loc !== null && onQuickLocation)
+onQuickLocation(loc.trim()); }, style: { background: "#1E1E28", color: "#2DD4BF", border: "1px solid #2DD4BF44", borderRadius: 7, padding: "8px 6px", cursor: "pointer", fontSize: 12, fontWeight: 700, touchAction: "manipulation", WebkitTapHighlightColor: "transparent" } }, "\uD83D\uDCCD Posizione"))),
+React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" } }, [
+{ label: "Job aperti", value: openJobs.length, color: openJobs.length > 0 ? "#f59e0b" : "#22c55e" },
+{ label: "Job totali", value: assetJobs.length, color: "#2DD4BF" },
+{ label: "Costo totale", value: "€" + totalCost.toFixed(0), color: "#a855f7" },
+{ label: "Ultima Sicurezza", value: lastIec ? lastIec.date : "mai", color: (lastIec === null || lastIec === void 0 ? void 0 : lastIec.overallPass) ? "#22c55e" : "#ef4444" },
+{ label: "Ultima verif.", value: lastFunc ? lastFunc.date : "mai", color: "#64748b" },
+].map(k => (React.createElement("div", { key: k.label, style: { background: "#141418", border: "1px solid #1e2a3a", borderRadius: 8, padding: "8px 14px", flex: 1, minWidth: 100 } },
+React.createElement("div", { style: { fontSize: 9, color: "#64748b", textTransform: "uppercase", letterSpacing: .7, fontWeight: 700 } }, k.label),
+React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: k.color, marginTop: 2 } }, k.value))))),
+React.createElement("div", { style: { display: "flex", gap: 4, marginBottom: 12, borderBottom: "2px solid #1e2a3a", paddingBottom: 0 } }, TABS.map(t => (React.createElement("button", { key: t.id, onClick: () => setTab(t.id), style: {
+background: "none", border: "none", borderBottom: tab === t.id ? "2px solid #3b82f6" : "2px solid transparent",
+color: tab === t.id ? "#5EEAD4" : "#64748b", padding: "7px 12px", cursor: "pointer",
+fontSize: 12, fontWeight: tab === t.id ? 700 : 400, marginBottom: -2, whiteSpace: "nowrap"
+} }, t.label)))),
+tab === "overview" && (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12, overflow: "auto", maxHeight: "55vh" } },
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 } },
+React.createElement("div", { style: S },
+React.createElement("div", { style: LBL }, "Identificazione"),
+[["Marca", asset.brand], ["Modello", asset.model], ["N° Serie", asset.serial], ["Ubicazione", asset.location]].map(([l, v]) => v ? (React.createElement("div", { key: l, style: { display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: "1px solid #1a2030" } },
+React.createElement("span", { style: { fontSize: 11, color: "#64748b" } }, l),
+React.createElement("span", { style: { fontSize: 11, color: "#e2e8f0", fontFamily: l === "N° Serie" ? "monospace" : "inherit" } }, v))) : null)),
+React.createElement("div", { style: S },
+React.createElement("div", { style: LBL }, "Date e contratti"),
+[
+["Acquisto", asset.purchaseDate],
+["Scad. garanzia", asset.warrantyExpiry],
+["Ultimo servizio", asset.lastService],
+["Prossimo servizio", asset.nextService],
+["Interv. Sicur. Elettr. (mesi)", asset.intervalIec || asset.serviceInterval],
+["Interv. Funzionale (mesi)", asset.intervalFunc || asset.serviceInterval],
+].map(([l, v]) => v ? (React.createElement("div", { key: l, style: { display: "flex", justifyContent: "space-between", padding: "4px 0", borderBottom: "1px solid #1a2030" } },
+React.createElement("span", { style: { fontSize: 11, color: "#64748b" } }, l),
+React.createElement("span", { style: { fontSize: 11, color: l === "Scad. garanzia" && warrantyDays !== null && warrantyDays < 90 ? "#f59e0b" : "#e2e8f0" } }, v))) : null),
+asset.serviceContract && (React.createElement("div", { style: { marginTop: 6, padding: "6px 8px", background: "#0D0D12", borderRadius: 6, fontSize: 10, color: "#94a3b8" } },
+React.createElement("span", { style: { color: "#64748b", fontWeight: 700 } }, "Contratto: "),
+asset.serviceContract)))),
+serviceDays !== null && (React.createElement("div", { style: { background: serviceDays < 0 ? "#ef444415" : serviceDays <= 30 ? "#f59e0b15" : "#22c55e15", border: "1px solid " + (serviceDays < 0 ? "#ef444433" : serviceDays <= 30 ? "#f59e0b33" : "#22c55e33"), borderRadius: 8, padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" } },
+React.createElement("span", { style: { fontSize: 12, color: "#94a3b8" } },
+"Prossima manutenzione programmata: ",
+React.createElement("strong", { style: { color: "#e2e8f0" } }, asset.nextService)),
+React.createElement(AlertChip, { days: serviceDays }))),
+asset.notes && React.createElement("div", { style: Object.assign(Object.assign({}, S), { fontSize: 12, color: "#94a3b8", lineHeight: 1.6 }) },
+React.createElement("div", { style: LBL }, "Note"),
+asset.notes))),
+tab === "timeline" && (React.createElement("div", { style: { overflow: "auto", maxHeight: "55vh" } }, timelineEvents.length === 0 ? (React.createElement("div", { style: { textAlign: "center", padding: 32, color: "#475569" } }, "Nessun evento registrato per questo apparecchio")) : (React.createElement("div", { style: { position: "relative", paddingLeft: 18 } },
+React.createElement("div", { style: { position: "absolute", left: 5, top: 6, bottom: 6, width: 2, background: "#1e2a3a" } }),
+timelineEvents.map((e, i) => (React.createElement("div", { key: i, style: { position: "relative", marginBottom: 12 } },
+React.createElement("div", { style: { position: "absolute", left: -17, top: 3, width: 11, height: 11, borderRadius: "50%", background: e.color, border: "2px solid #0D0D12" } }),
+React.createElement("div", { style: { background: "#141418", border: "1px solid #1e2a3a", borderRadius: 8, padding: "9px 13px" } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 } },
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", marginBottom: 2 } },
+React.createElement("span", { style: { fontSize: 13 } }, e.icon),
+React.createElement("span", { style: { fontSize: 12.5, fontWeight: 700, color: "#e2e8f0" } }, e.title),
+e.badge && React.createElement("span", { style: { fontSize: 9, fontWeight: 700, color: e.color, background: e.color + "22", border: "1px solid " + e.color + "44", borderRadius: 4, padding: "1px 6px", textTransform: "uppercase", letterSpacing: .3 } }, e.badge)),
+React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", lineHeight: 1.4 } }, e.sub)),
+React.createElement("span", { style: { fontSize: 11, color: "#64748b", fontFamily: "monospace", flexShrink: 0, whiteSpace: "nowrap" } }, e.date || "—")))))))))),
+tab === "jobs" && (React.createElement("div", { style: { overflow: "auto", maxHeight: "55vh", display: "flex", flexDirection: "column", gap: 8 } }, assetJobs.length === 0 ? (React.createElement("div", { style: { textAlign: "center", padding: 32, color: "#475569" } }, "Nessun job per questo apparecchio")) : assetJobs.map(j => {
+var _a;
+const pCost = j.parts.reduce((s, p) => { const pt = parts.find(x => x.id === p.partId); return s + (pt ? (pt.sellPrice || pt.unitPrice) * p.qty : 0); }, 0);
+const tot = pCost + j.laborHours * j.laborRate;
+return (React.createElement("div", { key: j.id, style: { background: "#141418", border: "1px solid #1e2a3a", borderRadius: 8, padding: "10px 14px", cursor: "pointer" }, onClick: () => onOpenJob(j) },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, flexWrap: "wrap" } },
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", marginBottom: 4 } },
+React.createElement("span", { style: { fontFamily: "monospace", fontSize: 11, color: "#64748b" } }, j.id),
+React.createElement(Badge, { text: j.status, color: STATUS_COLOR[j.status] || "#64748b" }),
+React.createElement(Badge, { text: j.priority, color: PRI_COLOR[j.priority] || "#64748b" }),
+React.createElement("span", { style: { fontSize: 11, color: "#64748b", textTransform: "capitalize" } }, j.type)),
+React.createElement("div", { style: { fontSize: 12, color: "#94a3b8", marginBottom: 2 } }, j.description || "—"),
+React.createElement("div", { style: { fontSize: 10, color: "#475569" } },
+j.openDate,
+j.closeDate ? " → " + j.closeDate : "",
+" \u00B7 ",
+j.assignee || "—")),
+React.createElement("div", { style: { textAlign: "right", flexShrink: 0 } },
+React.createElement("div", { style: { fontSize: 14, fontWeight: 800, color: "#a855f7", fontFamily: "monospace" } },
+"\u20AC",
+tot.toFixed(0)),
+((_a = j.timeline) === null || _a === void 0 ? void 0 : _a.length) > 0 && React.createElement("div", { style: { fontSize: 10, color: "#475569" } },
+"\u00B7 ",
+j.timeline.length,
+" step"),
+(j.iecReportId || j.funcReportId) && React.createElement("div", { style: { fontSize: 10, color: "#5EEAD4" } },
+j.iecReportId ? "⚡" : "",
+j.funcReportId ? "🩺" : "")))));
+}))),
+tab === "iec" && (React.createElement("div", { style: { overflow: "auto", maxHeight: "55vh", display: "flex", flexDirection: "column", gap: 8 } }, assetIec.length === 0 ? (React.createElement("div", { style: { textAlign: "center", padding: 32, color: "#475569" } }, "Nessuna verifica di sicurezza elettrica per questo apparecchio")) : assetIec.map(r => (React.createElement("div", { key: r.id, style: { background: "#141418", border: "1px solid " + (r.overallPass ? "#22c55e33" : "#ef444433"), borderRadius: 8, padding: "10px 14px" } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 } },
+React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center", marginBottom: 3 } },
+React.createElement("span", { style: { fontFamily: "monospace", fontWeight: 700, color: "#e2e8f0" } }, r.reportNumber || r.id),
+React.createElement("span", { style: { fontSize: 10, color: "#64748b" } },
+r.norm,
+" \u00B7 Cl.",
+r.equipClass,
+" \u00B7 ",
+r.patientType || "BF")),
+React.createElement("div", { style: { fontSize: 11, color: "#94a3b8" } },
+r.date,
+" \u00B7 ",
+r.technician || "—",
+" \u00B7 ",
+r.verifyType),
+r.notes && React.createElement("div", { style: { fontSize: 10, color: "#475569", marginTop: 3 } }, r.notes)),
+React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center" } },
+React.createElement("span", { style: { fontWeight: 800, fontSize: 13, color: r.overallPass ? "#22c55e" : "#ef4444" } }, r.overallPass ? "✓ OK" : "✗ NO"),
+React.createElement("button", { onClick: () => generateIECPDF(r, asset, customer, company), style: { background: "#202028", border: "1px solid #2a3040", borderRadius: 5, color: "#5EEAD4", padding: "3px 8px", cursor: "pointer", fontSize: 11 } })))))))),
+tab === "func" && (React.createElement("div", { style: { overflow: "auto", maxHeight: "55vh", display: "flex", flexDirection: "column", gap: 8 } }, assetFunc.length === 0 ? (React.createElement("div", { style: { textAlign: "center", padding: 32, color: "#475569" } }, "Nessuna verifica funzionale per questo apparecchio")) : assetFunc.map(r => {
+const tpl = (templates || FUNC_TEMPLATES || {})[r.templateId] || { label: "Generico", icon: "›" };
+return (React.createElement("div", { key: r.id, style: { background: "#141418", border: "1px solid " + (r.overallPass ? "#22c55e33" : "#ef444433"), borderRadius: 8, padding: "10px 14px" } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 } },
+React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center", marginBottom: 3 } },
+React.createElement("span", { style: { fontFamily: "monospace", fontWeight: 700, color: "#e2e8f0" } }, r.reportNumber || r.id),
+React.createElement("span", { style: { fontSize: 11, color: "#64748b" } },
+tpl.icon,
+" ",
+tpl.label)),
+React.createElement("div", { style: { fontSize: 11, color: "#94a3b8" } },
+r.date,
+" \u00B7 ",
+r.technician || "—"),
+r.notes && React.createElement("div", { style: { fontSize: 10, color: "#475569", marginTop: 3 } }, r.notes)),
+React.createElement("div", { style: { display: "flex", gap: 6, alignItems: "center" } },
+React.createElement("span", { style: { fontWeight: 800, fontSize: 13, color: r.overallPass ? "#22c55e" : "#ef4444" } }, r.overallPass ? "✓ OK" : "✗ NO"),
+React.createElement("button", { onClick: () => generateFuncPDF(r, asset, customer, company), style: { background: "#202028", border: "1px solid #2a3040", borderRadius: 5, color: "#5EEAD4", padding: "3px 8px", cursor: "pointer", fontSize: 11 } })))));
+})))));
+}
+function HistoryModal({ asset, jobs, parts, onClose }) {
+return null;
+}
+function PermissionMatrix({ value, onChange }) {
+var _a;
+const editableRoles = ROLES.filter(r => r.id !== "superuser");
+const [activeRole, setActiveRole] = React.useState(((_a = editableRoles[0]) === null || _a === void 0 ? void 0 : _a.id) || "admin");
+const toggle = (roleId, secId) => {
+const cur = (value[roleId] || DEFAULT_ROLE_PERMS[roleId] || []).slice();
+const i = cur.indexOf(secId);
+if (i >= 0)
+cur.splice(i, 1);
+else
+cur.push(secId);
+onChange(Object.assign(Object.assign({}, value), { [roleId]: cur }));
+};
+const has = (roleId, secId) => (value[roleId] || DEFAULT_ROLE_PERMS[roleId] || []).includes(secId);
+const activeRoleObj = editableRoles.find(r => r.id === activeRole) || editableRoles[0];
+const enabledCount = PERM_SECTIONS.filter(s => has(activeRole, s.id)).length;
+return (React.createElement("div", null,
+React.createElement("div", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .6, fontWeight: 700, marginBottom: 8 } }, "Scegli il ruolo da configurare"),
+React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 6, flexWrap: "wrap" } }, editableRoles.map(r => {
+const on = r.id === activeRole;
+return (React.createElement("button", { key: r.id, onClick: () => setActiveRole(r.id), style: {
+flex: "1 1 90px", minWidth: 90, background: on ? "#0D9488" : "#16161e",
+border: "1px solid " + (on ? "#2DD4BF" : "#2a3344"), borderRadius: 9, padding: "10px 8px",
+cursor: "pointer", color: on ? "#04201C" : "#cbd5e1", fontSize: 13, fontWeight: on ? 800 : 600,
+touchAction: "manipulation", WebkitTapHighlightColor: "transparent"
+} }, r.label));
+})),
+React.createElement("div", { style: { fontSize: 11.5, color: "#94a3b8", lineHeight: 1.5, marginBottom: 16, padding: "9px 12px", background: "#0D0D12", border: "1px solid #1e2a3a", borderRadius: 8 } }, activeRoleObj === null || activeRoleObj === void 0 ? void 0 :
+activeRoleObj.desc,
+React.createElement("span", { style: { display: "block", marginTop: 4, color: "#5EEAD4", fontWeight: 700 } },
+enabledCount,
+" sezioni visibili su ",
+PERM_SECTIONS.length)),
+React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 0, border: "1px solid #1e2a3a", borderRadius: 10, overflow: "hidden" } }, PERM_SECTIONS.map((sec, i) => {
+const on = has(activeRole, sec.id);
+return (React.createElement("label", { key: sec.id, style: {
+display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12,
+padding: "13px 15px", cursor: "pointer", borderBottom: i < PERM_SECTIONS.length - 1 ? "1px solid #16161C" : "none",
+background: i % 2 ? "#101014" : "#0c0c11", WebkitTapHighlightColor: "transparent"
+} },
+React.createElement("span", { style: { fontSize: 14, color: on ? "#e2e8f0" : "#64748b", fontWeight: on ? 600 : 400 } }, sec.label),
+React.createElement("span", { onClick: (e) => { e.preventDefault(); toggle(activeRole, sec.id); }, style: {
+position: "relative", width: 46, height: 26, borderRadius: 13, flexShrink: 0,
+background: on ? "#0D9488" : "#2a3344", transition: "background .15s", cursor: "pointer"
+} },
+React.createElement("span", { style: {
+position: "absolute", top: 3, left: on ? 23 : 3, width: 20, height: 20, borderRadius: "50%",
+background: "#fff", transition: "left .15s", boxShadow: "0 1px 3px rgba(0,0,0,.4)"
+} }))));
+}))));
+}
+function SettingsSection({ icon, title, color, children, accent }) {
+return (React.createElement("div", { style: { background: "#141418", borderRadius: 14, padding: "18px", border: "1px solid " + (accent || "#24242F") } },
+React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 9, marginBottom: 14 } },
+React.createElement("span", { style: { fontSize: 17 } }, icon),
+React.createElement("span", { style: { fontSize: 13, fontWeight: 800, color: color || "#e2e8f0", letterSpacing: .3 } }, title)),
+children));
+}
+function CestinoModal({ cestino, onRestore, onPurge, onClose }) {
+const TIPI = [
+{ key: "assets", label: "Apparecchi", nome: r => r.name || r.assetCode || r.id },
+{ key: "jobs", label: "Job / Interventi", nome: r => r.description || r.id },
+{ key: "customers", label: "Clienti", nome: r => r.name || r.id },
+{ key: "parts", label: "Ricambi", nome: r => r.name || r.code || r.id },
+{ key: "iecReports", label: "Verifiche Sicurezza Elettrica", nome: r => (r.reportNumber || r.id) },
+{ key: "funcReports", label: "Verifiche Funzionali", nome: r => (r.reportNumber || r.id) },
+{ key: "invoices", label: "Preventivi", nome: r => r.number || r.id },
+{ key: "quotes", label: "Preventivi", nome: r => r.number || r.id },
+{ key: "orders", label: "Ordini", nome: r => (r.supplier || "Ordine") + " " + (r.id || "") },
+{ key: "instruments", label: "Strumenti", nome: r => (r.brand || "") + " " + (r.model || r.id) },
+{ key: "procedures", label: "Procedure", nome: r => r.title || r.id },
+{ key: "withdrawals", label: "Prelievi", nome: r => r.id },
+];
+const fmtData = (iso) => { try {
+return new Date(iso).toLocaleDateString("it-IT");
+}
+catch (e) {
+return "";
+} };
+const totale = TIPI.reduce((n, t) => n + ((cestino[t.key] || []).length), 0);
+return (React.createElement(Modal, { title: "🗑 Cestino" + (totale > 0 ? " (" + totale + ")" : ""), onClose: onClose, wide: true },
+React.createElement("div", { style: { fontSize: 12.5, color: "#94a3b8", lineHeight: 1.55, marginBottom: 18 } },
+"Gli elementi spostati nel cestino non compaiono pi\u00F9 nelle liste, ma puoi ",
+React.createElement("strong", { style: { color: "#5EEAD4" } }, "ripristinarli"),
+" o eliminarli ",
+React.createElement("strong", { style: { color: "#f87171" } }, "definitivamente"),
+". Gli elementi vengono svuotati automaticamente dopo 90 giorni."),
+totale === 0 ? (React.createElement("div", { style: { textAlign: "center", color: "#64748b", padding: "40px 0", fontSize: 14 } }, "Il cestino \u00E8 vuoto.")) : (TIPI.filter(t => (cestino[t.key] || []).length > 0).map(t => (React.createElement("div", { key: t.key, style: { marginBottom: 20 } },
+React.createElement("div", { style: { fontSize: 11, fontWeight: 700, color: "#475569", textTransform: "uppercase", letterSpacing: 1, marginBottom: 8 } },
+t.label,
+" (",
+(cestino[t.key] || []).length,
+")"),
+(cestino[t.key] || []).map(rec => (React.createElement("div", { key: rec.id, style: { display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", background: "#0D0D12", border: "1px solid #1e2a3a", borderRadius: 9, marginBottom: 6 } },
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+React.createElement("div", { style: { fontSize: 13, color: "#e2e8f0", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, t.nome(rec)),
+rec.deletedAt && React.createElement("div", { style: { fontSize: 10.5, color: "#64748b", marginTop: 2 } },
+"Cestinato il ",
+fmtData(rec.deletedAt))),
+React.createElement("button", { onClick: () => onRestore(t.key, rec.id), style: { background: "#2DD4BF18", border: "1px solid #2DD4BF55", color: "#5EEAD4", borderRadius: 7, padding: "6px 12px", fontSize: 12, cursor: "pointer", whiteSpace: "nowrap", fontWeight: 600 } }, "\u21A9 Ripristina"),
+React.createElement("button", { onClick: () => { if (confirm("Eliminare DEFINITIVAMENTE questo elemento? Non sarà più recuperabile."))
+onPurge(t.key, rec.id); }, style: { background: "#ef444415", border: "1px solid #ef444455", color: "#f87171", borderRadius: 7, padding: "6px 10px", fontSize: 12, cursor: "pointer", whiteSpace: "nowrap" } }, "Elimina"))))))))));
+}
+function SettingsModal({ data, company, onUpdateCompany, onImport, onMerge, onReset, onClose, onCloudPull, isAdmin, isSuperuser, onOpenCestino }) {
+const Section = SettingsSection;
+const [comp, setComp] = React.useState(company);
+const [showPerms, setShowPerms] = React.useState(false);
+const s = k => e => setComp(x => (Object.assign(Object.assign({}, x), { [k]: e.target.value })));
+const [cloudStatus, setCloudStatus] = React.useState("");
+const [cloudBusy, setCloudBusy] = React.useState(false);
+const doSyncUp = () => __awaiter(this, void 0, void 0, function* () {
+setCloudBusy(true);
+setCloudStatus("Sincronizzazione in corso (carico e unisco)…");
+try {
+const { merged, mergedTrash, results } = yield supabaseSyncMerge(data);
+onCloudPull(merged, mergedTrash);
+const tot = Object.values(results).reduce((a, b) => a + b, 0);
+setCloudStatus("✓ Sincronizzato: " + tot + " record sul cloud (dati uniti, niente sovrascritture).");
+}
+catch (e) {
+setCloudStatus("✗ " + e.message);
+}
+setCloudBusy(false);
+});
+const migRef = React.useRef();
+const fileRefMigrate = e => {
+var _a;
+const file = (_a = e.target.files) === null || _a === void 0 ? void 0 : _a[0];
+if (!file) {
+e.target.value = '';
+return;
+}
+const reader = new FileReader();
+reader.onload = (ev) => __awaiter(this, void 0, void 0, function* () {
+try {
+const imported = JSON.parse(ev.target.result);
+const keys = ['assets', 'parts', 'jobs', 'customers', 'invoices', 'iecReports', 'funcReports', 'instruments', 'procedures', 'quotes', 'orders', 'withdrawals'];
+const hasData = keys.some(k => Array.isArray(imported[k]));
+if (!hasData) {
+alert('File backup non valido: nessun dato MedTrace riconosciuto.');
+e.target.value = '';
+return;
+}
+setCloudBusy(true);
+setCloudStatus("Migrazione dei dati sul cloud…");
+onImport(imported);
+const res = yield supabaseSyncUp(imported);
+const tot = Object.values(res).reduce((a, b) => a + b, 0);
+setCloudStatus("✓ Migrazione completata: " + tot + " record caricati sul cloud. Ora i dati sono salvati online.");
+}
+catch (err) {
+setCloudStatus("✗ Migrazione fallita: " + ((err === null || err === void 0 ? void 0 : err.message) || 'errore'));
+}
+finally {
+setCloudBusy(false);
+e.target.value = '';
+}
+});
+reader.onerror = () => { alert('Impossibile leggere il file'); e.target.value = ''; };
+reader.readAsText(file);
+};
+const doSyncDown = () => __awaiter(this, void 0, void 0, function* () {
+setCloudBusy(true);
+setCloudStatus("Sincronizzazione in corso (scarico e unisco)…");
+try {
+const { merged, mergedTrash, results } = yield supabaseSyncMerge(data);
+onCloudPull(merged, mergedTrash);
+const tot = Object.values(merged).reduce((a, arr) => a + ((arr === null || arr === void 0 ? void 0 : arr.length) || 0), 0);
+setCloudStatus("✓ Sincronizzato: " + tot + " record in totale (dati uniti, niente perdite).");
+}
+catch (e) {
+setCloudStatus("✗ " + e.message);
+}
+setCloudBusy(false);
+});
+const fileRef = e => {
+var _a;
+const input = e.target;
+const file = (_a = input.files) === null || _a === void 0 ? void 0 : _a[0];
+if (!file) {
+input.value = '';
+return;
+}
+const reader = new FileReader();
+reader.onload = ev => {
+try {
+const imported = JSON.parse(ev.target.result);
+const hasData = ['assets', 'parts', 'jobs', 'customers', 'invoices', 'iecReports', 'funcReports', 'instruments', 'procedures', 'quotes'].some(k => Array.isArray(imported[k]));
+if (!hasData) {
+alert('File backup non valido: nessun dato MedTrace riconosciuto.');
+input.value = '';
+return;
+}
+onImport(imported);
+}
+catch (err) {
+alert('Errore lettura file: ' + ((err === null || err === void 0 ? void 0 : err.message) || 'JSON non valido'));
+}
+input.value = '';
+};
+reader.onerror = () => { alert('Impossibile leggere il file'); input.value = ''; };
+reader.readAsText(file);
+};
+const fileRefMerge = e => {
+var _a;
+const input = e.target;
+const file = (_a = input.files) === null || _a === void 0 ? void 0 : _a[0];
+if (!file) {
+input.value = '';
+return;
+}
+const reader = new FileReader();
+reader.onload = ev => {
+try {
+const imported = JSON.parse(ev.target.result);
+const hasData = ['assets', 'parts', 'jobs', 'customers', 'invoices', 'iecReports', 'funcReports', 'instruments', 'procedures', 'quotes'].some(k => Array.isArray(imported[k]));
+if (!hasData) {
+alert('File backup non valido.');
+input.value = '';
+return;
+}
+onMerge(imported);
+}
+catch (err) {
+alert('Errore lettura file: ' + ((err === null || err === void 0 ? void 0 : err.message) || 'JSON non valido'));
+}
+input.value = '';
+};
+reader.onerror = () => { alert('Impossibile leggere il file'); input.value = ''; };
+reader.readAsText(file);
+};
+const isLogged = !(typeof DEMO_LOCKED !== "undefined" && DEMO_LOCKED) && (typeof getSupa === "function") && getSupa();
+return (React.createElement(Modal, { title: "Impostazioni", wide: true, onClose: onClose },
+React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14 } },
+isAdmin && (React.createElement(Section, { icon: "\uD83C\uDFE2", title: "Dati azienda" },
+isSuperuser && !comp.name && (React.createElement("div", { style: { background: "#f59e0b15", border: "1px solid #f59e0b44", borderRadius: 8, padding: "10px 13px", marginBottom: 14, fontSize: 12, color: "#f59e0b", lineHeight: 1.5 } }, "\u26A0 Inserisci il nome della tua azienda \u2014 apparir\u00E0 su tutti i PDF (rapporti, verifiche, preventivi).")),
+!isSuperuser && (React.createElement("div", { style: { background: "#0D0D12", border: "1px solid #1e2a3a", borderRadius: 8, padding: "9px 13px", marginBottom: 14, fontSize: 11.5, color: "#64748b", lineHeight: 1.5 } }, "I dati fiscali (ragione sociale, P.IVA, IBAN) sono modificabili solo dal Superuser. Puoi comunque gestire logo e preferenze qui sotto.")),
+React.createElement(Grid, { cols: "1fr 1fr" },
+React.createElement(Inp, { label: "Nome / Ragione sociale", value: comp.name, onChange: s("name"), disabled: !isSuperuser }),
+React.createElement(Inp, { label: "Sottotitolo", value: comp.subtitle, onChange: s("subtitle"), disabled: !isSuperuser }),
+React.createElement(Span2, null,
+React.createElement(Inp, { label: "Indirizzo", value: comp.address, onChange: s("address"), disabled: !isSuperuser })),
+React.createElement(Inp, { label: "P.IVA", value: comp.vat, onChange: s("vat"), disabled: !isSuperuser }),
+React.createElement(Inp, { label: "IBAN", value: comp.iban, onChange: s("iban"), disabled: !isSuperuser }),
+React.createElement(Span2, null,
+React.createElement(Inp, { label: "Prefisso numerazione preventivi", value: comp.invoicePrefix, onChange: s("invoicePrefix"), placeholder: "es. F", disabled: !isSuperuser }))),
+React.createElement("div", { style: { marginTop: 14, paddingTop: 14, borderTop: "1px solid #24242F" } },
+React.createElement("div", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700, marginBottom: 8 } }, "Logo aziendale (sui PDF)"),
+React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" } },
+comp.logo ? (React.createElement("img", { src: comp.logo, alt: "logo", style: { height: 48, maxWidth: 160, objectFit: "contain", background: "#fff", borderRadius: 6, padding: 6, border: "1px solid #2a3040" } })) : (React.createElement("div", { style: { height: 48, width: 120, borderRadius: 6, border: "1px dashed #2a3040", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#475569" } }, "Nessun logo")),
+isAdmin && (React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
+React.createElement("label", null,
+React.createElement("input", { type: "file", accept: "image/*", style: { display: "none" }, onChange: (e) => {
+var _a;
+const file = (_a = e.target.files) === null || _a === void 0 ? void 0 : _a[0];
+if (!file)
+return;
+const reader = new FileReader();
+reader.onload = (ev) => {
+const img = new Image();
+img.onload = () => {
+const maxW = 300;
+const scale = Math.min(1, maxW / img.width);
+const cv = document.createElement("canvas");
+cv.width = img.width * scale;
+cv.height = img.height * scale;
+cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+const dataUrl = cv.toDataURL("image/png");
+setComp(x => (Object.assign(Object.assign({}, x), { logo: dataUrl })));
+};
+img.src = ev.target.result;
+};
+reader.readAsDataURL(file);
+} }),
+React.createElement("span", { style: { background: "#2DD4BF15", color: "#2DD4BF", border: "1px solid #2DD4BF44", borderRadius: 9, padding: "9px 16px", cursor: "pointer", fontSize: 13, fontWeight: 700, display: "inline-block" } }, comp.logo ? "Cambia logo" : "Carica logo")),
+comp.logo && (React.createElement("button", { onClick: () => setComp(x => (Object.assign(Object.assign({}, x), { logo: "" }))), style: { background: "#ef444415", color: "#ef4444", border: "1px solid #ef444433", borderRadius: 9, padding: "9px 16px", cursor: "pointer", fontSize: 13, fontWeight: 700 } }, "Rimuovi"))))),
+comp.logo && (React.createElement("div", { onClick: () => { if (isAdmin)
+setComp(x => (Object.assign(Object.assign({}, x), { logoHasName: !x.logoHasName }))); }, style: { display: "flex", alignItems: "center", gap: 10, marginTop: 12, cursor: isAdmin ? "pointer" : "default", fontSize: 12.5, color: "#cbd5e1" } },
+React.createElement("div", { style: { width: 42, height: 25, borderRadius: 13, flexShrink: 0, background: comp.logoHasName ? "#2DD4BF" : "#3a4151", opacity: isAdmin ? 1 : 0.5, position: "relative", transition: "background .15s" } },
+React.createElement("div", { style: { position: "absolute", top: 3, left: comp.logoHasName ? 20 : 3, width: 19, height: 19, borderRadius: "50%", background: "#fff", transition: "left .15s", boxShadow: "0 1px 3px rgba(0,0,0,.4)" } })),
+"Il mio logo contiene gi\u00E0 il nome dell'azienda")),
+comp.logo && (React.createElement("div", { style: { fontSize: 11, color: "#64748b", marginTop: 5, marginLeft: 26, lineHeight: 1.4 } }, comp.logoHasName ? "Sui PDF il nome non verrà ripetuto sotto il logo (mostriamo solo P.IVA e indirizzo)." : "Sui PDF mostriamo il nome azienda accanto ai dati."))),
+isAdmin && React.createElement("div", { style: { textAlign: "right", marginTop: 12 } },
+React.createElement(Btn, { sm: true, onClick: () => __awaiter(this, void 0, void 0, function* () {
+onUpdateCompany(comp);
+const isOffline = (typeof OFFLINE_MODE !== "undefined" && OFFLINE_MODE);
+const isDemo = (typeof DEMO_LOCKED !== "undefined" && DEMO_LOCKED);
+if (!isOffline && !isDemo && typeof supabaseSaveCompany === "function") {
+const ok = yield supabaseSaveCompany(comp);
+alert(ok ? "Dati azienda salvati e condivisi con i colleghi." : "Salvati in locale. (Sincronizzazione cloud non riuscita: riprova quando sei online.)");
+}
+else {
+alert("Dati azienda salvati.");
+}
+}) }, "Salva dati azienda")))),
+React.createElement(Section, { icon: "\u2699\uFE0F", title: "Preferenze" },
+React.createElement("div", { onClick: () => { const v = !comp.stickerPrompt; setComp(x => (Object.assign(Object.assign({}, x), { stickerPrompt: v }))); onUpdateCompany(Object.assign(Object.assign({}, company), { stickerPrompt: v })); }, style: { display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" } },
+React.createElement("div", { style: {
+width: 46, height: 27, borderRadius: 14, flexShrink: 0, marginTop: 1,
+background: comp.stickerPrompt ? "#2DD4BF" : "#3a4151",
+position: "relative", transition: "background .15s"
+} },
+React.createElement("div", { style: {
+position: "absolute", top: 3, left: comp.stickerPrompt ? 22 : 3,
+width: 21, height: 21, borderRadius: "50%", background: "#fff",
+transition: "left .15s", boxShadow: "0 1px 3px rgba(0,0,0,.4)"
+} })),
+React.createElement("span", { style: { fontSize: 13, color: "#e2e8f0", lineHeight: 1.5 } },
+"Chiedi di stampare lo sticker QR dopo ogni verifica",
+React.createElement("span", { style: { display: "block", fontSize: 11.5, color: "#64748b", marginTop: 3 } }, "Se spento, la verifica viene salvata senza domande. Lo sticker resta sempre disponibile col pulsante \uD83C\uDFF7 nella lista delle verifiche.")))),
+isSuperuser && (React.createElement(Section, { icon: "\uD83E\uDDD1\u200D\uD83D\uDD27", title: "Tecnici" },
+React.createElement(TecniciManager, { technicians: comp.technicians || [], onChange: arr => { setComp(x => (Object.assign(Object.assign({}, x), { technicians: arr }))); onUpdateCompany(Object.assign(Object.assign({}, company), { technicians: arr })); const _off = (typeof OFFLINE_MODE !== "undefined" && OFFLINE_MODE); const _demo = (typeof DEMO_LOCKED !== "undefined" && DEMO_LOCKED); if (!_off && !_demo && typeof supabaseSaveTechnicians === "function") {
+supabaseSaveTechnicians(arr);
+} } }))),
+React.createElement(Section, { icon: "\uD83D\uDDD1", title: "Cestino" },
+React.createElement("div", { style: { fontSize: 11.5, color: "#94a3b8", lineHeight: 1.55, marginBottom: 14 } }, "Gli elementi eliminati finiscono qui e puoi recuperarli. Si svuotano da soli dopo 90 giorni."),
+React.createElement("button", { onClick: () => { if (onOpenCestino)
+onOpenCestino(); }, style: { width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, background: "#16161e", border: "1px solid #2a3344", borderRadius: 10, padding: "13px 16px", cursor: "pointer", color: "#e2e8f0", fontSize: 13.5, fontWeight: 700, textAlign: "left" } },
+React.createElement("span", null, "Apri il cestino"),
+React.createElement("span", { style: { color: "#64748b" } }, "\u203A"))),
+isSuperuser && (React.createElement(Section, { icon: "\uD83D\uDD10", title: "Ruoli e permessi" },
+React.createElement("div", { style: { fontSize: 11.5, color: "#94a3b8", lineHeight: 1.55, marginBottom: 14 } },
+"Decidi quali sezioni pu\u00F2 vedere ogni ruolo. Il ",
+React.createElement("strong", { style: { color: "#5EEAD4" } }, "Superuser"),
+" vede sempre tutto e pu\u00F2 gestire utenti e dati fiscali."),
+React.createElement("button", { onClick: () => setShowPerms(true), style: { width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, background: "#16161e", border: "1px solid #2a3344", borderRadius: 10, padding: "13px 16px", cursor: "pointer", color: "#e2e8f0", fontSize: 13.5, fontWeight: 700, textAlign: "left" } },
+React.createElement("span", null, "Configura ruoli e permessi"),
+React.createElement("span", { style: { color: "#5EEAD4", fontSize: 18 } }, "\u203A")))),
+isLogged ? (React.createElement(Section, { icon: "\u2601\uFE0F", title: "Sincronizzazione cloud", color: "#2DD4BF", accent: "#2DD4BF33" },
+React.createElement("div", { style: { color: "#94a3b8", fontSize: 12, lineHeight: 1.55, marginBottom: 14 } },
+"I dati vengono ",
+React.createElement("strong", { style: { color: "#5EEAD4" } }, "uniti"),
+" tra questo dispositivo e il cloud: niente viene sovrascritto o perso. Se tu e un collega lavorate su dispositivi diversi, le modifiche si combinano. In caso di modifica sullo stesso record, resta la versione pi\u00F9 recente.",
+React.createElement("span", { style: { display: "block", marginTop: 6 } },
+React.createElement("strong", { style: { color: "#5EEAD4" } }, "Carica"),
+" e ",
+React.createElement("strong", { style: { color: "#5EEAD4" } }, "Scarica"),
+" fanno entrambi una sincronizzazione completa (su e gi\u00F9): usa l'uno o l'altro, il risultato \u00E8 lo stesso.")),
+React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } },
+React.createElement(Btn, { sm: true, disabled: cloudBusy, onClick: doSyncUp }, cloudBusy ? "Sincronizzo…" : "⬆ Carica su cloud"),
+React.createElement(Btn, { sm: true, variant: "ghost", disabled: cloudBusy, onClick: doSyncDown }, cloudBusy ? "…" : "⬇ Scarica da cloud")),
+cloudStatus && (React.createElement("div", { style: { marginTop: 12, fontSize: 12, color: cloudStatus.startsWith("✗") ? "#ef4444" : "#2DD4BF", lineHeight: 1.5, background: (cloudStatus.startsWith("✗") ? "#ef444410" : "#2DD4BF10"), borderRadius: 8, padding: "9px 12px" } }, cloudStatus)))) : (React.createElement(Section, { icon: "\uD83D\uDCBE", title: "Dove sono i dati" },
+React.createElement("div", { style: { color: "#94a3b8", fontSize: 12, lineHeight: 1.55 } },
+"Tutti i dati sono salvati ",
+React.createElement("strong", { style: { color: "#e2e8f0" } }, "localmente su questo dispositivo"),
+", anche offline. Esporta backup periodici qui sotto per sicurezza."))),
+React.createElement(Section, { icon: "\uD83D\uDCE6", title: "Backup & ripristino" },
+React.createElement("div", { style: { color: "#64748b", fontSize: 11.5, lineHeight: 1.5, marginBottom: 12 } }, "Salva una copia dei tuoi dati in un file, o importane una. Utile prima di operazioni importanti."),
+React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap" } },
+React.createElement(Btn, { sm: true, variant: "ghost", onClick: () => downloadJSON("medtrace-backup-" + (new Date().toISOString().slice(0, 10)) + ".json", data) }, "\u2B07 Esporta backup")),
+React.createElement("div", { style: { marginTop: 14, padding: "13px 15px", background: "#0D0D12", border: "1px solid #1e2a3a", borderRadius: 9 } },
+React.createElement("div", { style: { fontSize: 12, color: "#e2e8f0", fontWeight: 700, marginBottom: 8 } }, "\u2B06 Importa un backup (sostituisce i dati attuali)"),
+React.createElement("input", { type: "file", accept: "application/json,.json,text/plain,*/*", onChange: fileRef, style: { display: "block", width: "100%", fontSize: 13, color: "#cbd5e1", background: "#16161e", border: "1px solid #2a3344", borderRadius: 8, padding: "10px", boxSizing: "border-box", marginBottom: 14 } }),
+React.createElement("div", { style: { fontSize: 12, color: "#e2e8f0", fontWeight: 700, marginBottom: 8 } }, "\u2295 Unisci da file (aggiunge senza cancellare)"),
+React.createElement("input", { type: "file", accept: "application/json,.json,text/plain,*/*", onChange: fileRefMerge, style: { display: "block", width: "100%", fontSize: 13, color: "#cbd5e1", background: "#16161e", border: "1px solid #2a3344", borderRadius: 8, padding: "10px", boxSizing: "border-box" } }))),
+isLogged && (React.createElement(Section, { icon: "\uD83D\uDC64", title: "Account" },
+React.createElement("button", { onClick: () => __awaiter(this, void 0, void 0, function* () { if (confirm("Disconnettere l'account? Per rientrare servirà di nuovo il login e una connessione.")) {
+try {
+yield supaSignOut();
+}
+catch (e) { }
+window.location.reload();
+} }), style: { background: "#ef444415", border: "1px solid #ef444433", borderRadius: 9, color: "#ef4444", padding: "9px 18px", cursor: "pointer", fontWeight: 700, fontSize: 13 } }, "Disconnetti account"))),
+isSuperuser && (React.createElement(Section, { icon: "\u26A0\uFE0F", title: "Zona pericolo", color: "#ef4444", accent: "#ef444433" },
+React.createElement("div", { style: { color: "#64748b", fontSize: 11.5, lineHeight: 1.5, marginBottom: 12 } }, "Cancella tutti i dati locali in modo permanente. Esporta un backup prima, se ti servono."),
+React.createElement(Btn, { variant: "danger", onClick: onReset }, "Reset completo dei dati"))),
+React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", paddingTop: 4 } },
+React.createElement(Btn, { variant: "ghost", onClick: onClose }, "Chiudi"))),
+showPerms && (React.createElement(Modal, { title: "\uD83D\uDD10 Ruoli e permessi", wide: true, onClose: () => setShowPerms(false) },
+React.createElement("div", { style: { maxHeight: "75vh", overflow: "auto" } },
+React.createElement(PermissionMatrix, { value: comp.rolePermissions || DEFAULT_ROLE_PERMS, onChange: (next) => { setComp(x => (Object.assign(Object.assign({}, x), { rolePermissions: next }))); onUpdateCompany(Object.assign(Object.assign({}, company), { rolePermissions: next })); } }),
+React.createElement("div", { style: { fontSize: 11, color: "#64748b", lineHeight: 1.5, marginTop: 14 } }, "Le modifiche si salvano subito e valgono al prossimo accesso degli utenti. Il Superuser vede sempre tutte le sezioni."),
+React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", marginTop: 14 } },
+React.createElement(Btn, { onClick: () => setShowPerms(false) }, "Fatto")))))));
+}
+function LoginScreen({ onLogin }) {
+const [mode, setMode] = React.useState('login');
+const [email, setEmail] = React.useState('');
+const [password, setPassword] = React.useState('');
+const [inviteCode, setInviteCode] = React.useState('');
+const [loading, setLoading] = React.useState(false);
+const [error, setError] = React.useState('');
+const handle = () => __awaiter(this, void 0, void 0, function* () {
+if (!email || !password) {
+setError('Inserisci email e password');
+return;
+}
+setLoading(true);
+setError('');
+try {
+if (mode === 'register') {
+if (!inviteCode.trim()) {
+setError('Inserisci il codice invito fornito dalla tua azienda');
+setLoading(false);
+return;
+}
+const result = yield supaSignUp(email, password);
+if (!result)
+throw new Error('Cloud non disponibile');
+if (result.error)
+throw result.error;
+try {
+const supa = getSupa();
+const { data: sess } = yield supa.auth.getSession();
+if (!(sess === null || sess === void 0 ? void 0 : sess.session)) {
+yield supaSignIn(email, password);
+}
+const { data: joinRes, error: joinErr } = yield supa.rpc('unisciti_con_codice', { codice: inviteCode.trim() });
+if (joinErr)
+throw joinErr;
+if (joinRes && joinRes.startsWith('ERRORE')) {
+throw new Error(joinRes.replace('ERRORE: ', ''));
+}
+}
+catch (je) {
+setError('Account creato ma codice non valido: ' + (je.message || je) + '. Contatta la tua azienda.');
+setLoading(false);
+return;
+}
+setError('Registrazione completata! Ora puoi accedere.');
+setMode('login');
+}
+else {
+const result = yield supaSignIn(email, password);
+if (!result)
+throw new Error('Cloud non disponibile');
+if (result.error)
+throw result.error;
+onLogin(result.data.user);
+}
+}
+catch (e) {
+setError(e.message || 'Errore di autenticazione');
+}
+finally {
+setLoading(false);
+}
+});
+const INP = FORM_INP;
+const LBL = FORM_LBL;
+return (React.createElement("div", { style: { minHeight: '100vh', background: '#0D0D12', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 } },
+React.createElement("div", { style: { width: '100%', maxWidth: 400 } },
+React.createElement("div", { style: { textAlign: 'center', marginBottom: 40 } },
+React.createElement("svg", { viewBox: "0 0 220 48", xmlns: "http://www.w3.org/2000/svg", style: { width: 200, height: 44 } },
+React.createElement("g", { fill: "none", stroke: "#2DD4BF", strokeLinecap: "round", strokeLinejoin: "round" },
+React.createElement("path", { d: "M6 24 Q11 14 16 24 Q21 34 26 24", strokeWidth: "2.5" }),
+React.createElement("path", { d: "M1 24 Q9 10 16 24 Q23 38 31 24", strokeWidth: "2.5" }),
+React.createElement("path", { d: "M-4 24 Q7 6 16 24 Q25 42 36 24", strokeWidth: "2.5" }),
+React.createElement("circle", { cx: "42", cy: "24", r: "3.5", fill: "#2DD4BF", stroke: "none" })),
+React.createElement("text", { x: "54", y: "28", fontFamily: "'Segoe UI',Arial,sans-serif", fontSize: "20", fontWeight: "800", fill: "#FFFFFF", letterSpacing: "-0.5" }, "MedTrace"),
+React.createElement("text", { x: "54", y: "40", fontFamily: "'Segoe UI',Arial,sans-serif", fontSize: "8.5", fontWeight: "600", fill: "#5A5A70", letterSpacing: "1.5" }, "MEDICAL")),
+React.createElement("p", { style: { color: '#5A5A70', fontSize: 11, marginTop: 10, letterSpacing: 1.5, textTransform: 'uppercase' } }, "Gestione Apparecchiature Elettromedicali")),
+React.createElement("div", { style: { background: '#141418', border: '1px solid #2A2A38', borderRadius: 14, padding: 32 } },
+React.createElement("h2", { style: { fontSize: 18, fontWeight: 800, marginBottom: 24, color: '#F0F0F5' } }, mode === 'login' ? 'Accedi' : 'Crea account'),
+React.createElement("div", { style: { marginBottom: 16 } },
+React.createElement("label", { style: LBL }, "Email"),
+React.createElement("input", { type: "email", value: email, onChange: e => setEmail(e.target.value), onKeyDown: e => e.key === 'Enter' && handle(), placeholder: "tuaemail@esempio.com", style: INP })),
+React.createElement("div", { style: { marginBottom: 24 } },
+React.createElement("label", { style: LBL }, "Password"),
+React.createElement("input", { type: "password", value: password, onChange: e => setPassword(e.target.value), onKeyDown: e => e.key === 'Enter' && handle(), placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022", style: INP })),
+mode === 'register' && (React.createElement("div", { style: { marginBottom: 24 } },
+React.createElement("label", { style: LBL }, "Codice invito azienda"),
+React.createElement("input", { type: "text", value: inviteCode, onChange: e => setInviteCode(e.target.value.toUpperCase()), onKeyDown: e => e.key === 'Enter' && handle(), placeholder: "es. MEDTRACE-2026", style: Object.assign(Object.assign({}, INP), { textTransform: 'uppercase' }) }),
+React.createElement("div", { style: { fontSize: 11, color: '#5A5A70', marginTop: 6, lineHeight: 1.4 } }, "Il codice fornito dalla tua azienda per accedere ai dati condivisi."))),
+error && React.createElement("div", { style: { background: error.includes('email') ? '#2DD4BF18' : '#ef444418', border: `1px solid ${error.includes('email') ? '#2DD4BF44' : '#ef444444'}`, borderRadius: 8, padding: '10px 14px', fontSize: 13, color: error.includes('email') ? '#2DD4BF' : '#ef4444', marginBottom: 16 } }, error),
+React.createElement("button", { onClick: handle, disabled: loading, style: { width: '100%', background: 'linear-gradient(135deg,#2DD4BF,#0D9488)', color: '#000', border: 'none', borderRadius: 8, padding: 13, fontSize: 14, fontWeight: 800, cursor: loading ? 'wait' : 'pointer', opacity: loading ? .7 : 1, fontFamily: 'inherit' } }, loading ? 'Caricamento…' : mode === 'login' ? 'Accedi' : 'Crea account'),
+React.createElement("div", { style: { textAlign: 'center', marginTop: 18 } },
+React.createElement("button", { onClick: () => { setMode(mode === 'login' ? 'register' : 'login'); setError(''); }, style: { background: 'none', border: 'none', color: '#5A5A70', fontSize: 13, cursor: 'pointer', textDecoration: 'underline' } }, mode === 'login' ? 'Non hai un account? Registrati' : 'Hai già un account? Accedi'))),
+React.createElement("p", { style: { textAlign: 'center', color: '#3A3A50', fontSize: 11, marginTop: 20 } }, "MedTrace \u00B7 Software gestione elettromedicali"))));
+}
+function AttachmentsList({ attachments, onAdd, onDelete, showToast, compact }) {
+const inputRef = React.useRef(null);
+const [uploading, setUploading] = React.useState(false);
+const handleFiles = (e) => __awaiter(this, void 0, void 0, function* () {
+const files = Array.from(e.target.files || []);
+if (!files.length)
+return;
+setUploading(true);
+try {
+for (const file of files) {
+if (file.size > 5 * 1024 * 1024) {
+alert(`File "${file.name}" è troppo grande (>5MB). Usa file più piccoli o comprimi prima.`);
+continue;
+}
+const att = yield fileToAttachment(file);
+const usage = getStorageUsage();
+if (usage.bytes + att.dataUrl.length > 9 * 1024 * 1024) {
+alert(`⚠ Spazio quasi esaurito (${usage.mb} MB di ~10 MB).\nEsporta backup e libera spazio prima di continuare.`);
+break;
+}
+onAdd(att);
+}
+showToast && showToast(`✓ ${files.length} file caricat${files.length === 1 ? 'o' : 'i'}`);
+}
+catch (err) {
+alert('Errore caricamento: ' + err.message);
+}
+finally {
+setUploading(false);
+if (inputRef.current)
+inputRef.current.value = '';
+}
+});
+const getIcon = (type) => {
+if (type === null || type === void 0 ? void 0 : type.startsWith('image/'))
+return '🖼';
+if (type === 'application/pdf')
+return '📄';
+if (type === null || type === void 0 ? void 0 : type.includes('word'))
+return '📝';
+if ((type === null || type === void 0 ? void 0 : type.includes('excel')) || (type === null || type === void 0 ? void 0 : type.includes('sheet')))
+return '📊';
+return '📎';
+};
+return (React.createElement("div", { style: { marginTop: compact ? 6 : 10 } },
+!compact && (React.createElement("div", { style: { fontSize: 10, color: '#5A5A70', textTransform: 'uppercase', letterSpacing: .8, fontWeight: 700, marginBottom: 6 } },
+"Allegati (",
+(attachments || []).length,
+")")),
+React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 } }, (attachments || []).length === 0 ? (React.createElement("div", { style: { fontSize: 11, color: '#5A5A70', padding: '6px 0', fontStyle: 'italic' } }, "Nessun allegato")) : (attachments || []).map(att => {
+var _a;
+return (React.createElement("div", { key: att.id, style: {
+background: '#0D0D12', border: '1px solid #2A2A38', borderRadius: 6,
+padding: '6px 10px', display: 'flex', alignItems: 'center', gap: 8,
+} },
+React.createElement("span", { style: { fontSize: 14 } }, getIcon(att.type)),
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+React.createElement("div", { style: { fontSize: 12, fontWeight: 600, color: '#F0F0F5', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, att.name),
+React.createElement("div", { style: { fontSize: 10, color: '#5A5A70' } },
+formatBytes(att.finalSize || att.size),
+" \u00B7 ",
+(att.uploadedAt || '').slice(0, 10))),
+React.createElement("button", { onClick: () => downloadAttachment(att), title: "Scarica", style: { background: '#202028', border: '1px solid #2DD4BF44', borderRadius: 4, color: '#2DD4BF', padding: '3px 8px', cursor: 'pointer', fontSize: 10, fontWeight: 700 } }, "\u2B07"),
+((_a = att.type) === null || _a === void 0 ? void 0 : _a.startsWith('image/')) && (React.createElement("button", { onClick: () => window.open(att.dataUrl, '_blank'), title: "Visualizza", style: { background: '#202028', border: '1px solid #2a3040', borderRadius: 4, color: '#94a3b8', padding: '3px 8px', cursor: 'pointer', fontSize: 10, fontWeight: 700 } }, "\uD83D\uDC41")),
+React.createElement("button", { onClick: () => { if (confirm('Eliminare "' + att.name + '"?'))
+onDelete(att.id); }, title: "Elimina", style: { background: '#202028', border: '1px solid #ef444433', borderRadius: 4, color: '#ef4444', padding: '3px 8px', cursor: 'pointer', fontSize: 10, fontWeight: 700 } }, "\u2715")));
+})),
+React.createElement("label", { style: {
+display: 'inline-flex', alignItems: 'center', gap: 6, cursor: uploading ? 'wait' : 'pointer',
+background: '#1E1E28', border: '1px dashed #2DD4BF44', borderRadius: 6, padding: '6px 14px',
+color: '#2DD4BF', fontSize: 11, fontWeight: 700, opacity: uploading ? .5 : 1,
+} },
+React.createElement("input", { ref: inputRef, type: "file", multiple: true, accept: "image/*,.pdf,.doc,.docx,.xls,.xlsx", onChange: handleFiles, disabled: uploading, style: { display: 'none' } }),
+uploading ? '⏳ Caricamento...' : '+ Carica allegato (PDF, immagine, doc)')));
+}
+function InstrumentsPage({ instruments, setInstruments, showToast, checkLocked }) {
+const [modal, setModal] = React.useState(null);
+const [search, setSearch] = React.useState('');
+const [filterStatus, setFilterStatus] = React.useState("");
+const [filterCategory, setFilterCategory] = React.useState("");
+const [filterOpen, setFilterOpen] = React.useState(false);
+const isMobile = useMedia("(max-width:600px)");
+const TODAY = new Date();
+const getStatus = (inst) => {
+if (!inst.calExpiry)
+return { label: 'Non impostata', color: '#64748b', days: null, key: 'none' };
+const expiry = new Date(inst.calExpiry);
+const days = Math.round((expiry - TODAY) / 86400000);
+if (days < 0)
+return { label: 'SCADUTA', color: '#ef4444', days, key: 'expired' };
+if (days <= 30)
+return { label: `Scade in ${days}gg`, color: '#ef4444', days, key: 'expiring' };
+if (days <= 60)
+return { label: `Scade in ${days}gg`, color: '#f59e0b', days, key: 'soon' };
+return { label: `Valida (${days}gg)`, color: '#22c55e', days, key: 'valid' };
+};
+const saveInstrument = (data) => {
+if (checkLocked && checkLocked())
+return;
+if (data.id) {
+const upd = withUpdateMeta(data);
+setInstruments(prev => prev.map(x => x.id === data.id ? upd : x));
+}
+else {
+const newInst = withCreateMeta(data);
+setInstruments(prev => [...prev, newInst]);
+}
+setModal(null);
+showToast('✓ Strumento salvato');
+};
+const deleteInstrument = (id) => {
+if (checkLocked && checkLocked())
+return;
+if (!confirm('Eliminare questo strumento?'))
+return;
+setInstruments(prev => prev.filter(x => x.id !== id));
+showToast('Strumento eliminato');
+};
+const filtered = instruments.filter(i => {
+if (search) {
+const q = search.toLowerCase();
+if (![i.brand, i.model, i.serial, i.internalCode, i.category, i.calLab, i.certNumber]
+.some(v => v && v.toLowerCase().includes(q)))
+return false;
+}
+if (filterCategory && i.category !== filterCategory)
+return false;
+if (filterStatus) {
+const s = getStatus(i);
+if (filterStatus === "valid" && s.key !== "valid")
+return false;
+if (filterStatus === "expiring" && s.key !== "soon" && s.key !== "expiring")
+return false;
+if (filterStatus === "expired" && s.key !== "expired")
+return false;
+if (filterStatus === "none" && s.key !== "none")
+return false;
+}
+return true;
+});
+const expired = instruments.filter(i => getStatus(i).key === 'expired').length;
+const expiring = instruments.filter(i => { const k = getStatus(i).key; return k === 'soon' || k === 'expiring'; }).length;
+const valid = instruments.filter(i => getStatus(i).key === 'valid').length;
+const categories = [...new Set(instruments.map(i => i.category).filter(Boolean))].sort();
+const activeFilterCount = (filterStatus ? 1 : 0) + (filterCategory ? 1 : 0);
+return (React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 } },
+React.createElement("div", null,
+React.createElement("h1", { style: { margin: 0, fontSize: 18, fontWeight: 900, display: isMobile ? "none" : "block" } }, "Strumenti di Misura"),
+React.createElement("p", { style: { color: "#64748b", margin: "2px 0 0", fontSize: 12, fontFamily: "monospace" } },
+instruments.length,
+" strumenti \u00B7 ",
+valid,
+" validi \u00B7 ",
+expiring,
+" in scadenza \u00B7 ",
+expired,
+" scaduti")),
+React.createElement(Btn, { sm: true, onClick: () => setModal({ type: 'form', data: null }) }, "+ Nuovo strumento")),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)", gap: 10, marginBottom: 16 } }, [
+{ label: 'Totale', value: instruments.length, color: '#2DD4BF' },
+{ label: 'Validi', value: valid, color: '#22c55e' },
+{ label: 'In scadenza', value: expiring, color: '#f59e0b' },
+{ label: 'Scaduti', value: expired, color: '#ef4444' },
+].map(k => (React.createElement("div", { key: k.label, style: { background: "#141418", border: "1px solid #1e2a3a", borderRadius: 10, padding: "12px 14px" } },
+React.createElement("div", { style: { fontSize: 24, fontWeight: 900, color: k.color, fontFamily: "monospace", lineHeight: 1 } }, k.value),
+React.createElement("div", { style: { fontSize: 10, color: "#64748b", marginTop: 5, textTransform: "uppercase", letterSpacing: .8, fontWeight: 700 } }, k.label))))),
+instruments.length === 0 ? (React.createElement(EmptyState, { icon: "\uD83D\uDD2C", title: "Nessuno strumento di misura", subtitle: "Registra i tuoi analizzatori, simulatori e multimetri: marca, modello, n\u00B0 serie, certificato di calibrazione e scadenza. Garantisce la rintracciabilit\u00E0 delle tue verifiche.", actions: [
+{ label: "+ Nuovo strumento", onClick: () => setModal({ type: 'form', data: null }), primary: true }
+] })) : (React.createElement(React.Fragment, null,
+React.createElement(MobileSearch, { value: search, onChange: setSearch, placeholder: "Cerca per marca, modello, seriale, categoria\u2026", count: filtered.length, total: instruments.length }),
+React.createElement(FilterDropdown, { filters: {
+status: { label: "Stato calibrazione", options: ["valid", "expiring", "expired", "none"].map(v => ({ valid: "Valida", expiring: "In scadenza", expired: "Scaduta", none: "Non impostata" }[v])), value: filterStatus ? ({ valid: "Valida", expiring: "In scadenza", expired: "Scaduta", none: "Non impostata" }[filterStatus]) : "" },
+category: { label: "Categoria", options: categories, value: filterCategory },
+}, onChange: (k, v) => {
+if (k === "status") {
+const map = { "Valida": "valid", "In scadenza": "expiring", "Scaduta": "expired", "Non impostata": "none" };
+setFilterStatus(map[v] || "");
+}
+else if (k === "category") {
+setFilterCategory(v);
+}
+}, onClearAll: () => { setFilterStatus(""); setFilterCategory(""); } }),
+filtered.length === 0 ? (React.createElement("div", { style: { textAlign: "center", padding: "30px 20px", background: "#141418", borderRadius: 10, border: "1px dashed #2a3040", fontSize: 13, color: "#64748b" } }, "Nessuno strumento corrisponde alla ricerca o ai filtri")) : isMobile ? (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, filtered.map(inst => {
+const status = getStatus(inst);
+return (React.createElement(SwipeableCard, { key: inst.id, onDelete: () => deleteInstrument(inst.id) },
+React.createElement("div", { style: { background: "#141418", border: "1px solid #1e2a3a", borderRadius: 12, overflow: "hidden", borderLeft: "3px solid " + status.color } },
+React.createElement("div", { onClick: () => setModal({ type: 'form', data: inst }), style: { padding: "12px 14px 10px", cursor: "pointer", touchAction: "manipulation", WebkitTapHighlightColor: "transparent", borderBottom: "1px solid #1e2a3a" } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 6 } },
+React.createElement("strong", { style: { color: "#e2e8f0", fontSize: 14, flex: 1, minWidth: 0, wordBreak: "break-word" } },
+inst.brand,
+" ",
+inst.model),
+React.createElement("span", { style: { padding: "2px 8px", background: status.color + "22", color: status.color, borderRadius: 5, fontSize: 10, fontWeight: 800, whiteSpace: "nowrap" } }, status.label)),
+inst.internalCode && React.createElement("div", { style: { fontSize: 11, color: "#64748b", fontFamily: "monospace", marginBottom: 3 } },
+"Codice: ",
+inst.internalCode),
+inst.serial && React.createElement("div", { style: { fontSize: 11, color: "#64748b", marginBottom: 3 } },
+"S/N: ",
+inst.serial),
+inst.category && React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", marginBottom: 3 } }, inst.category),
+inst.calExpiry && React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", marginTop: 4 } },
+"Scadenza: ",
+React.createElement("span", { style: { color: status.color, fontWeight: 700, fontFamily: "monospace" } }, inst.calExpiry)),
+inst.calLab && React.createElement("div", { style: { fontSize: 11, color: "#64748b", marginTop: 3 } },
+"Lab: ",
+inst.calLab)),
+React.createElement("div", { style: { display: "flex", justifyContent: "space-around", background: "#0F0F14" } },
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); setModal({ type: 'renew', data: inst }); }, style: { flex: 1, background: "transparent", color: "#2DD4BF", border: "none", borderRight: "1px solid #1e2a3a", padding: "10px 4px", fontSize: 11, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\u21BB Rinnova"),
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); setModal({ type: 'form', data: inst }); }, style: { flex: 1, background: "transparent", color: "#94a3b8", border: "none", borderRight: "1px solid #1e2a3a", padding: "10px 4px", fontSize: 11, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\u270F Modifica"),
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); deleteInstrument(inst.id); }, style: { background: "transparent", color: "#ef4444", border: "none", padding: "10px 14px", fontSize: 14, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\u2715")))));
+}))) : (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, filtered.map(inst => {
+const status = getStatus(inst);
+return (React.createElement("div", { key: inst.id, style: { background: "#141418", border: "1px solid #1e2a3a", borderLeft: "3px solid " + status.color, borderRadius: 10, padding: "12px 16px" } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" } },
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 5 } },
+React.createElement("span", { style: { fontSize: 14, fontWeight: 800, color: "#e2e8f0" } },
+inst.brand,
+" ",
+inst.model),
+inst.internalCode && React.createElement("span", { style: { fontFamily: "monospace", fontSize: 10, color: "#64748b", background: "#0D0D12", borderRadius: 4, padding: "1px 6px", border: "1px solid #1e2a3a" } }, inst.internalCode),
+inst.category && React.createElement("span", { style: { fontSize: 10, color: "#94a3b8", background: "#1e2a3a", borderRadius: 4, padding: "1px 8px" } }, inst.category),
+React.createElement("span", { style: { padding: "2px 10px", background: status.color + "22", color: status.color, border: `1px solid ${status.color}44`, borderRadius: 20, fontSize: 10, fontWeight: 700, whiteSpace: "nowrap" } }, status.label)),
+React.createElement("div", { style: { fontSize: 11, color: "#64748b", display: "flex", gap: 14, flexWrap: "wrap" } },
+inst.serial && React.createElement("span", null,
+"S/N: ",
+React.createElement("span", { style: { color: "#94a3b8", fontFamily: "monospace" } }, inst.serial)),
+inst.calDate && React.createElement("span", null,
+"Ultima cal.: ",
+React.createElement("span", { style: { color: "#94a3b8", fontFamily: "monospace" } }, inst.calDate)),
+inst.calExpiry && React.createElement("span", null,
+"Scadenza: ",
+React.createElement("span", { style: { color: status.color, fontWeight: 700, fontFamily: "monospace" } }, inst.calExpiry)),
+inst.calLab && React.createElement("span", null,
+"Lab: ",
+React.createElement("span", { style: { color: "#94a3b8" } }, inst.calLab)),
+inst.certNumber && React.createElement("span", null,
+"Cert.: ",
+React.createElement("span", { style: { color: "#94a3b8", fontFamily: "monospace" } }, inst.certNumber))),
+inst.notes && React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", marginTop: 6, background: "#0D0D12", borderRadius: 6, padding: "6px 10px", border: "1px solid #1e2a3a" } }, inst.notes)),
+React.createElement("div", { style: { display: "flex", gap: 6, flexShrink: 0 } },
+React.createElement("button", { onClick: () => setModal({ type: 'renew', data: inst }), style: { background: "transparent", color: "#2DD4BF", border: "1px solid #2DD4BF44", borderRadius: 6, padding: "5px 12px", cursor: "pointer", fontSize: 11, fontWeight: 700 } }, "\u21BB Rinnova"),
+React.createElement("button", { onClick: () => setModal({ type: 'form', data: inst }), style: { background: "transparent", color: "#94a3b8", border: "1px solid #2a3040", borderRadius: 6, padding: "5px 12px", cursor: "pointer", fontSize: 11, fontWeight: 700 } }, "\u270F Modifica"),
+React.createElement("button", { onClick: () => deleteInstrument(inst.id), style: { background: "transparent", color: "#ef4444", border: "1px solid #ef444433", borderRadius: 6, padding: "5px 12px", cursor: "pointer", fontSize: 11, fontWeight: 700 } }, "\u2715")))));
+}))))),
+(modal === null || modal === void 0 ? void 0 : modal.type) === 'form' && (React.createElement(Modal, { title: modal.data ? 'Modifica Strumento' : 'Nuovo Strumento', onClose: () => setModal(null) },
+React.createElement(InstrumentForm, { initial: modal.data, onSave: saveInstrument, onClose: () => setModal(null) }))),
+(modal === null || modal === void 0 ? void 0 : modal.type) === 'renew' && (React.createElement(Modal, { title: "Rinnova Calibrazione", onClose: () => setModal(null) },
+React.createElement(RenewCalibrationForm, { instrument: modal.data, onSave: (data) => { saveInstrument(data); showToast('✓ Calibrazione rinnovata'); }, onClose: () => setModal(null) })))));
+}
+function InstrumentForm({ initial, onSave, onClose }) {
+const CATEGORIES = ['Tester IEC/Sicurezza elettrica', 'Multimetro', 'Oscilloscopio',
+'Analizzatore defibrillatori', 'Analizzatore infusionali', 'Simulatore paziente',
+'Misuratore pressione', 'Termometro di riferimento', 'Calibratore', 'Altro'];
+const [form, setForm] = React.useState(initial || {
+brand: '', model: '', serial: '', internalCode: '', category: '',
+calDate: '', calExpiry: '', calLab: '', certNumber: '', calInterval: 12, notes: ''
+});
+const [errors, setErrors] = React.useState({});
+const set = (k, v) => setForm(f => (Object.assign(Object.assign({}, f), { [k]: v })));
+const calcExpiry = (date, months) => {
+if (!date || !months)
+return '';
+const d = new Date(date);
+d.setMonth(d.getMonth() + parseInt(months));
+return d.toISOString().slice(0, 10);
+};
+const INP = FORM_INP;
+const LBL = FORM_LBL;
+const ROW = FORM_ROW;
+const COL = FORM_COL;
+return (React.createElement("div", null,
+React.createElement(ErrorSummary, { errors: errors }),
+React.createElement("div", { style: ROW },
+React.createElement("div", { style: COL },
+React.createElement("label", { style: LBL }, "Marca *"),
+React.createElement("input", { style: INP, value: form.brand, onChange: e => set('brand', e.target.value), placeholder: "es. Fluke, Rigel, Metrolab" })),
+React.createElement("div", { style: COL },
+React.createElement("label", { style: LBL }, "Modello *"),
+React.createElement("input", { style: INP, value: form.model, onChange: e => set('model', e.target.value), placeholder: "es. 435-II, 288+" }))),
+React.createElement("div", { style: ROW },
+React.createElement("div", { style: COL },
+React.createElement("label", { style: LBL }, "N\u00B0 Serie"),
+React.createElement("input", { style: INP, value: form.serial, onChange: e => set('serial', e.target.value), placeholder: "Seriale costruttore" })),
+React.createElement("div", { style: COL },
+React.createElement("label", { style: LBL }, "Codice interno"),
+React.createElement("input", { style: INP, value: form.internalCode, onChange: e => set('internalCode', e.target.value), placeholder: "es. STR-001" }))),
+React.createElement("div", { style: { marginBottom: 12 } },
+React.createElement("label", { style: LBL }, "Categoria"),
+React.createElement("select", { style: INP, value: form.category, onChange: e => set('category', e.target.value) },
+React.createElement("option", { value: "" }, "\u2014 Seleziona \u2014"),
+CATEGORIES.map(c => React.createElement("option", { key: c, value: c }, c)))),
+React.createElement("div", { style: { borderTop: '1px solid #2A2A38', margin: '14px 0 12px', paddingTop: 14 } },
+React.createElement("div", { style: { fontSize: 11, color: '#2DD4BF', fontWeight: 700, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 } }, "Dati Calibrazione"),
+React.createElement("div", { style: ROW },
+React.createElement("div", { style: COL },
+React.createElement("label", { style: LBL }, "Data ultima calibrazione"),
+React.createElement("input", { type: "date", style: INP, value: form.calDate, onChange: e => { set('calDate', e.target.value); set('calExpiry', calcExpiry(e.target.value, form.calInterval)); } })),
+React.createElement("div", { style: { width: 120 } },
+React.createElement("label", { style: LBL }, "Intervallo (mesi)"),
+React.createElement("select", { style: INP, value: form.calInterval, onChange: e => { set('calInterval', e.target.value); set('calExpiry', calcExpiry(form.calDate, e.target.value)); } }, [6, 12, 24, 36].map(m => React.createElement("option", { key: m, value: m },
+m,
+" mesi"))))),
+React.createElement("div", { style: ROW },
+React.createElement("div", { style: COL },
+React.createElement("label", { style: LBL }, "Scadenza calibrazione"),
+React.createElement("input", { type: "date", style: Object.assign(Object.assign({}, INP), { color: form.calExpiry && new Date(form.calExpiry) < new Date() ? '#ef4444' : '#F0F0F5' }), value: form.calExpiry, onChange: e => set('calExpiry', e.target.value) })),
+React.createElement("div", { style: COL },
+React.createElement("label", { style: LBL }, "Laboratorio calibrazione"),
+React.createElement("input", { style: INP, value: form.calLab, onChange: e => set('calLab', e.target.value), placeholder: "es. ACCREDIA, SIT, interno" }))),
+React.createElement("div", { style: ROW },
+React.createElement("div", { style: COL },
+React.createElement("label", { style: LBL }, "N\u00B0 Certificato calibrazione"),
+React.createElement("input", { style: INP, value: form.certNumber, onChange: e => set('certNumber', e.target.value), placeholder: "es. CAL-2025-0123" })))),
+React.createElement("div", { style: { marginBottom: 14 } },
+React.createElement("label", { style: LBL }, "Note"),
+React.createElement("textarea", { style: Object.assign(Object.assign({}, INP), { minHeight: 60, resize: 'vertical' }), value: form.notes, onChange: e => set('notes', e.target.value), placeholder: "Note aggiuntive\u2026" })),
+React.createElement("div", { style: FORM_FOOTER },
+React.createElement("button", { onClick: onClose, style: FORM_BTN_GHOST }, "Annulla"),
+React.createElement("button", { onClick: () => {
+var _a, _b;
+const errs = {};
+if (!((_a = form.brand) === null || _a === void 0 ? void 0 : _a.trim()))
+errs.brand = "La marca è obbligatoria";
+if (!((_b = form.model) === null || _b === void 0 ? void 0 : _b.trim()))
+errs.model = "Il modello è obbligatorio";
+setErrors(errs);
+if (Object.keys(errs).length > 0)
+return;
+onSave(form);
+}, style: FORM_BTN_PRIMARY }, initial ? 'Salva modifiche' : 'Aggiungi strumento'))));
+}
+function RenewCalibrationForm({ instrument, onSave, onClose }) {
+const today = new Date().toISOString().slice(0, 10);
+const [form, setForm] = React.useState(Object.assign(Object.assign({}, instrument), { calDate: today, calExpiry: (() => { const d = new Date(today); d.setMonth(d.getMonth() + (instrument.calInterval || 12)); return d.toISOString().slice(0, 10); })(), certNumber: '', calLab: instrument.calLab || '' }));
+const set = (k, v) => setForm(f => (Object.assign(Object.assign({}, f), { [k]: v })));
+const INP = FORM_INP;
+const LBL = FORM_LBL;
+return (React.createElement("div", null,
+React.createElement("div", { style: { background: '#141418', borderRadius: 8, padding: '10px 14px', marginBottom: 14,
+border: '1px solid #2A2A38', fontSize: 13, color: '#9090A8' } },
+React.createElement("strong", { style: { color: '#F0F0F5' } },
+instrument.brand,
+" ",
+instrument.model),
+instrument.serial && React.createElement("span", { style: { marginLeft: 8, fontFamily: 'monospace', fontSize: 11 } },
+"S/N: ",
+instrument.serial)),
+React.createElement("div", { style: { display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap' } },
+React.createElement("div", { style: { flex: 1, minWidth: 140 } },
+React.createElement("label", { style: LBL }, "Data calibrazione *"),
+React.createElement("input", { type: "date", style: INP, value: form.calDate, onChange: e => { set('calDate', e.target.value); const d = new Date(e.target.value); d.setMonth(d.getMonth() + (form.calInterval || 12)); set('calExpiry', d.toISOString().slice(0, 10)); } })),
+React.createElement("div", { style: { flex: 1, minWidth: 140 } },
+React.createElement("label", { style: LBL }, "Nuova scadenza"),
+React.createElement("input", { type: "date", style: Object.assign(Object.assign({}, INP), { color: '#22c55e' }), value: form.calExpiry, onChange: e => set('calExpiry', e.target.value) }))),
+React.createElement("div", { style: { marginBottom: 12 } },
+React.createElement("label", { style: LBL }, "Laboratorio calibrazione"),
+React.createElement("input", { style: INP, value: form.calLab, onChange: e => set('calLab', e.target.value), placeholder: "es. ACCREDIA lab 0123" })),
+React.createElement("div", { style: { marginBottom: 14 } },
+React.createElement("label", { style: LBL }, "N\u00B0 Nuovo certificato"),
+React.createElement("input", { style: INP, value: form.certNumber, onChange: e => set('certNumber', e.target.value), placeholder: "es. CAL-2026-0456" })),
+React.createElement("div", { style: { display: 'flex', gap: 8, justifyContent: 'flex-end' } },
+React.createElement("button", { onClick: onClose, style: FORM_BTN_GHOST }, "Annulla"),
+React.createElement("button", { onClick: () => onSave(form), style: FORM_BTN_PRIMARY }, "\u21BB Salva rinnovo"))));
+}
+const PROC_CATEGORIES = [
+'Defibrillatore', 'Monitor multiparametrico', 'Ventilatore', 'Aspiratore',
+'Pompa infusionale', 'Elettrobisturi', 'Ecografo', 'Letto elettrico', 'ECG',
+'Termometro', 'DAE', 'Generico/Altro',
+];
+const PROC_TYPES = [
+'PPM annuale', 'PPM semestrale', 'PPM trimestrale',
+'Calibrazione', 'Verifica sicurezza elettrica', 'Troubleshooting',
+'Sostituzione componente', 'Aggiornamento firmware', 'Cleaning/Disinfezione', 'Altro',
+];
+function AIDraftModal({ onUseDraft, onClose }) {
+const [manualText, setManualText] = React.useState("");
+const [tipo, setTipo] = React.useState("manutenzione");
+const [modello, setModello] = React.useState("");
+const [loading, setLoading] = React.useState(false);
+const [result, setResult] = React.useState("");
+const [error, setError] = React.useState("");
+const FLD = { background: "#16161e", border: "1px solid #2a3344", borderRadius: 8, color: "#e2e8f0", fontSize: 13, padding: "9px 11px", outline: "none", width: "100%", boxSizing: "border-box", fontFamily: "inherit" };
+const genera = () => __awaiter(this, void 0, void 0, function* () {
+if (!manualText.trim()) {
+setError("Incolla prima il testo del manuale.");
+return;
+}
+setError("");
+setLoading(true);
+setResult("");
+const cosa = tipo === "manutenzione"
+? "una PROCEDURA DI MANUTENZIONE/SMONTAGGIO passo-passo, numerata, con eventuali avvertenze di sicurezza e attrezzi necessari"
+: "una CHECKLIST DI VERIFICA FUNZIONALE, come elenco di controlli con esito atteso (OK/NO), pronta da spuntare";
+const sys = "Sei un assistente tecnico per la manutenzione di apparecchiature elettromedicali. " +
+"Lavori ESCLUSIVAMENTE sul testo del manuale che ti viene fornito. " +
+"NON inventare valori, passaggi o controlli che non sono nel testo: se un'informazione manca, scrivi esattamente [DA VERIFICARE SUL MANUALE]. " +
+"Scrivi in italiano, in modo chiaro e operativo. Non aggiungere disclaimer, li gestisce gia' l'app.";
+const prompt = "Dal seguente testo di manuale" + (modello ? (" dell'apparecchio " + modello) : "") + ", genera " + cosa + ".\n\n" +
+"Restituisci SOLO il contenuto della bozza, senza introduzioni.\n\n=== TESTO MANUALE ===\n" + manualText.slice(0, 12000);
+try {
+const resp = yield fetch("https://api.anthropic.com/v1/messages", {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({
+model: "claude-sonnet-4-20250514",
+max_tokens: 1500,
+system: sys,
+messages: [{ role: "user", content: prompt }],
+}),
+});
+if (!resp.ok) {
+throw new Error("HTTP " + resp.status);
+}
+const data = yield resp.json();
+const text = (data.content || []).map(b => b.type === "text" ? b.text : "").filter(Boolean).join("\n").trim();
+if (!text) {
+throw new Error("Risposta vuota");
+}
+setResult(text);
+}
+catch (e) {
+setError("Non è stato possibile generare la bozza. La funzione AI richiede la connessione e la configurazione dell'API nel deploy. Dettaglio: " + (e.message || e));
+}
+finally {
+setLoading(false);
+}
+});
+const usaComeProc = () => {
+onUseDraft({
+modelName: modello || "",
+category: tipo === "manutenzione" ? "Manutenzione" : "Verifica",
+type: tipo === "manutenzione" ? "Preventiva" : "Funzionale",
+notes: "⚠ BOZZA GENERATA DA AI — DA VERIFICARE SUL MANUALE PRIMA DELL'USO\n\n" + result,
+_aiDraft: true,
+});
+};
+return (React.createElement("div", null,
+React.createElement("div", { style: { background: "#f59e0b15", border: "1px solid #f59e0b55", borderRadius: 8, padding: "11px 13px", marginBottom: 16, fontSize: 11.5, color: "#fbbf24", lineHeight: 1.5 } },
+React.createElement("strong", null, "\u26A0 Bozza, non documento ufficiale."),
+" L'AI genera una proposta basata solo sul testo che incolli. Va ",
+React.createElement("strong", null, "verificata sul manuale del costruttore da un tecnico qualificato"),
+" prima dell'uso. Non sostituisce la documentazione ufficiale n\u00E9 solleva da responsabilit\u00E0. Dove manca un dato comparir\u00E0 ",
+React.createElement("code", null, "[DA VERIFICARE SUL MANUALE]"),
+"."),
+!result && (React.createElement(React.Fragment, null,
+React.createElement("div", { style: { marginBottom: 12 } },
+React.createElement("div", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .6, fontWeight: 700, marginBottom: 5 } }, "Cosa generare"),
+React.createElement("div", { style: { display: "flex", gap: 8 } }, [["manutenzione", "🔧 Procedura manutenzione"], ["checklist", "✓ Checklist verifica funzionale"]].map(([v, l]) => {
+const on = tipo === v;
+return React.createElement("button", { key: v, onClick: () => setTipo(v), style: { flex: 1, background: on ? "#0D9488" : "#16161e", border: "1px solid " + (on ? "#2DD4BF" : "#2a3344"), borderRadius: 8, padding: "9px 8px", cursor: "pointer", color: on ? "#04201C" : "#cbd5e1", fontSize: 12, fontWeight: on ? 800 : 600 } }, l);
+}))),
+React.createElement("div", { style: { marginBottom: 12 } },
+React.createElement("div", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .6, fontWeight: 700, marginBottom: 5 } }, "Modello apparecchio (facoltativo)"),
+React.createElement("input", { value: modello, onChange: e => setModello(e.target.value), placeholder: "es. Defibrillatore XYZ 2000", style: FLD })),
+React.createElement("div", { style: { marginBottom: 14 } },
+React.createElement("div", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .6, fontWeight: 700, marginBottom: 5 } }, "Testo del manuale (incolla la sezione che ti interessa)"),
+React.createElement("textarea", { value: manualText, onChange: e => setManualText(e.target.value), rows: 9, placeholder: "Incolla qui il testo del manuale relativo alla manutenzione o alla verifica\u2026", style: Object.assign(Object.assign({}, FLD), { resize: "vertical", lineHeight: 1.5 }) }),
+React.createElement("div", { style: { fontSize: 10.5, color: "#475569", marginTop: 4 } }, "Suggerimento: incolla solo le pagine pertinenti (non l'intero manuale). Max ~12.000 caratteri.")),
+error && React.createElement("div", { style: { background: "#ef444415", border: "1px solid #ef444455", borderRadius: 8, padding: "10px 12px", marginBottom: 12, fontSize: 12, color: "#fca5a5", lineHeight: 1.5 } }, error),
+React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", gap: 8 } },
+React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "1px solid #2a3040", borderRadius: 7, color: "#94a3b8", padding: "9px 14px", fontSize: 12.5, fontWeight: 700, cursor: "pointer" } }, "Annulla"),
+React.createElement("button", { onClick: genera, disabled: loading, style: { background: loading ? "#0d948855" : "#0D9488", border: "none", borderRadius: 7, color: "#04201C", padding: "9px 16px", fontSize: 12.5, fontWeight: 800, cursor: loading ? "default" : "pointer" } }, loading ? "Genero…" : "✨ Genera bozza")))),
+result && (React.createElement(React.Fragment, null,
+React.createElement("div", { style: { background: "#0D0D12", border: "1px solid #2a3344", borderRadius: 8, padding: "13px 15px", marginBottom: 14, maxHeight: "45vh", overflow: "auto", fontSize: 12.5, color: "#e2e8f0", lineHeight: 1.6, whiteSpace: "pre-line" } }, result),
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap" } },
+React.createElement("button", { onClick: () => { setResult(""); }, style: { background: "transparent", border: "1px solid #2a3040", borderRadius: 7, color: "#94a3b8", padding: "9px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" } }, "\u2190 Rigenera"),
+React.createElement("div", { style: { display: "flex", gap: 8 } },
+React.createElement("button", { onClick: () => { try {
+navigator.clipboard.writeText(result);
+}
+catch (e) { } }, style: { background: "transparent", border: "1px solid #2a3040", borderRadius: 7, color: "#94a3b8", padding: "9px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer" } }, "Copia"),
+React.createElement("button", { onClick: usaComeProc, style: { background: "#2DD4BF", border: "none", borderRadius: 7, color: "#04201C", padding: "9px 16px", fontSize: 12.5, fontWeight: 800, cursor: "pointer" } }, "Usa come bozza procedura \u2192")))))));
+}
+function ProceduresPage({ procedures, setProcedures, instruments, parts, assets, showToast, setTab, moveToTrash }) {
+const [modal, setModal] = React.useState(null);
+const [search, setSearch] = React.useState('');
+const [filterCat, setFilterCat] = React.useState('all');
+const [filterType, setFilterType] = React.useState('all');
+const [viewProcId, setViewProcId] = React.useState(null);
+const filtered = procedures.filter(p => {
+if (search) {
+const q = search.toLowerCase();
+const hit = [p.modelName, p.brand, p.category, p.type, p.notes]
+.filter(Boolean).some(s => s.toLowerCase().includes(q));
+if (!hit)
+return false;
+}
+if (filterCat !== 'all' && p.category !== filterCat)
+return false;
+if (filterType !== 'all' && p.type !== filterType)
+return false;
+return true;
+});
+const saveProc = (proc) => {
+if (proc.id) {
+const upd = withUpdateMeta(proc);
+setProcedures(prev => prev.map(p => p.id === proc.id ? upd : p));
+}
+else {
+const newP = withCreateMeta(proc);
+setProcedures(prev => [...prev, newP]);
+}
+setModal(null);
+showToast('✓ Procedura salvata');
+};
+const delProc = (id) => {
+if (!confirm('Spostare questa procedura nel cestino?'))
+return;
+const rec = procedures.find(p => p.id === id);
+if (moveToTrash && rec)
+moveToTrash("procedures", rec);
+setProcedures(prev => prev.filter(p => p.id !== id));
+setViewProcId(null);
+showToast('Spostato nel cestino', '#f59e0b');
+};
+const duplicateProc = (proc) => {
+const copy = Object.assign(Object.assign({}, proc), { id: 'P' + Date.now(), modelName: proc.modelName + ' (copia)', createdAt: new Date().toISOString() });
+setProcedures(prev => [...prev, copy]);
+showToast('✓ Duplicata');
+};
+if (viewProcId) {
+const proc = procedures.find(p => p.id === viewProcId);
+if (!proc) {
+setViewProcId(null);
+return null;
+}
+return React.createElement(ProcedureDetail, { proc: proc, onEdit: () => setModal({ type: 'form', data: proc }), onDuplicate: () => duplicateProc(proc), onDelete: () => delProc(proc.id), onBack: () => setViewProcId(null), showToast: showToast });
+}
+return (React.createElement("div", { style: { padding: '16px 20px', maxWidth: 1100, margin: '0 auto' } },
+React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap', gap: 10 } },
+React.createElement("div", null,
+React.createElement("h1", { style: { margin: 0, fontSize: 20, fontWeight: 900 } }, "Procedure Tecniche"),
+React.createElement("p", { style: { color: '#64748b', margin: '3px 0 0', fontSize: 12 } }, "Guide passo-passo per modello specifico (knowledge base interna)")),
+React.createElement("div", { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
+false && (React.createElement("button", { onClick: () => setModal({ type: 'aiDraft' }), style: { background: '#1E1E28', color: '#c084fc', border: '1px solid #a855f744', borderRadius: 9, padding: '10px 15px', cursor: 'pointer', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap' } }, "\u2728 Genera bozza con AI")),
+React.createElement("button", { onClick: () => setModal({ type: 'form', data: null }), style: FORM_BTN_PRIMARY }, "+ Nuova procedura"))),
+React.createElement("div", { style: { display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' } },
+React.createElement("input", { value: search, onChange: e => setSearch(e.target.value), placeholder: "Cerca per modello, marca, categoria\u2026", style: { flex: 1, minWidth: 200, background: '#141418', border: '1px solid #2A2A38', borderRadius: 8, padding: '8px 12px', color: '#F0F0F5', fontSize: 13, outline: 'none' } }),
+React.createElement("select", { value: filterCat, onChange: e => setFilterCat(e.target.value), style: { background: '#141418', border: '1px solid #2A2A38', borderRadius: 8, padding: '8px 12px', color: '#9090A8', fontSize: 12 } },
+React.createElement("option", { value: "all" }, "Tutte le categorie"),
+PROC_CATEGORIES.map(c => React.createElement("option", { key: c, value: c }, c))),
+React.createElement("select", { value: filterType, onChange: e => setFilterType(e.target.value), style: { background: '#141418', border: '1px solid #2A2A38', borderRadius: 8, padding: '8px 12px', color: '#9090A8', fontSize: 12 } },
+React.createElement("option", { value: "all" }, "Tutti i tipi"),
+PROC_TYPES.map(t => React.createElement("option", { key: t, value: t }, t)))),
+React.createElement("div", { style: { fontSize: 11, color: '#5A5A70', marginBottom: 12 } },
+filtered.length,
+" di ",
+procedures.length,
+" procedure"),
+filtered.length === 0 ? (React.createElement("div", null, procedures.length === 0 ? (React.createElement(EmptyState, { icon: "\uD83D\uDCDA", title: "Nessuna procedura ancora", subtitle: "Crea procedure tecniche passo-passo come una knowledge base in stile iFixit. Aggiungi passi numerati, valori attesi, foto e checklist.", actions: [
+{ label: "+ Crea procedura", onClick: () => setModal({ type: 'form', data: null }), primary: true }
+] })) : (React.createElement("div", { style: { textAlign: 'center', padding: 48, color: '#64748b', background: '#141418', borderRadius: 12, border: '1px solid #2A2A38', fontSize: 13 } }, "Nessuna procedura corrisponde ai filtri")))) : (React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 8 } }, filtered.map(p => (React.createElement("div", { key: p.id, onClick: () => setViewProcId(p.id), style: { background: '#141418', border: '1px solid #2A2A38', borderRadius: 10, padding: '14px 16px', cursor: 'pointer', transition: 'all .15s' }, onMouseEnter: e => e.currentTarget.style.borderColor = '#2DD4BF66', onMouseLeave: e => e.currentTarget.style.borderColor = '#2A2A38' },
+React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' } },
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+React.createElement("div", { style: { display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 5 } },
+p.category && React.createElement("span", { style: { fontSize: 10, background: '#2DD4BF18', color: '#2DD4BF', border: '1px solid #2DD4BF33', borderRadius: 20, padding: '1px 8px', fontWeight: 700 } }, p.category),
+p.type && React.createElement("span", { style: { fontSize: 10, background: '#a855f718', color: '#a855f7', border: '1px solid #a855f733', borderRadius: 20, padding: '1px 8px', fontWeight: 700 } }, p.type)),
+React.createElement("div", { style: { fontSize: 15, fontWeight: 700, color: '#F0F0F5', marginBottom: 3 } },
+p.brand && React.createElement("span", { style: { color: '#9090A8' } }, p.brand),
+" ",
+p.modelName),
+React.createElement("div", { style: { fontSize: 11, color: '#5A5A70', display: 'flex', gap: 14, flexWrap: 'wrap' } },
+p.steps && React.createElement("span", null,
+"\uD83D\uDCCB ",
+p.steps.length,
+" step"),
+p.estimatedMinutes && React.createElement("span", null,
+"\u23F1 ~",
+p.estimatedMinutes,
+" min"),
+p.toolsRequired && p.toolsRequired.length > 0 && React.createElement("span", null,
+"\uD83D\uDD27 ",
+p.toolsRequired.length,
+" strumenti"))),
+React.createElement("div", { style: { flexShrink: 0, fontSize: 18, color: '#5A5A70' } }, "\u203A"))))))),
+(modal === null || modal === void 0 ? void 0 : modal.type) === 'form' && (React.createElement(Modal, { title: modal.data ? 'Modifica Procedura' : 'Nuova Procedura', wide: true, onClose: () => setModal(null) },
+React.createElement(ProcedureForm, { initial: modal.data, instruments: instruments, parts: parts, onSave: saveProc, onClose: () => setModal(null) }))),
+(modal === null || modal === void 0 ? void 0 : modal.type) === 'aiDraft' && (React.createElement(Modal, { title: "\u2728 Genera bozza con AI", wide: true, onClose: () => setModal(null) },
+React.createElement(AIDraftModal, { onUseDraft: (proc) => { setModal({ type: 'form', data: proc }); }, onClose: () => setModal(null) })))));
+}
+function ProcedureDetail({ proc, onEdit, onDuplicate, onDelete, onBack, showToast }) {
+var _a;
+return (React.createElement("div", { style: { padding: '16px 20px', maxWidth: 900, margin: '0 auto' } },
+React.createElement("button", { onClick: onBack, style: { background: '#1E1E28', border: '1px solid #2a3040', borderRadius: 6, color: '#94a3b8', padding: '5px 12px', cursor: 'pointer', fontSize: 11, fontWeight: 700, marginBottom: 12 } }, "\u2190 Procedure"),
+React.createElement("div", { style: { background: '#141418', border: '1px solid #2A2A38', borderRadius: 12, padding: '18px 20px', marginBottom: 14 } },
+React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap', marginBottom: 10 } },
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+React.createElement("div", { style: { display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap', marginBottom: 6 } },
+proc.category && React.createElement("span", { style: { fontSize: 10, background: '#2DD4BF18', color: '#2DD4BF', border: '1px solid #2DD4BF33', borderRadius: 20, padding: '2px 10px', fontWeight: 700 } }, proc.category),
+proc.type && React.createElement("span", { style: { fontSize: 10, background: '#a855f718', color: '#a855f7', border: '1px solid #a855f733', borderRadius: 20, padding: '2px 10px', fontWeight: 700 } }, proc.type)),
+React.createElement("h1", { style: { margin: 0, fontSize: 20, fontWeight: 900, color: '#F0F0F5' } },
+proc.brand,
+" ",
+proc.modelName),
+proc.description && React.createElement("p", { style: { margin: '6px 0 0', fontSize: 13, color: '#9090A8', lineHeight: 1.5 } }, proc.description)),
+React.createElement("div", { style: { display: 'flex', gap: 6, flexShrink: 0 } },
+React.createElement("button", { onClick: onEdit, style: { background: '#1E1E28', border: '1px solid #2DD4BF44', borderRadius: 6, color: '#2DD4BF', padding: '6px 12px', cursor: 'pointer', fontSize: 11, fontWeight: 700 } }, "\u270F Modifica"),
+React.createElement("button", { onClick: onDuplicate, style: { background: '#1E1E28', border: '1px solid #2a3040', borderRadius: 6, color: '#94a3b8', padding: '6px 12px', cursor: 'pointer', fontSize: 11, fontWeight: 700 } }, "\u2398 Duplica"),
+React.createElement("button", { onClick: onDelete, style: { background: '#1E1E28', border: '1px solid #ef444433', borderRadius: 6, color: '#ef4444', padding: '6px 10px', cursor: 'pointer', fontSize: 11, fontWeight: 700 } }, "\u2715"))),
+React.createElement("div", { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8, marginTop: 10, padding: '10px 0', borderTop: '1px solid #2A2A38' } },
+proc.estimatedMinutes && (React.createElement("div", null,
+React.createElement("div", { style: { fontSize: 10, color: '#5A5A70', textTransform: 'uppercase', letterSpacing: .7, fontWeight: 700 } }, "Tempo stimato"),
+React.createElement("div", { style: { fontSize: 13, color: '#F0F0F5', fontWeight: 700, marginTop: 2 } },
+"\u23F1 ",
+proc.estimatedMinutes,
+" min"))),
+proc.toolsRequired && proc.toolsRequired.length > 0 && (React.createElement("div", null,
+React.createElement("div", { style: { fontSize: 10, color: '#5A5A70', textTransform: 'uppercase', letterSpacing: .7, fontWeight: 700 } }, "Strumenti"),
+React.createElement("div", { style: { fontSize: 12, color: '#F0F0F5', marginTop: 2 } }, proc.toolsRequired.join(', ')))),
+proc.partsTypical && proc.partsTypical.length > 0 && (React.createElement("div", null,
+React.createElement("div", { style: { fontSize: 10, color: '#5A5A70', textTransform: 'uppercase', letterSpacing: .7, fontWeight: 700 } }, "Ricambi tipici"),
+React.createElement("div", { style: { fontSize: 12, color: '#F0F0F5', marginTop: 2 } }, proc.partsTypical.join(', ')))))),
+React.createElement("div", { style: { marginBottom: 14 } },
+React.createElement("div", { style: { fontSize: 11, color: '#5A5A70', textTransform: 'uppercase', letterSpacing: .8, fontWeight: 700, marginBottom: 8 } },
+"Procedura \u2014 ",
+((_a = proc.steps) === null || _a === void 0 ? void 0 : _a.length) || 0,
+" passi"),
+!proc.steps || proc.steps.length === 0 ? (React.createElement("div", { style: { padding: 20, color: '#5A5A70', fontStyle: 'italic', textAlign: 'center' } }, "Nessun passo definito")) : proc.steps.map((step, i) => (React.createElement("div", { key: i, style: { background: '#141418', border: '1px solid #2A2A38', borderRadius: 10, padding: '14px 16px', marginBottom: 8 } },
+React.createElement("div", { style: { display: 'flex', gap: 12, alignItems: 'flex-start' } },
+React.createElement("div", { style: { background: 'linear-gradient(135deg,#2DD4BF,#0D9488)', color: '#000', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 13, flexShrink: 0 } }, i + 1),
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+step.title && React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: '#F0F0F5', marginBottom: 5 } }, step.title),
+step.description && React.createElement("div", { style: { fontSize: 13, color: '#c0c0d0', lineHeight: 1.6, whiteSpace: 'pre-wrap', marginBottom: 8 } }, step.description),
+step.expectedValue && (React.createElement("div", { style: { background: '#0D0D12', border: '1px solid #2DD4BF33', borderRadius: 6, padding: '6px 12px', marginTop: 6, fontSize: 12 } },
+React.createElement("span", { style: { color: '#5A5A70', fontWeight: 700, marginRight: 6, fontSize: 10, textTransform: 'uppercase' } }, "Atteso:"),
+React.createElement("span", { style: { color: '#2DD4BF', fontWeight: 700 } }, step.expectedValue))),
+step.warning && (React.createElement("div", { style: { background: '#f59e0b15', border: '1px solid #f59e0b44', borderRadius: 6, padding: '6px 12px', marginTop: 6, fontSize: 12, color: '#f59e0b' } },
+"\u26A0 ",
+step.warning)),
+step.image && (React.createElement("div", { style: { marginTop: 10, borderRadius: 8, overflow: 'hidden', border: '1px solid #2A2A38', maxWidth: 400 } },
+React.createElement("img", { src: step.image, alt: `Step ${i + 1}`, style: { width: '100%', height: 'auto', display: 'block', cursor: 'pointer' }, onClick: () => window.open(step.image, '_blank') }))))))))),
+proc.notes && (React.createElement("div", { style: { background: '#141418', border: '1px solid #2A2A38', borderRadius: 10, padding: '14px 18px', marginBottom: 14, borderLeft: '4px solid #2DD4BF' } },
+React.createElement("div", { style: { fontSize: 10, color: '#5A5A70', textTransform: 'uppercase', letterSpacing: .8, fontWeight: 700, marginBottom: 6 } }, "Note e tips"),
+React.createElement("div", { style: { fontSize: 13, color: '#c0c0d0', whiteSpace: 'pre-wrap', lineHeight: 1.6 } }, proc.notes))),
+React.createElement("div", { style: { textAlign: 'center', fontSize: 10, color: '#3A3A50', marginTop: 20 } },
+"Creata il ",
+(proc.createdAt || '').slice(0, 10))));
+}
+function ProcedureForm({ initial, instruments, parts, onSave, onClose }) {
+const [form, setForm] = React.useState(Object.assign({ brand: '', modelName: '', category: '', type: '', description: '', estimatedMinutes: '', toolsRequired: [], partsTypical: [], steps: [], notes: '' }, (initial || {})));
+const [errors, setErrors] = React.useState({});
+const set = (k, v) => setForm(f => (Object.assign(Object.assign({}, f), { [k]: v })));
+const addStep = () => {
+setForm(f => (Object.assign(Object.assign({}, f), { steps: [...(f.steps || []), { title: '', description: '', expectedValue: '', warning: '', image: '' }] })));
+};
+const updStep = (i, key, val) => {
+setForm(f => (Object.assign(Object.assign({}, f), { steps: f.steps.map((s, idx) => idx === i ? Object.assign(Object.assign({}, s), { [key]: val }) : s) })));
+};
+const moveStep = (i, dir) => {
+setForm(f => {
+const ns = [...f.steps];
+const target = i + dir;
+if (target < 0 || target >= ns.length)
+return f;
+[ns[i], ns[target]] = [ns[target], ns[i]];
+return Object.assign(Object.assign({}, f), { steps: ns });
+});
+};
+const delStep = (i) => {
+if (!confirm('Eliminare questo passo?'))
+return;
+setForm(f => (Object.assign(Object.assign({}, f), { steps: f.steps.filter((_, idx) => idx !== i) })));
+};
+const uploadStepImage = (i, file) => __awaiter(this, void 0, void 0, function* () {
+if (!file)
+return;
+if (file.size > 3 * 1024 * 1024) {
+alert('Immagine troppo grande (>3MB). Comprimi prima.');
+return;
+}
+try {
+const att = yield fileToAttachment(file);
+updStep(i, 'image', att.dataUrl);
+}
+catch (e) {
+alert('Errore: ' + e.message);
+}
+});
+const INP = FORM_INP;
+const LBL = FORM_LBL;
+const ROW = FORM_ROW;
+return (React.createElement("div", { style: { maxHeight: '70vh', overflowY: 'auto', paddingRight: 6 } },
+React.createElement(ErrorSummary, { errors: errors }),
+React.createElement("div", { style: ROW },
+React.createElement("div", { style: { flex: 1, minWidth: 140 } },
+React.createElement("label", { style: LBL }, "Marca"),
+React.createElement("input", { style: INP, value: form.brand, onChange: e => set('brand', e.target.value), placeholder: "es. Philips" })),
+React.createElement("div", { style: { flex: 2, minWidth: 140 } },
+React.createElement("label", { style: LBL }, "Modello *"),
+React.createElement("input", { style: INP, value: form.modelName, onChange: e => set('modelName', e.target.value), placeholder: "es. HeartStart MRx" }))),
+React.createElement("div", { style: ROW },
+React.createElement("div", { style: { flex: 1, minWidth: 140 } },
+React.createElement("label", { style: LBL }, "Categoria"),
+React.createElement("select", { style: INP, value: form.category, onChange: e => set('category', e.target.value) },
+React.createElement("option", { value: "" }, "\u2014 Seleziona \u2014"),
+PROC_CATEGORIES.map(c => React.createElement("option", { key: c, value: c }, c)))),
+React.createElement("div", { style: { flex: 1, minWidth: 140 } },
+React.createElement("label", { style: LBL }, "Tipo procedura"),
+React.createElement("select", { style: INP, value: form.type, onChange: e => set('type', e.target.value) },
+React.createElement("option", { value: "" }, "\u2014 Seleziona \u2014"),
+PROC_TYPES.map(t => React.createElement("option", { key: t, value: t }, t)))),
+React.createElement("div", { style: { width: 140 } },
+React.createElement("label", { style: LBL }, "Tempo (min)"),
+React.createElement("input", { type: "number", style: INP, value: form.estimatedMinutes, onChange: e => set('estimatedMinutes', e.target.value), placeholder: "60" }))),
+React.createElement("div", { style: { marginBottom: 12 } },
+React.createElement("label", { style: LBL }, "Descrizione breve"),
+React.createElement("textarea", { style: Object.assign(Object.assign({}, INP), { minHeight: 50, resize: 'vertical' }), value: form.description, onChange: e => set('description', e.target.value), placeholder: "A cosa serve, contesto, frequenza consigliata\u2026" })),
+React.createElement("div", { style: ROW },
+React.createElement("div", { style: { flex: 1, minWidth: 140 } },
+React.createElement("label", { style: LBL }, "Strumenti necessari (separati da virgola)"),
+React.createElement("input", { style: INP, value: (form.toolsRequired || []).join(', '), onChange: e => set('toolsRequired', e.target.value.split(',').map(s => s.trim()).filter(Boolean)), placeholder: "es. Fluke Impulse 7000, Multimetro" })),
+React.createElement("div", { style: { flex: 1, minWidth: 140 } },
+React.createElement("label", { style: LBL }, "Ricambi tipici"),
+React.createElement("input", { style: INP, value: (form.partsTypical || []).join(', '), onChange: e => set('partsTypical', e.target.value.split(',').map(s => s.trim()).filter(Boolean)), placeholder: "es. Batteria, elettrodi" }))),
+React.createElement("div", { style: { borderTop: '1px solid #2A2A38', margin: '18px 0 12px', paddingTop: 14 } },
+React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 } },
+React.createElement("div", { style: { fontSize: 12, color: '#2DD4BF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 } },
+"Passi della procedura (",
+(form.steps || []).length,
+")"),
+React.createElement("button", { type: "button", onClick: addStep, style: { background: 'linear-gradient(135deg,#2DD4BF,#0D9488)', color: '#000', border: 'none', borderRadius: 6, padding: '5px 14px', cursor: 'pointer', fontSize: 11, fontWeight: 800 } }, "+ Aggiungi passo")),
+(form.steps || []).length === 0 ? (React.createElement("div", { style: { padding: 20, background: '#0D0D12', border: '1px dashed #2A2A38', borderRadius: 8, color: '#5A5A70', textAlign: 'center', fontSize: 12 } }, "Nessun passo. Clicca \"+ Aggiungi passo\" per iniziare.")) : form.steps.map((step, i) => (React.createElement("div", { key: i, style: { background: '#0D0D12', border: '1px solid #2A2A38', borderRadius: 8, padding: 12, marginBottom: 8 } },
+React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 } },
+React.createElement("div", { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+React.createElement("div", { style: { background: '#2DD4BF', color: '#000', borderRadius: '50%', width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 11 } }, i + 1),
+React.createElement("span", { style: { color: '#5A5A70', fontSize: 11 } },
+"Passo ",
+i + 1)),
+React.createElement("div", { style: { display: 'flex', gap: 4 } },
+React.createElement("button", { type: "button", onClick: () => moveStep(i, -1), disabled: i === 0, style: { background: '#1E1E28', border: '1px solid #2a3040', borderRadius: 4, color: '#94a3b8', padding: '2px 7px', cursor: i === 0 ? 'not-allowed' : 'pointer', fontSize: 11, opacity: i === 0 ? .3 : 1 } }, "\u2191"),
+React.createElement("button", { type: "button", onClick: () => moveStep(i, 1), disabled: i === form.steps.length - 1, style: { background: '#1E1E28', border: '1px solid #2a3040', borderRadius: 4, color: '#94a3b8', padding: '2px 7px', cursor: i === form.steps.length - 1 ? 'not-allowed' : 'pointer', fontSize: 11, opacity: i === form.steps.length - 1 ? .3 : 1 } }, "\u2193"),
+React.createElement("button", { type: "button", onClick: () => delStep(i), style: { background: '#1E1E28', border: '1px solid #ef444433', borderRadius: 4, color: '#ef4444', padding: '2px 7px', cursor: 'pointer', fontSize: 11 } }, "\u2715"))),
+React.createElement("input", { style: Object.assign(Object.assign({}, INP), { marginBottom: 6 }), value: step.title || '', onChange: e => updStep(i, 'title', e.target.value), placeholder: "Titolo del passo (es. Test scarica 200J)" }),
+React.createElement("textarea", { style: Object.assign(Object.assign({}, INP), { minHeight: 60, resize: 'vertical', marginBottom: 6 }), value: step.description || '', onChange: e => updStep(i, 'description', e.target.value), placeholder: "Descrizione dettagliata. Cosa fare, come collegarlo, dove guardare\u2026" }),
+React.createElement("div", { style: { display: 'flex', gap: 8, marginBottom: 6, flexWrap: 'wrap' } },
+React.createElement("input", { style: Object.assign(Object.assign({}, INP), { flex: 1, minWidth: 120 }), value: step.expectedValue || '', onChange: e => updStep(i, 'expectedValue', e.target.value), placeholder: "Valore atteso (es. 195-205 J)" }),
+React.createElement("input", { style: Object.assign(Object.assign({}, INP), { flex: 1, minWidth: 120 }), value: step.warning || '', onChange: e => updStep(i, 'warning', e.target.value), placeholder: "\u26A0 Avvertenza (opzionale)" })),
+step.image ? (React.createElement("div", { style: { display: 'flex', alignItems: 'center', gap: 8, padding: 6, background: '#141418', borderRadius: 6, border: '1px solid #2A2A38' } },
+React.createElement("img", { src: step.image, style: { width: 60, height: 60, objectFit: 'cover', borderRadius: 4 } }),
+React.createElement("span", { style: { fontSize: 11, color: '#5A5A70', flex: 1 } }, "Immagine caricata"),
+React.createElement("button", { type: "button", onClick: () => updStep(i, 'image', ''), style: { background: '#1E1E28', border: '1px solid #ef444433', borderRadius: 4, color: '#ef4444', padding: '3px 10px', cursor: 'pointer', fontSize: 11, fontWeight: 700 } }, "Rimuovi"))) : (React.createElement("label", { style: { display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', background: '#141418', border: '1px dashed #2DD4BF44', borderRadius: 6, padding: '5px 12px', color: '#2DD4BF', fontSize: 11, fontWeight: 700 } },
+React.createElement("input", { type: "file", accept: "image/*", onChange: e => { var _a; return uploadStepImage(i, (_a = e.target.files) === null || _a === void 0 ? void 0 : _a[0]); }, style: { display: 'none' } }),
+"\uD83D\uDDBC + Aggiungi 1 foto (max 3MB)")))))),
+React.createElement("div", { style: { marginBottom: 14 } },
+React.createElement("label", { style: LBL }, "Note e tips appresi sul campo"),
+React.createElement("textarea", { style: Object.assign(Object.assign({}, INP), { minHeight: 70, resize: 'vertical' }), value: form.notes, onChange: e => set('notes', e.target.value), placeholder: "Errori comuni, accorgimenti, esperienze utili\u2026" })),
+React.createElement("div", { style: { display: 'flex', gap: 8, justifyContent: 'flex-end', paddingTop: 10, borderTop: '1px solid #2A2A38', position: 'sticky', bottom: 0, background: '#1a1a22', margin: '0 -6px', padding: '12px 6px' } },
+React.createElement("button", { onClick: onClose, style: FORM_BTN_GHOST }, "Annulla"),
+React.createElement("button", { onClick: () => {
+var _a;
+const errs = {};
+if (!((_a = form.modelName) === null || _a === void 0 ? void 0 : _a.trim()))
+errs.modelName = "Il modello/titolo è obbligatorio";
+setErrors(errs);
+if (Object.keys(errs).length > 0)
+return;
+onSave(form);
+}, style: FORM_BTN_PRIMARY }, initial ? 'Salva modifiche' : 'Crea procedura'))));
+}
+const QUOTE_STATUS_COLOR = {
+'bozza': '#64748b',
+'inviato': '#3b82f6',
+'accettato': '#22c55e',
+'rifiutato': '#ef4444',
+'scaduto': '#f59e0b',
+};
+const IVA_RATES = [0, 4, 5, 10, 22];
+const IVA_DEFAULT_Q = 22;
+function newQuoteNumber(quotes) {
+const y = new Date().getFullYear().toString().slice(-2);
+const max = (quotes || []).reduce((m, q) => {
+const n = parseInt((q.number || '').replace(/\D/g, '')) || 0;
+return Math.max(m, n);
+}, 0);
+return `QT${y}-${String(max + 1).padStart(3, '0')}`;
+}
+function QuoteForm({ initial, customers, jobs, assets, parts, quotes, onSave, onClose }) {
+const blank = {
+number: newQuoteNumber(quotes),
+customerId: '',
+jobId: '',
+date: new Date().toISOString().slice(0, 10),
+validUntil: (() => { const d = new Date(); d.setDate(d.getDate() + 30); return d.toISOString().slice(0, 10); })(),
+status: 'bozza',
+laborLines: [],
+partLines: [],
+notes: '',
+paymentTerms: 'Bonifico bancario a 30 giorni',
+vatExempt: false,
+};
+const [f, setF] = React.useState(() => {
+if (initial)
+return initial;
+return blank;
+});
+const s = k => e => setF(x => (Object.assign(Object.assign({}, x), { [k]: e.target.value })));
+const sCheck = k => e => setF(x => (Object.assign(Object.assign({}, x), { [k]: e.target.checked })));
+const addLabor = () => setF(x => (Object.assign(Object.assign({}, x), { laborLines: [...x.laborLines, {
+id: Date.now() + Math.random(),
+label: 'Manodopera',
+hours: 1,
+rate: 55,
+}] })));
+const updLabor = (id, k, v) => setF(x => (Object.assign(Object.assign({}, x), { laborLines: x.laborLines.map(l => l.id === id ? Object.assign(Object.assign({}, l), { [k]: k === 'hours' || k === 'rate' ? +v : v }) : l) })));
+const delLabor = id => setF(x => (Object.assign(Object.assign({}, x), { laborLines: x.laborLines.filter(l => l.id !== id) })));
+const addPartFree = () => setF(x => (Object.assign(Object.assign({}, x), { partLines: [...x.partLines, {
+id: Date.now() + Math.random(),
+type: 'free',
+description: '', qty: 1, unitPrice: 0,
+vat: f.vatExempt ? 0 : IVA_DEFAULT_Q,
+}] })));
+const addPartWarehouse = (part) => {
+setF(x => (Object.assign(Object.assign({}, x), { partLines: [...x.partLines, {
+id: Date.now() + Math.random(),
+type: 'warehouse',
+partId: part.id,
+description: part.name + (part.code ? ` (${part.code})` : ''),
+qty: 1,
+unitPrice: part.sellPrice || part.unitPrice || 0,
+vat: f.vatExempt ? 0 : IVA_DEFAULT_Q,
+}] })));
+};
+const updPart = (id, k, v) => setF(x => (Object.assign(Object.assign({}, x), { partLines: x.partLines.map(l => l.id === id ? Object.assign(Object.assign({}, l), { [k]: k === 'qty' || k === 'unitPrice' || k === 'vat' ? +v : v }) : l) })));
+const delPart = id => setF(x => (Object.assign(Object.assign({}, x), { partLines: x.partLines.filter(l => l.id !== id) })));
+const importFromJob = (jobId) => {
+const job = jobs.find(j => j.id === jobId);
+if (!job)
+return;
+const asset = assets.find(a => a.id === job.assetId);
+const newParts = [];
+(job.parts || []).forEach(p => {
+const pt = parts.find(x => x.id === p.partId);
+if (pt)
+newParts.push({
+id: Date.now() + Math.random(),
+type: 'warehouse',
+partId: pt.id,
+description: pt.name + (pt.code ? ` (${pt.code})` : ''),
+qty: p.qty,
+unitPrice: pt.sellPrice || pt.unitPrice || 0,
+vat: f.vatExempt ? 0 : IVA_DEFAULT_Q,
+});
+});
+const newLabor = [];
+if (job.laborHours > 0) {
+newLabor.push({
+id: Date.now() + Math.random(),
+label: `Manodopera — ${(asset === null || asset === void 0 ? void 0 : asset.name) || 'intervento'} (rif. ${job.id})`,
+hours: job.laborHours,
+rate: job.laborRate || 55,
+});
+}
+setF(x => (Object.assign(Object.assign({}, x), { jobId: jobId, customerId: x.customerId || job.customerId || (asset === null || asset === void 0 ? void 0 : asset.customerId) || '', laborLines: [...x.laborLines, ...newLabor], partLines: [...x.partLines, ...newParts] })));
+};
+const laborTotal = f.laborLines.reduce((s, l) => s + (l.hours * l.rate), 0);
+const partsSubtotal = f.partLines.reduce((s, l) => s + (l.qty * l.unitPrice), 0);
+const subtotal = laborTotal + partsSubtotal;
+const vatTotal = f.vatExempt ? 0 : f.partLines.reduce((s, l) => s + (l.qty * l.unitPrice * l.vat / 100), 0)
++ (f.vatExempt ? 0 : f.laborLines.reduce((s, l) => s + (l.hours * l.rate * IVA_DEFAULT_Q / 100), 0));
+const grandTotal = subtotal + vatTotal;
+const customer = customers.find(c => c.id === f.customerId);
+const customerJobs = jobs.filter(j => {
+const a = assets.find(a => a.id === j.assetId);
+return (j.customerId || (a === null || a === void 0 ? void 0 : a.customerId)) === f.customerId;
+});
+const INP = FORM_INP;
+const LBL = FORM_LBL;
+return (React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '72vh', overflowY: 'auto', paddingRight: 4 } },
+React.createElement("div", { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 } },
+React.createElement("div", null,
+React.createElement("label", { style: LBL }, "N\u00B0 Preventivo"),
+React.createElement("input", { style: INP, value: f.number, onChange: s('number') })),
+React.createElement("div", null,
+React.createElement("label", { style: LBL }, "Stato"),
+React.createElement("select", { style: INP, value: f.status, onChange: s('status') }, Object.keys(QUOTE_STATUS_COLOR).map(v => React.createElement("option", { key: v, value: v }, v.charAt(0).toUpperCase() + v.slice(1))))),
+React.createElement("div", null,
+React.createElement("label", { style: LBL }, "Cliente"),
+React.createElement("select", { style: INP, value: f.customerId, onChange: s('customerId') },
+React.createElement("option", { value: "" }, "\u2014 Seleziona cliente \u2014"),
+customers.map(c => React.createElement("option", { key: c.id, value: c.id }, c.name)))),
+React.createElement("div", null,
+React.createElement("label", { style: LBL }, "Job collegato"),
+React.createElement("select", { style: INP, value: f.jobId, onChange: e => { s('jobId')(e); if (e.target.value)
+importFromJob(e.target.value); } },
+React.createElement("option", { value: "" }, "\u2014 Nessuno / importa manuale \u2014"),
+customerJobs.map(j => {
+const a = assets.find(a => a.id === j.assetId);
+return React.createElement("option", { key: j.id, value: j.id },
+j.id,
+" \u2014 ",
+(a === null || a === void 0 ? void 0 : a.name) || '?',
+" (",
+j.status,
+")");
+}))),
+React.createElement("div", null,
+React.createElement("label", { style: LBL }, "Data preventivo"),
+React.createElement("input", { type: "date", style: INP, value: f.date, onChange: s('date') })),
+React.createElement("div", null,
+React.createElement("label", { style: LBL }, "Valido fino al"),
+React.createElement("input", { type: "date", style: INP, value: f.validUntil, onChange: s('validUntil') }))),
+React.createElement("label", { style: { display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 12, color: '#9090A8' } },
+React.createElement("input", { type: "checkbox", checked: f.vatExempt, onChange: sCheck('vatExempt') }),
+"Esente IVA (art. 10, regime forfettario, ecc.)"),
+React.createElement("div", { style: { borderTop: '1px solid #2A2A38', paddingTop: 12 } },
+React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 } },
+React.createElement("span", { style: { fontSize: 11, color: '#2DD4BF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: .8 } },
+"\uD83D\uDD27 Manodopera (",
+f.laborLines.length,
+" voci)"),
+React.createElement("button", { onClick: addLabor, style: { background: '#1E1E28', border: '1px solid #2DD4BF44', borderRadius: 6, color: '#2DD4BF', padding: '4px 12px', cursor: 'pointer', fontSize: 11, fontWeight: 700 } }, "+ Voce")),
+f.laborLines.length === 0 && (React.createElement("div", { style: { textAlign: 'center', color: '#3A3A50', padding: '10px 0', fontSize: 12 } }, "Nessuna voce manodopera")),
+f.laborLines.map(l => (React.createElement("div", { key: l.id, style: { display: 'grid', gridTemplateColumns: '1fr 70px 70px auto', gap: 6, marginBottom: 6, alignItems: 'center' } },
+React.createElement("input", { style: INP, value: l.label, onChange: e => updLabor(l.id, 'label', e.target.value), placeholder: "Descrizione (es. Trasferta, Ore lavoro, Installazione\u2026)" }),
+React.createElement("input", { type: "number", style: Object.assign(Object.assign({}, INP), { textAlign: 'center' }), value: l.hours, onChange: e => updLabor(l.id, 'hours', e.target.value), placeholder: "ore", step: "0.5" }),
+React.createElement("input", { type: "number", style: Object.assign(Object.assign({}, INP), { textAlign: 'center' }), value: l.rate, onChange: e => updLabor(l.id, 'rate', e.target.value), placeholder: "\u20AC/h" }),
+React.createElement("button", { onClick: () => delLabor(l.id), style: { background: '#ef444415', border: '1px solid #ef444430', borderRadius: 5, color: '#ef4444', padding: '6px 8px', cursor: 'pointer', fontSize: 11 } }, "\u2715")))),
+f.laborLines.length > 0 && (React.createElement("div", { style: { textAlign: 'right', fontSize: 12, color: '#9090A8', marginTop: 4 } },
+"Subtotale manodopera: ",
+React.createElement("strong", { style: { color: '#F0F0F5' } },
+"\u20AC",
+laborTotal.toFixed(2))))),
+React.createElement("div", { style: { borderTop: '1px solid #2A2A38', paddingTop: 12 } },
+React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 6 } },
+React.createElement("span", { style: { fontSize: 11, color: '#a855f7', fontWeight: 700, textTransform: 'uppercase', letterSpacing: .8 } },
+"\uD83D\uDCE6 Parti / Materiali (",
+f.partLines.length,
+" righe)"),
+React.createElement("div", { style: { display: 'flex', gap: 6 } },
+React.createElement("button", { onClick: addPartFree, style: { background: '#1E1E28', border: '1px solid #a855f744', borderRadius: 6, color: '#a855f7', padding: '4px 10px', cursor: 'pointer', fontSize: 11, fontWeight: 700 } }, "+ Riga libera"))),
+parts.length > 0 && (React.createElement("div", { style: { background: '#0D0D12', border: '1px solid #2A2A38', borderRadius: 8, padding: '8px 10px', marginBottom: 8 } },
+React.createElement("div", { style: { fontSize: 10, color: '#5A5A70', marginBottom: 5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: .7 } }, "Aggiungi dal magazzino (senza scalare stock)"),
+React.createElement("div", { style: { display: 'flex', flexWrap: 'wrap', gap: 5 } }, parts.filter(p => p.qty > 0 || true).map(p => (React.createElement("button", { key: p.id, onClick: () => addPartWarehouse(p), style: { background: '#1E1E28', border: '1px solid #2A2A38', borderRadius: 6, color: '#9090A8', padding: '3px 9px', cursor: 'pointer', fontSize: 10 } },
+"+ ",
+p.name,
+p.code ? ` (${p.code})` : '',
+" \u2014 \u20AC",
+(p.sellPrice || p.unitPrice || 0).toFixed(2))))))),
+f.partLines.length === 0 && (React.createElement("div", { style: { textAlign: 'center', color: '#3A3A50', padding: '10px 0', fontSize: 12 } }, "Nessun materiale")),
+f.partLines.map(l => (React.createElement("div", { key: l.id, style: { display: 'grid', gridTemplateColumns: '1fr 55px 70px 55px auto', gap: 6, marginBottom: 6, alignItems: 'center' } },
+React.createElement("div", null,
+l.type === 'warehouse' && (React.createElement("div", { style: { fontSize: 9, color: '#a855f7', fontWeight: 700, marginBottom: 2 } }, "\uD83D\uDCE6 MAGAZZINO")),
+React.createElement("input", { style: INP, value: l.description, onChange: e => updPart(l.id, 'description', e.target.value), placeholder: "Descrizione ricambio / materiale" })),
+React.createElement("input", { type: "number", style: Object.assign(Object.assign({}, INP), { textAlign: 'center' }), value: l.qty, onChange: e => updPart(l.id, 'qty', e.target.value), placeholder: "Q.t\u00E0", step: "1" }),
+React.createElement("input", { type: "number", style: Object.assign(Object.assign({}, INP), { textAlign: 'center' }), value: l.unitPrice, onChange: e => updPart(l.id, 'unitPrice', e.target.value), placeholder: "\u20AC cad.", step: "0.01" }),
+React.createElement("select", { style: Object.assign(Object.assign({}, INP), { padding: '8px 4px', textAlign: 'center' }), value: l.vat, onChange: e => updPart(l.id, 'vat', e.target.value) }, IVA_RATES.map(r => React.createElement("option", { key: r, value: r },
+r,
+"%"))),
+React.createElement("button", { onClick: () => delPart(l.id), style: { background: '#ef444415', border: '1px solid #ef444430', borderRadius: 5, color: '#ef4444', padding: '6px 8px', cursor: 'pointer', fontSize: 11 } }, "\u2715")))),
+f.partLines.length > 0 && (React.createElement("div", { style: { textAlign: 'right', fontSize: 12, color: '#9090A8', marginTop: 4 } },
+"Subtotale materiali: ",
+React.createElement("strong", { style: { color: '#F0F0F5' } },
+"\u20AC",
+partsSubtotal.toFixed(2))))),
+React.createElement("div", { style: { background: '#0D0D12', border: '1px solid #2A2A38', borderRadius: 10, padding: '14px 16px' } },
+React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 5 } },
+React.createElement("span", { style: { color: '#5A5A70' } }, "Manodopera"),
+React.createElement("span", { style: { color: '#F0F0F5', fontWeight: 700 } },
+"\u20AC",
+laborTotal.toFixed(2))),
+React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 5 } },
+React.createElement("span", { style: { color: '#5A5A70' } }, "Materiali"),
+React.createElement("span", { style: { color: '#F0F0F5', fontWeight: 700 } },
+"\u20AC",
+partsSubtotal.toFixed(2))),
+React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid #2A2A38' } },
+React.createElement("span", { style: { color: '#5A5A70' } }, "Imponibile"),
+React.createElement("span", { style: { color: '#F0F0F5', fontWeight: 700 } },
+"\u20AC",
+subtotal.toFixed(2))),
+!f.vatExempt && (React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 8 } },
+React.createElement("span", { style: { color: '#5A5A70' } }, "IVA"),
+React.createElement("span", { style: { color: '#F0F0F5', fontWeight: 700 } },
+"\u20AC",
+vatTotal.toFixed(2)))),
+React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', fontSize: 16 } },
+React.createElement("span", { style: { color: '#94a3b8', fontWeight: 700 } }, "TOTALE"),
+React.createElement("span", { style: { color: '#22c55e', fontWeight: 900 } },
+"\u20AC",
+grandTotal.toFixed(2)))),
+React.createElement("div", null,
+React.createElement("label", { style: LBL }, "Condizioni di pagamento"),
+React.createElement("input", { style: INP, value: f.paymentTerms, onChange: s('paymentTerms') })),
+React.createElement("div", null,
+React.createElement("label", { style: LBL }, "Note / condizioni speciali"),
+React.createElement("textarea", { style: Object.assign(Object.assign({}, INP), { minHeight: 60, resize: 'vertical' }), value: f.notes, onChange: s('notes'), placeholder: "Note aggiuntive, esclusioni, condizioni speciali\u2026" })),
+React.createElement("div", { style: { display: 'flex', gap: 8, justifyContent: 'flex-end', paddingTop: 10, borderTop: '1px solid #2A2A38', position: 'sticky', bottom: 0, background: '#1a1a22', margin: '0 -4px', padding: '12px 4px' } },
+React.createElement("button", { onClick: onClose, style: FORM_BTN_GHOST }, "Annulla"),
+React.createElement("button", { onClick: () => onSave(Object.assign(Object.assign({}, f), { _totals: { labor: laborTotal, parts: partsSubtotal, subtotal, vat: vatTotal, grand: grandTotal } })), style: FORM_BTN_PRIMARY }, initial ? 'Salva modifiche' : 'Crea preventivo'))));
+}
+function QuotesPage({ quotes, setQuotes, customers, jobs, assets, parts, company, showToast, moveToTrash }) {
+const [modal, setModal] = React.useState(null);
+const [search, setSearch] = React.useState('');
+const [filterStatus, setFilterStatus] = React.useState('all');
+const saveQuote = (q) => {
+const exists = quotes.some(x => x.id === q.id);
+if (exists) {
+const upd = withUpdateMeta(q);
+setQuotes(qs => qs.map(x => x.id === q.id ? upd : x));
+showToast('Preventivo aggiornato');
+}
+else {
+const newQ = withCreateMeta(q);
+setQuotes(qs => [...qs, newQ]);
+showToast('✓ Preventivo ' + newQ.number + ' creato');
+}
+setModal(null);
+};
+const delQuote = (id) => {
+if (checkLocked())
+return;
+if (!confirm('Spostare questo preventivo nel cestino?'))
+return;
+const rec = quotes.find(q => q.id === id);
+if (moveToTrash && rec)
+moveToTrash("quotes", rec);
+setQuotes(qs => qs.filter(q => q.id !== id));
+showToast('Spostato nel cestino', '#f59e0b');
+};
+const filtered = quotes.filter(q => {
+if (filterStatus !== 'all' && q.status !== filterStatus)
+return false;
+if (search) {
+const c = customers.find(x => x.id === q.customerId);
+const hay = [q.number, q.status, c === null || c === void 0 ? void 0 : c.name, q.notes].filter(Boolean).join(' ').toLowerCase();
+if (!hay.includes(search.toLowerCase()))
+return false;
+}
+return true;
+});
+const totalOpen = quotes.filter(q => ['bozza', 'inviato'].includes(q.status)).length;
+const totalAccepted = quotes.filter(q => q.status === 'accettato').length;
+const valueOpen = quotes.filter(q => q.status === 'inviato').reduce((s, q) => { var _a; return s + (((_a = q._totals) === null || _a === void 0 ? void 0 : _a.grand) || 0); }, 0);
+return (React.createElement("div", { style: { padding: '16px 20px', maxWidth: 1100, margin: '0 auto' } },
+React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap', gap: 10 } },
+React.createElement("div", null,
+React.createElement("h1", { style: { margin: 0, fontSize: 20, fontWeight: 900 } }, "Preventivi"),
+React.createElement("p", { style: { color: '#64748b', margin: '3px 0 0', fontSize: 12 } }, "Quotazioni da job \u2192 PDF professionale")),
+React.createElement("button", { onClick: () => setModal({ type: 'form', data: null }), style: FORM_BTN_PRIMARY }, "+ Nuovo preventivo")),
+React.createElement("div", { style: { display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' } }, [
+{ label: 'In corso (bozza+inviati)', value: totalOpen, color: '#3b82f6' },
+{ label: 'Accettati', value: totalAccepted, color: '#22c55e' },
+{ label: 'Valore inviati', value: `€${valueOpen.toFixed(0)}`, color: '#2DD4BF' },
+{ label: 'Totale', value: quotes.length, color: '#64748b' },
+].map(k => (React.createElement("div", { key: k.label, style: { background: '#141418', border: '1px solid #2A2A38', borderTop: `3px solid ${k.color}`, borderRadius: 10, padding: '10px 16px', flex: 1, minWidth: 110 } },
+React.createElement("div", { style: { fontSize: 20, fontWeight: 900, color: k.color, fontFamily: 'monospace' } }, k.value),
+React.createElement("div", { style: { fontSize: 10, color: '#5A5A70', marginTop: 3, textTransform: 'uppercase', letterSpacing: .7, fontWeight: 600 } }, k.label))))),
+React.createElement("div", { style: { display: 'flex', gap: 8, marginBottom: 14, flexWrap: 'wrap' } },
+React.createElement("input", { value: search, onChange: e => setSearch(e.target.value), placeholder: "Cerca numero, cliente\u2026", style: { flex: 1, minWidth: 180, background: '#141418', border: '1px solid #2A2A38', borderRadius: 8, padding: '8px 12px', color: '#F0F0F5', fontSize: 13, outline: 'none' } }),
+React.createElement("select", { value: filterStatus, onChange: e => setFilterStatus(e.target.value), style: { background: '#141418', border: '1px solid #2A2A38', borderRadius: 8, padding: '8px 12px', color: '#9090A8', fontSize: 12 } },
+React.createElement("option", { value: "all" }, "Tutti gli stati"),
+Object.keys(QUOTE_STATUS_COLOR).map(s => React.createElement("option", { key: s, value: s }, s.charAt(0).toUpperCase() + s.slice(1))))),
+filtered.length === 0 ? (React.createElement("div", { style: { textAlign: 'center', padding: 48, color: '#5A5A70', background: '#141418', borderRadius: 12, border: '1px solid #2A2A38' } }, quotes.length === 0 ? (React.createElement(React.Fragment, null,
+React.createElement("div", { style: { fontSize: 36, marginBottom: 10, opacity: .4 } }, "\uD83D\uDCCB"),
+React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: '#94a3b8', marginBottom: 6 } }, "Nessun preventivo ancora"),
+React.createElement("div", { style: { fontSize: 12, marginBottom: 14 } }, "Apri un job, usa il bottone \"Crea preventivo\" oppure creane uno da qui"),
+React.createElement("button", { onClick: () => setModal({ type: 'form', data: null }), style: FORM_BTN_PRIMARY }, "+ Nuovo preventivo"))) : 'Nessun risultato')) : (React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 8 } }, filtered.slice().sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '')).map(q => {
+var _a, _b, _c;
+const customer = customers.find(c => c.id === q.customerId);
+const job = jobs.find(j => j.id === q.jobId);
+const asset = job ? assets.find(a => a.id === job.assetId) : null;
+const sc = QUOTE_STATUS_COLOR[q.status] || '#64748b';
+const grand = ((_a = q._totals) === null || _a === void 0 ? void 0 : _a.grand) || 0;
+return (React.createElement("div", { key: q.id, style: { background: '#141418', border: `1px solid ${sc}33`, borderLeft: `4px solid ${sc}`, borderRadius: 10, padding: '12px 16px' } },
+React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' } },
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+React.createElement("div", { style: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 4 } },
+React.createElement("span", { style: { fontFamily: 'monospace', fontWeight: 900, fontSize: 14, color: '#F0F0F5' } }, q.number),
+React.createElement("span", { style: { fontSize: 10, background: sc + '20', color: sc, border: `1px solid ${sc}44`, borderRadius: 20, padding: '1px 9px', fontWeight: 700, textTransform: 'capitalize' } }, q.status),
+q.jobId && React.createElement("span", { style: { fontSize: 10, color: '#5A5A70' } },
+"rif. ",
+q.jobId)),
+React.createElement("div", { style: { fontSize: 13, color: '#9090A8' } },
+(customer === null || customer === void 0 ? void 0 : customer.name) || '—',
+asset ? ` · ${asset.name}` : ''),
+React.createElement("div", { style: { fontSize: 11, color: '#5A5A70', marginTop: 3 } },
+q.date,
+q.validUntil ? ` · valido fino al ${q.validUntil}` : '',
+((_b = q.laborLines) === null || _b === void 0 ? void 0 : _b.length) > 0 && ` · ${q.laborLines.length} voci manodopera`,
+((_c = q.partLines) === null || _c === void 0 ? void 0 : _c.length) > 0 && ` · ${q.partLines.length} righe materiali`)),
+React.createElement("div", { style: { textAlign: 'right', flexShrink: 0 } },
+React.createElement("div", { style: { fontSize: 18, fontWeight: 900, color: '#22c55e', fontFamily: 'monospace' } },
+"\u20AC",
+grand.toFixed(2)),
+React.createElement("div", { style: { display: 'flex', gap: 6, marginTop: 8, justifyContent: 'flex-end' } },
+React.createElement("button", { onClick: () => generateQuotePDF(q, customer, company, assets, jobs), style: { background: '#141418', border: '1px solid #2DD4BF44', borderRadius: 6, color: '#2DD4BF', padding: '4px 10px', cursor: 'pointer', fontSize: 11, fontWeight: 700 } }, "PDF"),
+React.createElement("button", { onClick: () => setModal({ type: 'form', data: q }), style: { background: '#202028', border: '1px solid #2a3040', borderRadius: 6, color: '#94a3b8', padding: '4px 10px', cursor: 'pointer', fontSize: 11 } }, "\u270F"),
+React.createElement("button", { onClick: () => delQuote(q.id), style: { background: '#ef444415', border: '1px solid #ef444430', borderRadius: 6, color: '#ef4444', padding: '4px 8px', cursor: 'pointer', fontSize: 11 } }, "\u2715"))))));
+}))),
+(modal === null || modal === void 0 ? void 0 : modal.type) === 'form' && (React.createElement(Modal, { title: modal.data ? 'Modifica Preventivo' : 'Nuovo Preventivo', wide: true, onClose: () => setModal(null) },
+React.createElement(QuoteForm, { initial: modal.data, customers: customers, jobs: jobs, assets: assets, parts: parts, quotes: quotes, onSave: saveQuote, onClose: () => setModal(null) })))));
+}
+function generateQuotePDF(quote, customer, company, assets, jobs) {
+var _a, _b, _c, _d, _e;
+const job = jobs === null || jobs === void 0 ? void 0 : jobs.find(j => j.id === quote.jobId);
+const asset = job ? assets === null || assets === void 0 ? void 0 : assets.find(a => a.id === job.assetId) : null;
+const sc = QUOTE_STATUS_COLOR[quote.status] || '#64748b';
+const grand = ((_a = quote._totals) === null || _a === void 0 ? void 0 : _a.grand) || 0;
+const subtotal = ((_b = quote._totals) === null || _b === void 0 ? void 0 : _b.subtotal) || 0;
+const vatAmt = ((_c = quote._totals) === null || _c === void 0 ? void 0 : _c.vat) || 0;
+const laborRows = (quote.laborLines || []).map(l => `<tr><td>${l.label}</td><td style="text-align:center">${l.hours}h × €${l.rate}/h</td><td style="text-align:right;font-weight:700">€${(l.hours * l.rate).toFixed(2)}</td></tr>`).join('');
+const partRows = (quote.partLines || []).map(l => `<tr><td>${l.type === 'warehouse' ? '📦 ' : ''}${l.description}</td><td style="text-align:center">${l.qty} × €${Number(l.unitPrice).toFixed(2)}${!quote.vatExempt ? ` (+${l.vat}% IVA)` : ''}</td><td style="text-align:right;font-weight:700">€${(l.qty * l.unitPrice).toFixed(2)}</td></tr>`).join('');
+const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a2e; background: #fff; }
+.header { background: linear-gradient(135deg, #2DD4BF, #0D9488); color: white; padding: 28px 32px; display: flex; justify-content: space-between; align-items: flex-start; }
+.header h1 { font-size: 22px; font-weight: 900; margin-bottom: 4px; }
+.header .sub { font-size: 10px; opacity: .85; line-height: 1.5; }
+.header-logo { height: 28px !important; width: 36px !important; max-height:28px !important; max-width:36px !important; object-fit:contain; display:block; margin-bottom:8px; }
+.badge { display:inline-block; background:rgba(255,255,255,0.25); border:1px solid rgba(255,255,255,0.4); border-radius:6px; padding:4px 12px; font-size:13px; font-weight:800; margin-top:6px; }
+.body { padding: 24px 32px; }
+.meta-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px; }
+.meta-box { background:#f8fafc; border-radius:8px; padding:12px 14px; }
+.meta-label { font-size:9px; color:#64748b; text-transform:uppercase; letter-spacing:.7px; font-weight:700; margin-bottom:4px; }
+.meta-value { font-size:13px; font-weight:700; color:#1a1a2e; }
+.section-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#64748b; margin-bottom:8px; border-bottom:1px solid #e2e8f0; padding-bottom:4px; margin-top:18px; }
+table { width:100%; border-collapse:collapse; font-size:11px; }
+th { background:#f1f5f9; text-align:left; padding:7px 10px; font-size:9px; text-transform:uppercase; letter-spacing:.5px; color:#64748b; font-weight:700; }
+td { padding:7px 10px; border-bottom:1px solid #f1f5f9; vertical-align:top; }
+tr:last-child td { border-bottom:none; }
+.totals { margin-top:16px; background:#f8fafc; border-radius:8px; padding:14px 16px; }
+.total-row { display:flex; justify-content:space-between; font-size:12px; margin-bottom:5px; color:#475569; }
+.total-grand { display:flex; justify-content:space-between; font-size:16px; font-weight:900; color:#0D9488; padding-top:8px; border-top:2px solid #2DD4BF; margin-top:8px; }
+.notes { margin-top:16px; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:12px 14px; font-size:11px; color:#92400e; }
+.footer { margin-top:24px; padding-top:10px; border-top:1px solid #e2e8f0; text-align:center; font-size:9px; color:#94a3b8; }
+.validity { font-size:10px; opacity:.8; margin-top:4px; }
+</style></head><body><div class="wrap"><div class="side"></div><div class="main">
+<div class="header">
+<div>
+${company.logo ? `<img src="${company.logo}" class="brand-logo"/>` : ''}
+${(company.logo && company.logoHasName) ? '' : `<h1>${(company.name || 'Documento')}</h1>`}
+<div class="sub">${company.subtitle || 'Gestione Apparecchiature Elettromedicali'}</div>
+${company.address ? `<div class="sub">${company.address}</div>` : ''}
+${company.vat ? `<div class="sub">P.IVA: ${company.vat}</div>` : ''}
+</div>
+<div style="text-align:right">
+<div style="font-size:11px;opacity:.8;margin-bottom:4px">PREVENTIVO</div>
+<div style="font-size:26px;font-weight:900;letter-spacing:-1px">${quote.number}</div>
+<div class="validity">Data: ${quote.date}</div>
+${quote.validUntil ? `<div class="validity">Valido fino al: ${quote.validUntil}</div>` : ''}
+<div class="badge">${(quote.status || '').toUpperCase()}</div>
+</div>
+</div>
+<div class="body">
+<div class="meta-grid">
+<div class="meta-box">
+<div class="meta-label">Cliente</div>
+<div class="meta-value">${(customer === null || customer === void 0 ? void 0 : customer.name) || '—'}</div>
+${(customer === null || customer === void 0 ? void 0 : customer.address) ? `<div style="font-size:11px;color:#475569;margin-top:3px">${customer.address}</div>` : ''}
+${(customer === null || customer === void 0 ? void 0 : customer.vat) ? `<div style="font-size:11px;color:#475569">P.IVA: ${customer.vat}</div>` : ''}
+</div>
+<div class="meta-box">
+<div class="meta-label">Oggetto</div>
+<div class="meta-value">${asset ? asset.name : (job ? `Rif. job ${job.id}` : 'Intervento tecnico')}</div>
+${(asset === null || asset === void 0 ? void 0 : asset.brand) || (asset === null || asset === void 0 ? void 0 : asset.model) ? `<div style="font-size:11px;color:#475569;margin-top:2px">${[asset.brand, asset.model].filter(Boolean).join(' ')}</div>` : ''}
+${(asset === null || asset === void 0 ? void 0 : asset.serial) ? `<div style="font-size:11px;color:#475569">S/N: ${asset.serial}</div>` : ''}
+${job ? `<div style="font-size:10px;color:#94a3b8;margin-top:2px">Rif. job: ${job.id}</div>` : ''}
+</div>
+</div>
+${(quote.laborLines || []).length > 0 ? `
+<div class="section-title">Manodopera</div>
+<table>
+<thead><tr><th style="width:60%">Descrizione</th><th style="width:25%">Dettaglio</th><th style="width:15%">Importo</th></tr></thead>
+<tbody>${laborRows}</tbody>
+</table>` : ''}
+${(quote.partLines || []).length > 0 ? `
+<div class="section-title">Materiali e Ricambi</div>
+<table>
+<thead><tr><th style="width:55%">Descrizione</th><th style="width:30%">Q.tà × Prezzo</th><th style="width:15%">Importo</th></tr></thead>
+<tbody>${partRows}</tbody>
+</table>` : ''}
+<div class="totals">
+<div class="total-row"><span>Manodopera</span><span>€${(((_d = quote._totals) === null || _d === void 0 ? void 0 : _d.labor) || 0).toFixed(2)}</span></div>
+<div class="total-row"><span>Materiali</span><span>€${(((_e = quote._totals) === null || _e === void 0 ? void 0 : _e.parts) || 0).toFixed(2)}</span></div>
+<div class="total-row"><span>Imponibile</span><span>€${subtotal.toFixed(2)}</span></div>
+${!quote.vatExempt ? `<div class="total-row"><span>IVA</span><span>€${vatAmt.toFixed(2)}</span></div>` : '<div class="total-row"><span>Esente IVA</span><span>—</span></div>'}
+<div class="total-grand"><span>TOTALE</span><span>€${grand.toFixed(2)}</span></div>
+</div>
+${quote.paymentTerms ? `<div style="margin-top:14px;font-size:11px;color:#475569"><strong>Condizioni di pagamento:</strong> ${quote.paymentTerms}</div>` : ''}
+${quote.notes ? `<div class="notes"><strong>Note:</strong> ${quote.notes}</div>` : ''}
+<div class="footer">
+${(company.name || 'Documento')} — Preventivo generato il ${new Date().toLocaleDateString('it-IT')}<br>
+Questo documento non ha valore fiscale — per la fatturazione utilizzare il software di fatturazione elettronica
+</div>
+</div>
+</div></div></body></html>`;
+showPDFPreview(html, `preventivo-${quote.number}.pdf`);
+}
+function AgendaPage({ assets, jobs, instruments, iecReports, funcReports, customers, setTab: goTab, setModal, showToast }) {
+const [view, setView] = React.useState('overview');
+const [filterType, setFilterType] = React.useState('all');
+const [monthOffset, setMonthOffset] = React.useState(0);
+const TODAY = new Date();
+TODAY.setHours(0, 0, 0, 0);
+const MONTHS_IT = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+const DAYS_IT = ['Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab', 'Dom'];
+const viewDate = new Date(TODAY.getFullYear(), TODAY.getMonth() + monthOffset, 1);
+const viewYear = viewDate.getFullYear();
+const viewMonth = viewDate.getMonth();
+const allEvents = React.useMemo(() => {
+const events = [];
+assets.forEach(a => {
+if (!a.nextService)
+return;
+const date = new Date(a.nextService);
+const days = Math.round((date - TODAY) / 86400000);
+const customer = customers.find(c => c.id === a.customerId);
+events.push({
+id: 'maint-' + a.id, type: 'maintenance',
+color: days < 0 ? '#ef4444' : days <= 30 ? '#f59e0b' : '#2DD4BF',
+date: a.nextService, dateObj: date,
+title: a.name,
+customerName: customer ? customer.name : 'Senza cliente',
+customerId: a.customerId || '',
+location: a.location || '',
+subtitle: (a.brand ? a.brand + ' ' : '') + (a.model || ''),
+days, assetId: a.id,
+status: days < 0 ? ('scaduta da ' + Math.abs(days) + 'gg') : days === 0 ? 'oggi' : ('tra ' + days + 'gg'),
+onAction: () => setModal({ type: 'iec', assetId: a.id, data: null }),
+});
+});
+instruments.forEach(i => {
+if (!i.calExpiry)
+return;
+const date = new Date(i.calExpiry);
+const days = Math.round((date - TODAY) / 86400000);
+events.push({
+id: 'cal-' + i.id, type: 'calibration',
+color: days < 0 ? '#ef4444' : days <= 60 ? '#f59e0b' : '#a855f7',
+date: i.calExpiry, dateObj: date,
+title: (i.brand || '') + ' ' + (i.model || ''),
+customerName: 'Strumenti interni', customerId: '__instruments__',
+location: '', subtitle: i.category || 'Strumento di misura',
+days,
+status: days < 0 ? ('scaduta da ' + Math.abs(days) + 'gg') : ('tra ' + days + 'gg'),
+onAction: () => goTab('instruments'),
+});
+});
+jobs.filter(j => j.status !== 'chiuso').forEach(j => {
+const asset = assets.find(a => a.id === j.assetId);
+const customer = customers.find(c => c.id === (j.customerId || (asset === null || asset === void 0 ? void 0 : asset.customerId)));
+const date = new Date(j.openDate || TODAY);
+const days = Math.round((date - TODAY) / 86400000);
+events.push({
+id: 'job-' + j.id, type: 'job',
+color: j.priority === 'urgente' ? '#ef4444' : j.priority === 'alta' ? '#f97316' : '#64748b',
+date: (j.openDate || TODAY.toISOString().slice(0, 10)), dateObj: date,
+title: j.description || 'Intervento',
+customerName: customer ? customer.name : 'Senza cliente',
+customerId: (j.customerId || (asset === null || asset === void 0 ? void 0 : asset.customerId) || ''),
+location: (asset === null || asset === void 0 ? void 0 : asset.location) || '',
+subtitle: asset ? asset.name : '',
+days, status: j.status,
+onAction: () => setModal({ type: 'job', data: j }),
+});
+});
+return events.sort((a, b) => a.dateObj - b.dateObj);
+}, [assets, instruments, jobs, customers]);
+const monthEvents = React.useMemo(() => {
+return allEvents.filter(e => {
+const d = e.dateObj;
+return d.getFullYear() === viewYear && d.getMonth() === viewMonth &&
+(filterType === 'all' || e.type === filterType);
+});
+}, [allEvents, viewYear, viewMonth, filterType]);
+const stats = React.useMemo(() => {
+const overdue = monthEvents.filter(e => e.days < 0).length;
+const thisWeek = monthEvents.filter(e => e.days >= 0 && e.days <= 7).length;
+const maint = monthEvents.filter(e => e.type === 'maintenance').length;
+const cal = monthEvents.filter(e => e.type === 'calibration').length;
+const job = monthEvents.filter(e => e.type === 'job').length;
+return { total: monthEvents.length, overdue, thisWeek, maint, cal, job };
+}, [monthEvents]);
+const byClient = React.useMemo(() => {
+const groups = {};
+monthEvents.forEach(e => {
+const key = e.customerId || '__none__';
+if (!groups[key])
+groups[key] = { name: e.customerName, events: [], overdue: 0 };
+groups[key].events.push(e);
+if (e.days < 0)
+groups[key].overdue++;
+});
+return Object.values(groups).sort((a, b) => b.overdue - a.overdue || b.events.length - a.events.length);
+}, [monthEvents]);
+const byWeek = React.useMemo(() => {
+const weeks = {};
+monthEvents.forEach(e => {
+const d = e.dateObj;
+const weekNum = Math.ceil(d.getDate() / 7);
+if (!weeks[weekNum])
+weeks[weekNum] = [];
+weeks[weekNum].push(e);
+});
+return Object.entries(weeks).map(([w, events]) => ({
+week: parseInt(w),
+label: 'Settimana ' + w + ' (' + ((parseInt(w) - 1) * 7 + 1) + '–' + Math.min(parseInt(w) * 7, 31) + ')',
+events: events.sort((a, b) => a.dateObj - b.dateObj),
+})).sort((a, b) => a.week - b.week);
+}, [monthEvents]);
+const TYPE_LABEL = { maintenance: 'Verifica', calibration: 'Calibrazione', job: 'Intervento' };
+const Tab = ({ id, label }) => (React.createElement("button", { onClick: () => setView(id), style: {
+background: view === id ? '#2DD4BF' : 'transparent',
+color: view === id ? '#06251f' : '#94a3b8',
+border: view === id ? 'none' : '1px solid #2a3040',
+borderRadius: 8, padding: '7px 14px', cursor: 'pointer',
+fontSize: 12.5, fontWeight: 700, whiteSpace: 'nowrap',
+} }, label));
+const EventRow = ({ e, showClient }) => (React.createElement("div", { onClick: e.onAction, style: {
+display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px',
+background: '#0F0F14', borderRadius: 8, border: '1px solid #1e2a3a',
+borderLeft: '3px solid ' + e.color, cursor: 'pointer', marginBottom: 6,
+} },
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+React.createElement("div", { style: { fontSize: 13, fontWeight: 600, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, e.title),
+React.createElement("div", { style: { fontSize: 11, color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, showClient && e.customerName !== 'Strumenti interni' ? e.customerName + (e.location ? ' · ' + e.location : '') : e.subtitle)),
+React.createElement("div", { style: { textAlign: 'right', flexShrink: 0 } },
+React.createElement("div", { style: { fontSize: 11, fontWeight: 700, color: e.color, whiteSpace: 'nowrap' } }, e.status),
+React.createElement("div", { style: { fontSize: 10, color: '#475569' } }, e.date))));
+return (React.createElement("div", null,
+React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 10 } },
+React.createElement("div", null,
+React.createElement("h1", { style: { margin: 0, fontSize: 18, fontWeight: 900 } }, "Agenda & Pianificazione"),
+React.createElement("p", { style: { color: '#64748b', margin: '2px 0 0', fontSize: 12 } }, "Cosa c'\u00E8 da fare, organizzato per non perdere niente"))),
+React.createElement("div", { style: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 16 } },
+React.createElement("button", { onClick: () => setMonthOffset(monthOffset - 1), style: { background: '#141418', border: '1px solid #2a3040', borderRadius: 8, color: '#94a3b8', padding: '7px 14px', cursor: 'pointer', fontSize: 16 } }, "\u2039"),
+React.createElement("div", { style: { textAlign: 'center', minWidth: 170 } },
+React.createElement("div", { style: { fontWeight: 800, fontSize: 16, color: '#e2e8f0' } },
+MONTHS_IT[viewMonth],
+" ",
+viewYear),
+monthOffset !== 0 && React.createElement("button", { onClick: () => setMonthOffset(0), style: { background: 'none', border: 'none', color: '#2DD4BF', fontSize: 10, cursor: 'pointer', padding: 0, marginTop: 2 } }, "\u21A9 Torna a oggi")),
+React.createElement("button", { onClick: () => setMonthOffset(monthOffset + 1), style: { background: '#141418', border: '1px solid #2a3040', borderRadius: 8, color: '#94a3b8', padding: '7px 14px', cursor: 'pointer', fontSize: 16 } }, "\u203A")),
+React.createElement("div", { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 10, marginBottom: 16 } },
+React.createElement("div", { style: { background: '#141418', border: '1px solid #1e2a3a', borderRadius: 10, padding: '12px 14px' } },
+React.createElement("div", { style: { fontSize: 26, fontWeight: 900, color: '#2DD4BF', fontFamily: 'monospace', lineHeight: 1 } }, stats.total),
+React.createElement("div", { style: { fontSize: 10, color: '#64748b', marginTop: 5, textTransform: 'uppercase', letterSpacing: .6, fontWeight: 700 } }, "Da fare")),
+React.createElement("div", { style: { background: '#141418', border: '1px solid ' + (stats.overdue > 0 ? '#ef444444' : '#1e2a3a'), borderRadius: 10, padding: '12px 14px' } },
+React.createElement("div", { style: { fontSize: 26, fontWeight: 900, color: '#ef4444', fontFamily: 'monospace', lineHeight: 1 } }, stats.overdue),
+React.createElement("div", { style: { fontSize: 10, color: '#64748b', marginTop: 5, textTransform: 'uppercase', letterSpacing: .6, fontWeight: 700 } }, "Scadute")),
+React.createElement("div", { style: { background: '#141418', border: '1px solid #1e2a3a', borderRadius: 10, padding: '12px 14px' } },
+React.createElement("div", { style: { fontSize: 26, fontWeight: 900, color: '#f59e0b', fontFamily: 'monospace', lineHeight: 1 } }, stats.thisWeek),
+React.createElement("div", { style: { fontSize: 10, color: '#64748b', marginTop: 5, textTransform: 'uppercase', letterSpacing: .6, fontWeight: 700 } }, "Entro 7gg")),
+React.createElement("div", { style: { background: '#141418', border: '1px solid #1e2a3a', borderRadius: 10, padding: '12px 14px' } },
+React.createElement("div", { style: { fontSize: 26, fontWeight: 900, color: '#94a3b8', fontFamily: 'monospace', lineHeight: 1 } }, byClient.length),
+React.createElement("div", { style: { fontSize: 10, color: '#64748b', marginTop: 5, textTransform: 'uppercase', letterSpacing: .6, fontWeight: 700 } }, "Clienti"))),
+React.createElement("div", { style: { display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 } }, [
+{ id: 'all', label: 'Tutto (' + stats.total + ')' },
+{ id: 'maintenance', label: 'Verifiche (' + stats.maint + ')' },
+{ id: 'calibration', label: 'Calibrazioni (' + stats.cal + ')' },
+{ id: 'job', label: 'Interventi (' + stats.job + ')' },
+].map(f => (React.createElement("button", { key: f.id, onClick: () => setFilterType(f.id), style: {
+background: filterType === f.id ? '#2DD4BF22' : '#141418',
+color: filterType === f.id ? '#2DD4BF' : '#64748b',
+border: '1px solid ' + (filterType === f.id ? '#2DD4BF66' : '#2a3040'),
+borderRadius: 20, padding: '4px 13px', cursor: 'pointer', fontSize: 11.5, fontWeight: 700,
+} }, f.label)))),
+React.createElement("div", { style: { display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16, overflowX: 'auto', paddingBottom: 2 } },
+React.createElement(Tab, { id: "overview", label: "Priorit\u00E0" }),
+React.createElement(Tab, { id: "byClient", label: "Per cliente" }),
+React.createElement(Tab, { id: "byWeek", label: "Per settimana" }),
+React.createElement(Tab, { id: "calendar", label: "Calendario" })),
+stats.total === 0 && (React.createElement(EmptyState, { icon: "\uD83D\uDCC5", title: "Niente in programma per " + MONTHS_IT[viewMonth], subtitle: "Nessuna verifica, calibrazione o intervento in scadenza questo mese. Usa le frecce sopra per controllare gli altri mesi." })),
+stats.total > 0 && view === 'overview' && (React.createElement("div", null,
+stats.overdue > 0 && (React.createElement("div", { style: { marginBottom: 18 } },
+React.createElement("div", { style: { fontSize: 12, fontWeight: 800, color: '#ef4444', marginBottom: 8, textTransform: 'uppercase', letterSpacing: .6, display: 'flex', alignItems: 'center', gap: 6 } },
+"\u26A0 Scadute \u2014 da recuperare (",
+stats.overdue,
+")"),
+monthEvents.filter(e => e.days < 0).map(e => React.createElement(EventRow, { key: e.id, e: e, showClient: true })))),
+React.createElement("div", null,
+React.createElement("div", { style: { fontSize: 12, fontWeight: 800, color: '#94a3b8', marginBottom: 8, textTransform: 'uppercase', letterSpacing: .6 } }, "In programma (per scadenza)"),
+monthEvents.filter(e => e.days >= 0).map(e => React.createElement(EventRow, { key: e.id, e: e, showClient: true })),
+monthEvents.filter(e => e.days >= 0).length === 0 && (React.createElement("div", { style: { color: '#64748b', fontSize: 12, padding: '12px', textAlign: 'center' } }, "Tutto il resto \u00E8 gi\u00E0 scaduto \u2014 recupera quelle sopra."))))),
+stats.total > 0 && view === 'byClient' && (React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 12 } }, byClient.map((g, gi) => (React.createElement("div", { key: gi, style: { background: '#141418', border: '1px solid ' + (g.overdue > 0 ? '#ef444433' : '#1e2a3a'), borderRadius: 12, overflow: 'hidden' } },
+React.createElement("div", { style: { padding: '10px 14px', background: '#0F0F14', borderBottom: '1px solid #1e2a3a', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 } },
+React.createElement("div", { style: { fontWeight: 800, fontSize: 14, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, g.name),
+React.createElement("div", { style: { display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 } },
+g.overdue > 0 && React.createElement("span", { style: { background: '#ef444422', color: '#ef4444', border: '1px solid #ef444444', borderRadius: 20, padding: '1px 8px', fontSize: 10, fontWeight: 800 } },
+g.overdue,
+" scadute"),
+React.createElement("span", { style: { background: '#2DD4BF22', color: '#2DD4BF', borderRadius: 20, padding: '1px 8px', fontSize: 10, fontWeight: 800 } },
+g.events.length,
+" totali"))),
+React.createElement("div", { style: { padding: '10px 12px' } }, g.events.map(e => React.createElement(EventRow, { key: e.id, e: e, showClient: false })))))))),
+stats.total > 0 && view === 'byWeek' && (React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 12 } }, byWeek.map(w => (React.createElement("div", { key: w.week, style: { background: '#141418', border: '1px solid #1e2a3a', borderRadius: 12, overflow: 'hidden' } },
+React.createElement("div", { style: { padding: '10px 14px', background: '#0F0F14', borderBottom: '1px solid #1e2a3a', display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+React.createElement("span", { style: { fontWeight: 800, fontSize: 13, color: '#e2e8f0' } }, w.label),
+React.createElement("span", { style: { background: '#2DD4BF22', color: '#2DD4BF', borderRadius: 20, padding: '1px 8px', fontSize: 10, fontWeight: 800 } }, w.events.length)),
+React.createElement("div", { style: { padding: '10px 12px' } }, w.events.map(e => React.createElement(EventRow, { key: e.id, e: e, showClient: true })))))))),
+stats.total > 0 && view === 'calendar' && (React.createElement("div", { style: { background: '#141418', border: '1px solid #1e2a3a', borderRadius: 12, overflow: 'hidden' } },
+React.createElement("div", { style: { display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', borderBottom: '1px solid #1e2a3a' } }, DAYS_IT.map(d => (React.createElement("div", { key: d, style: { padding: '8px 4px', textAlign: 'center', fontSize: 10, fontWeight: 700, color: '#64748b', textTransform: 'uppercase' } }, d)))),
+React.createElement("div", { style: { display: 'grid', gridTemplateColumns: 'repeat(7,1fr)' } }, (() => {
+const monthStart = new Date(viewYear, viewMonth, 1);
+const startPad = monthStart.getDay() === 0 ? 6 : monthStart.getDay() - 1;
+const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+const cells = [];
+for (let i = 0; i < startPad; i++)
+cells.push(React.createElement("div", { key: 'p' + i, style: { minHeight: 64, borderRight: '1px solid #14182a', borderBottom: '1px solid #14182a' } }));
+for (let day = 1; day <= daysInMonth; day++) {
+const dayEvents = monthEvents.filter(e => e.dateObj.getDate() === day);
+const isToday = monthOffset === 0 && day === TODAY.getDate();
+const hasOverdue = dayEvents.some(e => e.days < 0);
+cells.push(React.createElement("div", { key: day, style: { minHeight: 64, padding: '5px', borderRight: '1px solid #14182a', borderBottom: '1px solid #14182a', background: isToday ? '#2DD4BF0a' : 'transparent' } },
+React.createElement("div", { style: { fontSize: 11, fontWeight: isToday ? 900 : 500, color: isToday ? '#2DD4BF' : '#64748b', marginBottom: 4 } }, day),
+dayEvents.length > 0 && (React.createElement("div", { onClick: () => { setView('byWeek'); }, style: {
+background: hasOverdue ? '#ef444422' : '#2DD4BF22',
+color: hasOverdue ? '#ef4444' : '#2DD4BF',
+border: '1px solid ' + (hasOverdue ? '#ef444444' : '#2DD4BF44'),
+borderRadius: 6, padding: '3px', textAlign: 'center', cursor: 'pointer',
+fontSize: 13, fontWeight: 900, lineHeight: 1.2,
+} },
+dayEvents.length,
+React.createElement("div", { style: { fontSize: 8, fontWeight: 600, opacity: .8 } }, dayEvents.length === 1 ? 'cosa' : 'cose')))));
+}
+return cells;
+})()),
+React.createElement("div", { style: { padding: '10px 14px', borderTop: '1px solid #1e2a3a', fontSize: 11, color: '#64748b', textAlign: 'center' } }, "Tocca un giorno per vedere i dettagli \u00B7 Il numero indica quante attivit\u00E0 ci sono")))));
+}
+function PianoManuale({ assets, setAssets, customers, year, setYear, showToast, goTab }) {
+const MONTHS_IT = ['Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno', 'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'];
+const [filterType, setFilterType] = React.useState('all');
+const [filterLocation, setFilterLocation] = React.useState('all');
+const [filterCustomer, setFilterCustomer] = React.useState('all');
+const [selectedIds, setSelectedIds] = React.useState([]);
+const [bulkMonth, setBulkMonth] = React.useState('');
+const categories = Array.from(new Set(assets.map(a => detectCategory(a.name || '')).filter(Boolean)));
+const locations = Array.from(new Set(assets.map(a => a.location || '').filter(Boolean)));
+const filtered = assets.filter(a => {
+if (filterType !== 'all' && detectCategory(a.name || '') !== filterType)
+return false;
+if (filterLocation !== 'all' && a.location !== filterLocation)
+return false;
+if (filterCustomer !== 'all' && a.customerId !== filterCustomer)
+return false;
+return true;
+});
+const getPlanned = (asset) => {
+if (!asset.plannedMonths)
+return null;
+return asset.plannedMonths[year] || null;
+};
+const setPlanned = (assetId, month) => {
+setAssets(prev => prev.map(a => {
+if (a.id !== assetId)
+return a;
+const planned = Object.assign({}, (a.plannedMonths || {}));
+if (month === null || month === '') {
+delete planned[year];
+}
+else {
+planned[year] = parseInt(month);
+}
+return Object.assign(Object.assign({}, a), { plannedMonths: planned });
+}));
+};
+const applyBulk = () => {
+if (!bulkMonth) {
+alert('Seleziona un mese');
+return;
+}
+if (selectedIds.length === 0) {
+alert('Seleziona almeno un apparecchio');
+return;
+}
+const month = bulkMonth === 'none' ? null : parseInt(bulkMonth);
+setAssets(prev => prev.map(a => {
+if (!selectedIds.includes(a.id))
+return a;
+const planned = Object.assign({}, (a.plannedMonths || {}));
+if (month === null)
+delete planned[year];
+else
+planned[year] = month;
+return Object.assign(Object.assign({}, a), { plannedMonths: planned });
+}));
+showToast(`✓ ${selectedIds.length} apparecchi ${month === null ? 'rimossi dal piano' : 'pianificati per ' + MONTHS_IT[month - 1]}`);
+setSelectedIds([]);
+setBulkMonth('');
+};
+const byMonth = {};
+for (let m = 1; m <= 12; m++)
+byMonth[m] = [];
+const unplanned = [];
+filtered.forEach(a => {
+const p = getPlanned(a);
+if (p)
+byMonth[p].push(a);
+else
+unplanned.push(a);
+});
+const toggleSelect = (id) => {
+setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+};
+const selectAllFiltered = () => {
+if (selectedIds.length === filtered.length)
+setSelectedIds([]);
+else
+setSelectedIds(filtered.map(a => a.id));
+};
+const AssetCard = ({ asset, showSelect, compact }) => {
+const customer = customers.find(c => c.id === asset.customerId);
+const isSelected = selectedIds.includes(asset.id);
+const category = detectCategory(asset.name || '') || 'Generico';
+return (React.createElement("div", { style: {
+background: isSelected ? '#2DD4BF15' : '#0D0D12',
+border: `1px solid ${isSelected ? '#2DD4BF66' : '#2A2A38'}`,
+borderRadius: 6, padding: compact ? '5px 8px' : '8px 10px', marginBottom: 4,
+cursor: showSelect ? 'pointer' : 'default',
+display: 'flex', alignItems: 'center', gap: 8,
+}, onClick: showSelect ? () => toggleSelect(asset.id) : undefined },
+showSelect && (React.createElement("input", { type: "checkbox", checked: isSelected, readOnly: true, style: { accentColor: '#2DD4BF', cursor: 'pointer', flexShrink: 0 } })),
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+React.createElement("div", { style: { fontSize: compact ? 11 : 12, fontWeight: 700, color: '#F0F0F5', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, asset.name),
+!compact && (React.createElement("div", { style: { fontSize: 10, color: '#5A5A70', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, [category, asset.location, customer === null || customer === void 0 ? void 0 : customer.name].filter(Boolean).join(' · ')))),
+!showSelect && (React.createElement("select", { value: getPlanned(asset) || '', onChange: e => setPlanned(asset.id, e.target.value), onClick: e => e.stopPropagation(), style: { background: '#141418', border: '1px solid #2A2A38', borderRadius: 4, color: '#9090A8', fontSize: 10, padding: '2px 4px', flexShrink: 0 } },
+React.createElement("option", { value: "" }, "\u2014"),
+MONTHS_IT.map((m, i) => React.createElement("option", { key: i, value: i + 1 }, m.slice(0, 3)))))));
+};
+return (React.createElement("div", null,
+React.createElement("div", { style: { background: '#141418', border: '1px solid #2A2A38', borderRadius: 10, padding: '14px 16px', marginBottom: 14 } },
+React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 10 } },
+React.createElement("div", null,
+React.createElement("h3", { style: { margin: 0, fontSize: 15, fontWeight: 800, color: '#F0F0F5' } }, "Piano Manutenzione Manuale"),
+React.createElement("p", { style: { margin: '2px 0 0', fontSize: 11, color: '#5A5A70' } }, "Pianifica manualmente quando fare ogni apparecchio, indipendentemente dalla scadenza tecnica")),
+React.createElement("div", { style: { display: 'flex', alignItems: 'center', gap: 8 } },
+React.createElement("span", { style: { color: '#5A5A70', fontSize: 12 } }, "Anno:"),
+React.createElement("select", { value: year, onChange: e => setYear(+e.target.value), style: { background: '#1E1E28', border: '1px solid #2a3040', borderRadius: 6, padding: '5px 10px', color: '#e2e8f0', fontSize: 12 } }, [year - 1, year, year + 1, year + 2].map(y => React.createElement("option", { key: y, value: y }, y))))),
+React.createElement("div", { style: { display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 0 } },
+React.createElement("select", { value: filterType, onChange: e => setFilterType(e.target.value), style: { background: '#0D0D12', border: '1px solid #2A2A38', borderRadius: 6, padding: '5px 10px', color: '#9090A8', fontSize: 11 } },
+React.createElement("option", { value: "all" }, "Tutte le categorie"),
+categories.map(c => React.createElement("option", { key: c, value: c }, c))),
+React.createElement("select", { value: filterLocation, onChange: e => setFilterLocation(e.target.value), style: { background: '#0D0D12', border: '1px solid #2A2A38', borderRadius: 6, padding: '5px 10px', color: '#9090A8', fontSize: 11 } },
+React.createElement("option", { value: "all" }, "Tutte le ubicazioni"),
+locations.map(l => React.createElement("option", { key: l, value: l }, l))),
+React.createElement("select", { value: filterCustomer, onChange: e => setFilterCustomer(e.target.value), style: { background: '#0D0D12', border: '1px solid #2A2A38', borderRadius: 6, padding: '5px 10px', color: '#9090A8', fontSize: 11 } },
+React.createElement("option", { value: "all" }, "Tutti i clienti"),
+customers.map(c => React.createElement("option", { key: c.id, value: c.id }, c.name))),
+React.createElement("span", { style: { marginLeft: 'auto', color: '#5A5A70', fontSize: 11, alignSelf: 'center' } },
+filtered.length,
+" apparecchi \u00B7 ",
+unplanned.length,
+" non pianificati"))),
+React.createElement("div", { style: { background: '#141418', border: `1px solid ${selectedIds.length > 0 ? '#2DD4BF44' : '#2A2A38'}`, borderRadius: 10, padding: '10px 14px', marginBottom: 14,
+display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' } },
+React.createElement("button", { onClick: selectAllFiltered, style: { background: '#1E1E28', border: '1px solid #2a3040', borderRadius: 6, color: '#94a3b8', padding: '5px 12px', cursor: 'pointer', fontSize: 11, fontWeight: 700 } }, selectedIds.length === filtered.length && filtered.length > 0 ? 'Deseleziona tutti' : 'Seleziona tutti i filtrati'),
+React.createElement("span", { style: { color: '#5A5A70', fontSize: 12 } },
+selectedIds.length,
+" selezionat",
+selectedIds.length === 1 ? 'o' : 'i'),
+selectedIds.length > 0 && (React.createElement(React.Fragment, null,
+React.createElement("span", { style: { color: '#5A5A70', fontSize: 12, marginLeft: 'auto' } }, "Assegna a:"),
+React.createElement("select", { value: bulkMonth, onChange: e => setBulkMonth(e.target.value), style: { background: '#0D0D12', border: '1px solid #2A2A38', borderRadius: 6, padding: '5px 10px', color: '#F0F0F5', fontSize: 12 } },
+React.createElement("option", { value: "" }, "\u2014 Mese \u2014"),
+MONTHS_IT.map((m, i) => React.createElement("option", { key: i, value: i + 1 }, m)),
+React.createElement("option", { value: "none" }, "Rimuovi pianificazione")),
+React.createElement("button", { onClick: applyBulk, style: { background: 'linear-gradient(135deg,#2DD4BF,#0D9488)', color: '#000', border: 'none', borderRadius: 6, padding: '6px 14px', cursor: 'pointer', fontSize: 11, fontWeight: 800 } }, "Applica")))),
+React.createElement("div", { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10, marginBottom: 14 } }, Array.from({ length: 12 }, (_, m) => m + 1).map(month => {
+const items = byMonth[month];
+return (React.createElement("div", { key: month, style: { background: '#141418', border: `1px solid ${items.length > 0 ? '#2DD4BF33' : '#2A2A38'}`, borderRadius: 10, overflow: 'hidden' } },
+React.createElement("div", { style: { padding: '8px 12px', background: items.length > 0 ? '#2DD4BF15' : '#1a1a22',
+borderBottom: `1px solid ${items.length > 0 ? '#2DD4BF33' : '#2A2A38'}`,
+display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+React.createElement("span", { style: { fontWeight: 800, fontSize: 12, color: items.length > 0 ? '#F0F0F5' : '#5A5A70' } }, MONTHS_IT[month - 1]),
+items.length > 0 && (React.createElement("span", { style: { background: '#2DD4BF', color: '#000', borderRadius: 20, padding: '1px 7px', fontSize: 10, fontWeight: 900 } }, items.length))),
+React.createElement("div", { style: { padding: 6, minHeight: 60 } }, items.length === 0 ? (React.createElement("div", { style: { padding: '10px 6px', color: '#3A3A50', fontSize: 11, textAlign: 'center' } }, "Nessuno")) : items.map(asset => React.createElement(AssetCard, { key: asset.id, asset: asset, compact: true })))));
+})),
+unplanned.length > 0 && (React.createElement("div", { style: { background: '#141418', border: '1px solid #f59e0b33', borderRadius: 10, overflow: 'hidden' } },
+React.createElement("div", { style: { padding: '10px 14px', background: '#f59e0b15', borderBottom: '1px solid #f59e0b33',
+display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 } },
+React.createElement("span", { style: { fontWeight: 800, fontSize: 13, color: '#f59e0b' } },
+"\u26A0 Non pianificati (",
+unplanned.length,
+")"),
+React.createElement("span", { style: { fontSize: 10, color: '#5A5A70' } }, "Spunta gli apparecchi e usa \"Assegna a\" sopra, oppure scegli il mese dal menu su ogni riga")),
+React.createElement("div", { style: { padding: 8, maxHeight: 300, overflowY: 'auto' } }, unplanned.map(asset => React.createElement(AssetCard, { key: asset.id, asset: asset, showSelect: true }))))),
+React.createElement("div", { style: { textAlign: 'center', marginTop: 14, fontSize: 10, color: '#3A3A50' } }, "Suggerimento: assegna gli apparecchi ai mesi per bilanciare il carico di lavoro nell'anno. Il piano manuale \u00E8 indipendente dalla scadenza tecnica (Prossimo servizio).")));
+}
+function detectCategory(name) {
+const n = (name || '').toLowerCase();
+if (n.includes('defibrillatore') || n.includes('defib') || n.includes('dae'))
+return 'Defibrillatore';
+if (n.includes('monitor') || n.includes('saturim'))
+return 'Monitor multiparametrico';
+if (n.includes('ventilatore') || n.includes('respiratore'))
+return 'Ventilatore';
+if (n.includes('aspirat'))
+return 'Aspiratore';
+if (n.includes('pompa') || n.includes('infusion'))
+return 'Pompa infusionale';
+if (n.includes('elettrobistur') || n.includes('esu'))
+return 'Elettrobisturi';
+if (n.includes('ecograf') || n.includes('ultrasuon'))
+return 'Ecografo';
+if (n.includes('letto'))
+return 'Letto elettrico';
+if (n.includes('termometro'))
+return 'Termometro';
+if (n.includes('elettrocardiograf') || n.includes('ecg'))
+return 'ECG';
+return 'Altro';
+}
+const STATUS_COLOR_PORTAL = {
+'aperto': '#ef4444',
+'in corso': '#f59e0b',
+'in attesa parti': '#f59e0b',
+'attesa parti': '#f59e0b',
+'chiuso': '#22c55e',
+'sospeso': '#94a3b8',
+'operativo': '#22c55e',
+'fuori servizio': '#ef4444',
+'in manutenzione': '#f59e0b',
+};
+function PortalClient({ assets, jobs, iecReports, funcReports, instruments, customers, company, onExit, customerId: initialCustomerId }) {
+var _a, _b;
+const [selectedCustomerId, setSelectedCustomerId] = React.useState(initialCustomerId || ((_a = customers[0]) === null || _a === void 0 ? void 0 : _a.id) || '');
+const [tab, setTab] = React.useState('jobs');
+const customer = customers.find(c => c.id === selectedCustomerId);
+const customerAssets = assets.filter(a => a.customerId === selectedCustomerId);
+const customerAssetIds = customerAssets.map(a => a.id);
+const customerJobs = jobs.filter(j => customerAssetIds.includes(j.assetId));
+const customerIec = iecReports.filter(r => customerAssetIds.includes(r.assetId));
+const customerFunc = funcReports.filter(r => customerAssetIds.includes(r.assetId));
+const openJobs = customerJobs.filter(j => j.status !== 'chiuso');
+const Badge = ({ text, color }) => (React.createElement("span", { style: {
+background: (color || '#64748b') + '22', color: color || '#64748b',
+border: `1px solid ${color || '#64748b'}44`,
+borderRadius: 20, padding: '2px 10px', fontSize: 11, fontWeight: 700,
+textTransform: 'capitalize', whiteSpace: 'nowrap',
+} }, text));
+if (!customer && customers.length === 0) {
+return (React.createElement("div", { style: { minHeight: '100vh', background: '#0D0D12', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, flexDirection: 'column', gap: 16 } },
+React.createElement("div", { style: { background: '#141418', border: '1px solid #2A2A38', borderRadius: 14, padding: '32px 40px', textAlign: 'center', maxWidth: 400 } },
+React.createElement("div", { style: { fontSize: 40, marginBottom: 12 } }, "\uD83D\uDC65"),
+React.createElement("h2", { style: { color: '#F0F0F5', fontSize: 18, marginBottom: 8 } }, "Nessun cliente"),
+React.createElement("p", { style: { color: '#5A5A70', fontSize: 13, marginBottom: 20 } }, "Per provare la modalit\u00E0 portale cliente, prima crea almeno un cliente nella sezione Clienti."),
+React.createElement("button", { onClick: onExit, style: { background: 'linear-gradient(135deg,#2DD4BF,#0D9488)', color: '#000', border: 'none', borderRadius: 8, padding: '10px 22px', fontWeight: 800, fontSize: 13, cursor: 'pointer' } }, "\u2190 Torna all'app"))));
+}
+return (React.createElement("div", { style: { minHeight: '100vh', background: '#0D0D12', fontFamily: "'Segoe UI',system-ui,sans-serif" } },
+React.createElement("div", { style: { background: 'linear-gradient(135deg,#2DD4BF,#0D9488)', color: '#000', padding: '7px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, fontWeight: 700, flexWrap: 'wrap', gap: 6 } },
+React.createElement("span", null, "\uD83D\uDC41 ANTEPRIMA PORTALE CLIENTE (read-only) \u2014 questo \u00E8 quello che vedr\u00E0 il tuo cliente"),
+React.createElement("button", { onClick: onExit, style: { background: 'rgba(0,0,0,.2)', color: '#000', border: '1px solid rgba(0,0,0,.3)', borderRadius: 5, padding: '3px 10px', fontWeight: 700, fontSize: 11, cursor: 'pointer' } }, "\u2715 Esci anteprima")),
+React.createElement("div", { style: { background: '#141418', borderBottom: '1px solid #2A2A38', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' } },
+React.createElement("span", { style: { color: '#5A5A70', fontSize: 12, fontWeight: 700 } }, "Anteprima come cliente:"),
+React.createElement("select", { value: selectedCustomerId, onChange: e => setSelectedCustomerId(e.target.value), style: { background: '#0D0D12', border: '1px solid #2A2A38', borderRadius: 6, padding: '5px 12px', color: '#F0F0F5', fontSize: 13, fontWeight: 700 } }, customers.map(c => React.createElement("option", { key: c.id, value: c.id }, c.name))),
+React.createElement("span", { style: { marginLeft: 'auto', color: '#3A3A50', fontSize: 10 } },
+"URL futuro: medtrace.app/portale/",
+((_b = customer === null || customer === void 0 ? void 0 : customer.id) === null || _b === void 0 ? void 0 : _b.slice(-8)) || '...')),
+React.createElement("div", { style: { background: '#141418', borderBottom: '1px solid #2A2A38', padding: '16px 20px' } },
+React.createElement("div", { style: { display: 'flex', alignItems: 'center', gap: 16, maxWidth: 900, margin: '0 auto', flexWrap: 'wrap' } },
+React.createElement("svg", { viewBox: "0 0 50 40", xmlns: "http://www.w3.org/2000/svg", style: { width: 50, height: 32, flexShrink: 0 } },
+React.createElement("g", { fill: "none", stroke: "#2DD4BF", strokeWidth: "2.5", strokeLinecap: "round" },
+React.createElement("path", { d: "M8 20 Q12 12 16 20 Q20 28 24 20" }),
+React.createElement("path", { d: "M4 20 Q10 8 16 20 Q22 32 28 20" }),
+React.createElement("path", { d: "M0 20 Q8 4 16 20 Q24 36 32 20" }),
+React.createElement("circle", { cx: "38", cy: "20", r: "4", fill: "#2DD4BF" }))),
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+React.createElement("div", { style: { fontSize: 18, fontWeight: 900, color: '#F0F0F5', marginBottom: 2 } },
+"Portale ",
+(customer === null || customer === void 0 ? void 0 : customer.name) || 'Cliente'),
+React.createElement("div", { style: { fontSize: 11, color: '#5A5A70' } },
+"Servizio assistenza tecnica",
+company.name ? " di " + company.name : "")),
+React.createElement("div", { style: { background: '#2DD4BF18', border: '1px solid #2DD4BF33', borderRadius: 20, padding: '4px 12px', fontSize: 10, color: '#2DD4BF', fontWeight: 700 } }, "\u25CF ONLINE"))),
+React.createElement("div", { style: { padding: '20px 16px', maxWidth: 900, margin: '0 auto' } },
+React.createElement("div", { style: { display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' } }, [
+{ label: 'Apparecchi', value: customerAssets.length, color: '#2DD4BF' },
+{ label: 'Job aperti', value: openJobs.length, color: openJobs.length > 0 ? '#f59e0b' : '#22c55e' },
+{ label: 'Verifiche di Sicurezza Elettrica', value: customerIec.length, color: '#9955ff' },
+{ label: 'Verifiche funz.', value: customerFunc.length, color: '#0D9488' },
+].map(k => (React.createElement("div", { key: k.label, style: { background: '#141418', border: '1px solid #2A2A38', borderTop: `3px solid ${k.color}`, borderRadius: 10, padding: '12px 18px', flex: 1, minWidth: 120 } },
+React.createElement("div", { style: { fontSize: 22, fontWeight: 900, color: k.color, fontFamily: 'monospace' } }, k.value),
+React.createElement("div", { style: { fontSize: 10, color: '#5A5A70', marginTop: 4, textTransform: 'uppercase', letterSpacing: .7, fontWeight: 600 } }, k.label))))),
+React.createElement("div", { style: { background: '#141418', border: '1px dashed #2DD4BF44', borderRadius: 10, padding: '12px 16px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 } },
+React.createElement("div", null,
+React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: '#F0F0F5' } }, "Richiedi intervento"),
+React.createElement("div", { style: { fontSize: 11, color: '#5A5A70' } }, "Segnala un guasto o richiedi una verifica programmata")),
+React.createElement("button", { onClick: () => alert('Funzione disponibile nella versione cloud — richiede integrazione email'), style: { background: '#1E1E28', border: '1px solid #2DD4BF66', borderRadius: 6, color: '#2DD4BF', padding: '8px 16px', cursor: 'pointer', fontSize: 12, fontWeight: 700 } }, "+ Nuova richiesta")),
+React.createElement("div", { style: { display: 'flex', gap: 2, marginBottom: 16, borderBottom: '2px solid #2A2A38', overflowX: 'auto' } }, [
+{ id: 'jobs', label: `Interventi (${customerJobs.length})` },
+{ id: 'assets', label: `Apparecchi (${customerAssets.length})` },
+{ id: 'iec', label: `Sic. Elettrica (${customerIec.length})` },
+{ id: 'func', label: `Funzionali (${customerFunc.length})` },
+].map(t => (React.createElement("button", { key: t.id, onClick: () => setTab(t.id), style: {
+background: 'none', border: 'none',
+borderBottom: tab === t.id ? '2px solid #2DD4BF' : '2px solid transparent',
+color: tab === t.id ? '#2DD4BF' : '#6A6A80',
+padding: '8px 16px', cursor: 'pointer', fontSize: 12, fontWeight: 700,
+marginBottom: -2, whiteSpace: 'nowrap', flexShrink: 0,
+} }, t.label)))),
+tab === 'jobs' && (React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 10 } }, customerJobs.length === 0 ? (React.createElement("div", { style: { textAlign: 'center', padding: 48, color: '#5A5A70', background: '#141418', borderRadius: 12, border: '1px solid #2A2A38' } }, "Nessun intervento registrato")) : customerJobs.slice().sort((a, b) => (b.openDate || '').localeCompare(a.openDate || '')).map(j => {
+const asset = assets.find(a => a.id === j.assetId);
+const hasReport = j.iecReportId || j.funcReportId;
+return (React.createElement("div", { key: j.id, style: { background: '#141418', border: `1px solid ${j.status === 'chiuso' ? '#22c55e22' : j.status === 'aperto' ? '#ef444422' : '#2A2A38'}`, borderRadius: 10, padding: '14px 16px' } },
+React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap', marginBottom: 8 } },
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+React.createElement("div", { style: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 5 } },
+React.createElement("span", { style: { fontFamily: 'monospace', fontSize: 11, color: '#5A5A70' } }, j.id),
+React.createElement(Badge, { text: j.status, color: STATUS_COLOR_PORTAL[j.status] }),
+React.createElement(Badge, { text: j.priority, color: j.priority === 'urgente' ? '#ef4444' : j.priority === 'alta' ? '#f97316' : '#94a3b8' }),
+React.createElement("span", { style: { fontSize: 11, color: '#5A5A70', textTransform: 'capitalize' } }, j.type)),
+React.createElement("div", { style: { fontSize: 13, color: '#F0F0F5', fontWeight: 600, marginBottom: 3 } }, j.description || '—'),
+asset && (React.createElement("div", { style: { fontSize: 11, color: '#5A5A70' } },
+"\uD83D\uDCE6 ",
+asset.name,
+asset.brand ? ` · ${asset.brand}` : '',
+asset.serial ? ` · S/N: ${asset.serial}` : ''))),
+React.createElement("div", { style: { textAlign: 'right', flexShrink: 0 } },
+React.createElement("div", { style: { fontSize: 11, color: '#5A5A70' } }, j.openDate),
+j.closeDate && React.createElement("div", { style: { fontSize: 11, color: '#22c55e', fontWeight: 700 } },
+"Chiuso: ",
+j.closeDate))),
+j.timeline && j.timeline.length > 0 && (React.createElement("div", { style: { marginTop: 8, padding: '8px 12px', background: '#0D0D12', borderRadius: 6, borderLeft: '3px solid #2DD4BF' } },
+React.createElement("div", { style: { fontSize: 10, color: '#5A5A70', fontWeight: 700, marginBottom: 4, textTransform: 'uppercase', letterSpacing: .5 } },
+"Timeline (",
+j.timeline.length,
+" step)"),
+j.timeline.slice(-3).map((t, i) => (React.createElement("div", { key: i, style: { fontSize: 11, color: '#9090A8', marginBottom: 2 } },
+React.createElement("span", { style: { color: '#5A5A70', fontFamily: 'monospace', marginRight: 6 } }, t.date),
+t.note))))),
+j.attachments && j.attachments.length > 0 && (React.createElement("div", { style: { marginTop: 8, padding: '8px 12px', background: '#0D0D12', borderRadius: 6, borderLeft: '3px solid #a855f7' } },
+React.createElement("div", { style: { fontSize: 10, color: '#5A5A70', fontWeight: 700, marginBottom: 5, textTransform: 'uppercase', letterSpacing: .5 } },
+"Documenti allegati (",
+j.attachments.length,
+")"),
+j.attachments.map(att => {
+var _a;
+return (React.createElement("div", { key: att.id, style: { display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 } },
+React.createElement("span", { style: { fontSize: 13 } }, ((_a = att.type) === null || _a === void 0 ? void 0 : _a.startsWith('image/')) ? '🖼' : att.type === 'application/pdf' ? '📄' : '📎'),
+React.createElement("span", { style: { fontSize: 11, color: '#9090A8', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, att.name),
+React.createElement("button", { onClick: () => downloadAttachment(att), style: { background: '#1E1E28', border: '1px solid #2DD4BF44', borderRadius: 4, color: '#2DD4BF', padding: '2px 8px', cursor: 'pointer', fontSize: 10, fontWeight: 700 } }, "\u2B07 Scarica")));
+}))),
+hasReport && (React.createElement("div", { style: { marginTop: 8, fontSize: 11, color: '#2DD4BF' } }, "\u2713 Rapporto tecnico collegato (visibile nelle tab dedicate)"))));
+}))),
+tab === 'assets' && (React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 10 } }, customerAssets.length === 0 ? (React.createElement("div", { style: { textAlign: 'center', padding: 48, color: '#5A5A70', background: '#141418', borderRadius: 12, border: '1px solid #2A2A38' } }, "Nessun apparecchio registrato")) : customerAssets.map(a => (React.createElement("div", { key: a.id, style: { background: '#141418', border: '1px solid #2A2A38', borderRadius: 10, padding: '14px 16px' } },
+React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, flexWrap: 'wrap' } },
+React.createElement("div", { style: { flex: 1 } },
+React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: '#F0F0F5', marginBottom: 4 } }, a.name),
+React.createElement("div", { style: { fontSize: 11, color: '#5A5A70' } }, [a.brand, a.model, a.serial && `S/N: ${a.serial}`, a.location].filter(Boolean).join(' · ')),
+a.riskClass && (React.createElement("div", { style: { fontSize: 10, color: '#5A5A70', marginTop: 4 } },
+"Classe rischio: ",
+React.createElement("span", { style: { color: '#9090A8' } }, a.riskClass)))),
+React.createElement(Badge, { text: a.status, color: STATUS_COLOR_PORTAL[a.status] })),
+a.nextService && (React.createElement("div", { style: { marginTop: 8, padding: '6px 10px', background: '#0D0D12', borderRadius: 6, fontSize: 11, color: '#5A5A70', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 } },
+React.createElement("span", null, "Prossima manutenzione:"),
+React.createElement("span", { style: { color: '#F0F0F5', fontWeight: 700 } }, a.nextService)))))))),
+tab === 'iec' && (React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 10 } }, customerIec.length === 0 ? (React.createElement("div", { style: { textAlign: 'center', padding: 48, color: '#5A5A70', background: '#141418', borderRadius: 12, border: '1px solid #2A2A38' } }, "Nessuna verifica di sicurezza elettrica")) : customerIec.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '')).map(r => {
+const asset = assets.find(a => a.id === r.assetId);
+return (React.createElement("div", { key: r.id, style: { background: '#141418', border: `1px solid ${r.overallPass ? '#22c55e33' : '#ef444433'}`, borderRadius: 10, padding: '14px 16px' } },
+React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 } },
+React.createElement("div", null,
+React.createElement("div", { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 } },
+React.createElement("span", { style: { fontFamily: 'monospace', fontWeight: 700, color: '#F0F0F5' } }, r.reportNumber || r.id),
+React.createElement("span", { style: { fontSize: 10, color: '#5A5A70' } },
+r.norm,
+" \u00B7 Cl.",
+r.equipClass,
+" \u00B7 ",
+r.patientType || 'BF')),
+React.createElement("div", { style: { fontSize: 11, color: '#9090A8' } },
+r.date,
+asset ? ` · ${asset.name}` : '',
+r.technician ? ` · ${r.technician}` : '')),
+React.createElement("div", { style: { display: 'flex', gap: 8, alignItems: 'center' } },
+React.createElement(Badge, { text: r.overallPass ? 'CONFORME' : 'NON CONFORME', color: r.overallPass ? '#22c55e' : '#ef4444' }))),
+r.attachments && r.attachments.length > 0 && (React.createElement("div", { style: { marginTop: 8, padding: '8px 12px', background: '#0D0D12', borderRadius: 6, borderLeft: '3px solid #a855f7' } },
+React.createElement("div", { style: { fontSize: 10, color: '#5A5A70', fontWeight: 700, marginBottom: 5, textTransform: 'uppercase' } }, "Documenti"),
+r.attachments.map(att => {
+var _a;
+return (React.createElement("div", { key: att.id, style: { display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 } },
+React.createElement("span", { style: { fontSize: 12 } }, ((_a = att.type) === null || _a === void 0 ? void 0 : _a.startsWith('image/')) ? '🖼' : att.type === 'application/pdf' ? '📄' : '📎'),
+React.createElement("span", { style: { fontSize: 11, color: '#9090A8', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, att.name),
+React.createElement("button", { onClick: () => downloadAttachment(att), style: { background: '#1E1E28', border: '1px solid #2DD4BF44', borderRadius: 4, color: '#2DD4BF', padding: '2px 8px', cursor: 'pointer', fontSize: 10, fontWeight: 700 } }, "\u2B07")));
+}))),
+React.createElement("button", { onClick: () => generateIECPDF(r, asset, customer, company), style: { marginTop: 10, background: '#1E1E28', border: '1px solid #2DD4BF44', borderRadius: 6, color: '#2DD4BF', padding: '5px 14px', cursor: 'pointer', fontSize: 11, fontWeight: 700 } }, "\u2B07 Scarica rapporto PDF")));
+}))),
+tab === 'func' && (React.createElement("div", { style: { display: 'flex', flexDirection: 'column', gap: 10 } }, customerFunc.length === 0 ? (React.createElement("div", { style: { textAlign: 'center', padding: 48, color: '#5A5A70', background: '#141418', borderRadius: 12, border: '1px solid #2A2A38' } }, "Nessuna verifica funzionale")) : customerFunc.slice().sort((a, b) => (b.date || '').localeCompare(a.date || '')).map(r => {
+const asset = assets.find(a => a.id === r.assetId);
+return (React.createElement("div", { key: r.id, style: { background: '#141418', border: `1px solid ${r.overallPass ? '#22c55e33' : '#ef444433'}`, borderRadius: 10, padding: '14px 16px' } },
+React.createElement("div", { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 } },
+React.createElement("div", null,
+React.createElement("div", { style: { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 } },
+React.createElement("span", { style: { fontFamily: 'monospace', fontWeight: 700, color: '#F0F0F5' } }, r.reportNumber || r.id)),
+React.createElement("div", { style: { fontSize: 11, color: '#9090A8' } },
+r.date,
+asset ? ` · ${asset.name}` : '',
+r.technician ? ` · ${r.technician}` : '')),
+React.createElement(Badge, { text: r.overallPass ? 'CONFORME' : 'NON CONFORME', color: r.overallPass ? '#22c55e' : '#ef4444' })),
+r.attachments && r.attachments.length > 0 && (React.createElement("div", { style: { marginTop: 8, padding: '8px 12px', background: '#0D0D12', borderRadius: 6, borderLeft: '3px solid #a855f7' } },
+React.createElement("div", { style: { fontSize: 10, color: '#5A5A70', fontWeight: 700, marginBottom: 5, textTransform: 'uppercase' } }, "Documenti"),
+r.attachments.map(att => {
+var _a;
+return (React.createElement("div", { key: att.id, style: { display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 } },
+React.createElement("span", { style: { fontSize: 12 } }, ((_a = att.type) === null || _a === void 0 ? void 0 : _a.startsWith('image/')) ? '🖼' : att.type === 'application/pdf' ? '📄' : '📎'),
+React.createElement("span", { style: { fontSize: 11, color: '#9090A8', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' } }, att.name),
+React.createElement("button", { onClick: () => downloadAttachment(att), style: { background: '#1E1E28', border: '1px solid #2DD4BF44', borderRadius: 4, color: '#2DD4BF', padding: '2px 8px', cursor: 'pointer', fontSize: 10, fontWeight: 700 } }, "\u2B07")));
+}))),
+React.createElement("button", { onClick: () => generateFuncPDF(r, asset, customer, company), style: { marginTop: 10, background: '#1E1E28', border: '1px solid #2DD4BF44', borderRadius: 6, color: '#2DD4BF', padding: '5px 14px', cursor: 'pointer', fontSize: 11, fontWeight: 700 } }, "\u2B07 Scarica rapporto PDF")));
+}))),
+React.createElement("div", { style: { textAlign: 'center', marginTop: 32, padding: '16px 0', fontSize: 11, color: '#3A3A50', borderTop: '1px solid #1a1a22' } },
+company.name || "Portale",
+" \u00B7 Portale Cliente \u2014 Solo visualizzazione",
+React.createElement("br", null),
+"Per assistenza tecnica contatta il tuo referente"))));
+}
+function TemplateManagerModal({ allTemplates, customTemplates, onNew, onEdit, onDelete, onClose }) {
+const predefiniti = Object.entries(allTemplates).filter(([id, t]) => !t.isCustom);
+const custom = Object.entries(customTemplates || {});
+const ROW = { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "11px 14px", background: "#0F0F14", border: "1px solid #1e2a3a", borderRadius: 9, marginBottom: 7 };
+return (React.createElement("div", null,
+React.createElement("div", { style: { fontSize: 12, color: "#64748b", marginBottom: 16, lineHeight: 1.5, background: "#1e2a3a44", borderRadius: 8, padding: "10px 12px" } }, "Crea template di verifica personalizzati per i tuoi standard specifici (es. EN 60601-2-14, EN 62745). Appariranno nel menu quando crei una nuova verifica funzionale."),
+React.createElement("button", { onClick: onNew, style: Object.assign(Object.assign({}, FORM_BTN_PRIMARY), { width: "100%", marginBottom: 18 }) }, "+ Crea nuovo template"),
+custom.length > 0 && (React.createElement("div", { style: { marginBottom: 18 } },
+React.createElement("div", { style: { fontSize: 11, fontWeight: 800, color: "#2DD4BF", marginBottom: 8, textTransform: "uppercase", letterSpacing: .6 } },
+"I tuoi template (",
+custom.length,
+")"),
+custom.map(([id, t]) => {
+var _a;
+return (React.createElement("div", { key: id, style: ROW },
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, t.label),
+React.createElement("div", { style: { fontSize: 11, color: "#64748b" } },
+t.norm || "Nessuna norma",
+" \u00B7 ",
+((_a = t.sections) === null || _a === void 0 ? void 0 : _a.length) || 0,
+" sezioni")),
+React.createElement("div", { style: { display: "flex", gap: 6, flexShrink: 0 } },
+React.createElement("button", { onClick: () => onEdit(t), style: { background: "#1a1a22", border: "1px solid #2a3040", borderRadius: 6, color: "#5EEAD4", padding: "6px 11px", cursor: "pointer", fontSize: 12, fontWeight: 700 } }, "Modifica"),
+React.createElement("button", { onClick: () => onDelete(id), style: { background: "#ef444415", border: "1px solid #ef444433", borderRadius: 6, color: "#ef4444", padding: "6px 11px", cursor: "pointer", fontSize: 12, fontWeight: 700 } }, "Elimina"))));
+}))),
+React.createElement("div", null,
+React.createElement("div", { style: { fontSize: 11, fontWeight: 800, color: "#64748b", marginBottom: 8, textTransform: "uppercase", letterSpacing: .6 } },
+"Template predefiniti (",
+predefiniti.length,
+")"),
+React.createElement("div", { style: { fontSize: 11, color: "#475569", marginBottom: 8 } }, "Di sola lettura. Per personalizzarli, crea un nuovo template."),
+predefiniti.map(([id, t]) => {
+var _a;
+return (React.createElement("div", { key: id, style: Object.assign(Object.assign({}, ROW), { opacity: .7 }) },
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+React.createElement("div", { style: { fontSize: 12.5, fontWeight: 600, color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, t.label),
+React.createElement("div", { style: { fontSize: 10.5, color: "#475569" } },
+t.norm || "",
+" \u00B7 ",
+((_a = t.sections) === null || _a === void 0 ? void 0 : _a.length) || 0,
+" sezioni")),
+React.createElement("span", { style: { fontSize: 10, color: "#475569", flexShrink: 0 } }, "\uD83D\uDD12 predefinito")));
+})),
+React.createElement("div", { style: FORM_FOOTER },
+React.createElement("button", { onClick: onClose, style: FORM_BTN_GHOST }, "Chiudi"))));
+}
+function ClientReportModal({ customer, assets, iecReports, funcReports, jobs, company, onClose }) {
+const myAssets = React.useMemo(() => assets.filter(a => a.customerId === customer.id), [assets, customer.id]);
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+const STATUS_LABEL = { operativo: "Operativo", "in manutenzione": "In manutenzione", "fuori servizio": "Fuori servizio", dismesso: "Dismesso" };
+const STATUS_COLOR = { operativo: "#22c55e", "in manutenzione": "#f59e0b", "fuori servizio": "#ef4444", dismesso: "#64748b" };
+const totOperativi = myAssets.filter(a => a.status === "operativo" || !a.status).length;
+const totFuoriServizio = myAssets.filter(a => a.status === "fuori servizio").length;
+const scadute = myAssets.filter(a => { if (!a.nextService)
+return false; const d = new Date(a.nextService); d.setHours(0, 0, 0, 0); return d < today; }).length;
+const verificheCliente = iecReports.filter(r => r.customerId === customer.id).length + funcReports.filter(r => r.customerId === customer.id).length;
+const sorted = React.useMemo(() => [...myAssets].sort((a, b) => {
+if (!a.nextService)
+return 1;
+if (!b.nextService)
+return -1;
+return new Date(a.nextService) - new Date(b.nextService);
+}), [myAssets]);
+const Stat = ({ n, label, color }) => (React.createElement("div", { style: { flex: 1, minWidth: 80, background: "#0F0F14", border: "1px solid #1e2a3a", borderRadius: 10, padding: "12px 8px", textAlign: "center" } },
+React.createElement("div", { style: { fontSize: 22, fontWeight: 900, color: color || "#2DD4BF", fontFamily: "monospace" } }, n),
+React.createElement("div", { style: { fontSize: 9, color: "#64748b", textTransform: "uppercase", letterSpacing: .5, marginTop: 4, fontWeight: 700 } }, label)));
+return (React.createElement("div", null,
+React.createElement("div", { style: { marginBottom: 16 } },
+React.createElement("div", { style: { fontSize: 18, fontWeight: 900, color: "#e2e8f0" } }, customer.name),
+React.createElement("div", { style: { fontSize: 12, color: "#64748b", marginTop: 2 } }, [customer.vat && ("P.IVA " + customer.vat), customer.address].filter(Boolean).join(" · ") || "—")),
+React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 } },
+React.createElement(Stat, { n: myAssets.length, label: "Apparecchi" }),
+React.createElement(Stat, { n: totOperativi, label: "Operativi", color: "#22c55e" }),
+React.createElement(Stat, { n: totFuoriServizio, label: "Fuori serv.", color: totFuoriServizio > 0 ? "#ef4444" : "#22c55e" }),
+React.createElement(Stat, { n: scadute, label: "Scadute", color: scadute > 0 ? "#ef4444" : "#22c55e" }),
+React.createElement(Stat, { n: verificheCliente, label: "Verifiche", color: "#a855f7" })),
+React.createElement("div", { style: { fontSize: 11, fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: .6, marginBottom: 8 } },
+"Apparecchi (",
+myAssets.length,
+")"),
+myAssets.length === 0 ? (React.createElement("div", { style: { padding: "20px", textAlign: "center", color: "#64748b", fontSize: 13, background: "#0F0F14", borderRadius: 10 } }, "Nessun apparecchio registrato per questo cliente.")) : (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6, maxHeight: "40vh", overflowY: "auto" } }, sorted.map(a => {
+const st = a.status || "operativo";
+let scadColor = "#64748b", scadNote = "";
+if (a.nextService) {
+const d = new Date(a.nextService);
+d.setHours(0, 0, 0, 0);
+const days = Math.round((d - today) / 86400000);
+if (days < 0) {
+scadColor = "#ef4444";
+scadNote = " (scaduta)";
+}
+else if (days <= 30) {
+scadColor = "#f59e0b";
+scadNote = " (" + days + "gg)";
+}
+}
+return (React.createElement("div", { key: a.id, style: { padding: "10px 12px", background: "#0F0F14", border: "1px solid #1e2a3a", borderRadius: 8, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 } },
+React.createElement("div", { style: { minWidth: 0, flex: 1 } },
+React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: "#e2e8f0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, a.name || "—"),
+React.createElement("div", { style: { fontSize: 11, color: "#64748b", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } },
+[a.brand, a.model].filter(Boolean).join(" "),
+a.serial ? " · SN: " + a.serial : "",
+a.location ? " · " + a.location : "")),
+React.createElement("div", { style: { textAlign: "right", flexShrink: 0 } },
+React.createElement("span", { style: { fontSize: 9.5, fontWeight: 800, padding: "2px 8px", borderRadius: 5, background: STATUS_COLOR[st] + "22", color: STATUS_COLOR[st], textTransform: "uppercase", letterSpacing: .3 } }, STATUS_LABEL[st] || st),
+a.nextService && React.createElement("div", { style: { fontSize: 10, color: scadColor, fontWeight: scadNote ? 700 : 400, marginTop: 4, fontFamily: "monospace" } },
+a.nextService,
+scadNote))));
+}))),
+React.createElement("div", { style: FORM_FOOTER },
+React.createElement("button", { onClick: onClose, style: FORM_BTN_GHOST }, "Chiudi"),
+React.createElement("button", { onClick: () => generateClientReportPDF(customer, assets, iecReports, funcReports, jobs, company), style: FORM_BTN_PRIMARY }, "\uD83D\uDDA8 Scarica PDF"))));
+}
+function StickerModal({ report, asset, customer, company, kind, onClose }) {
+const isAssetSticker = kind === "asset";
+const cfg = (typeof getSupabaseConfig === "function") ? getSupabaseConfig() : { url: "" };
+const supaActive = !!(cfg && cfg.url);
+const dateStr = report.date || new Date().toISOString().slice(0, 10);
+const reportNum = report.reportNumber || report.report_number || (kind === "iec" ? "VSE" : "VF");
+const esito = (report.overallPass !== undefined ? report.overallPass : report.overall_pass) ? "CONFORME" : "NON CONFORME";
+const esitoOk = (report.overallPass !== undefined ? report.overallPass : report.overall_pass);
+const verLabel = kind === "iec" ? "Verifica Sicurezza Elettrica" : "Verifica Funzionale";
+const norm = report.norm || (kind === "iec" ? "IEC 62353" : "IEC 60601");
+const nextDueStr = (() => {
+const explicit = report.nextDate || report.next_date;
+if (explicit)
+return explicit;
+if (!dateStr)
+return "";
+const d = new Date(dateStr);
+if (isNaN(d.getTime()))
+return "";
+let months;
+if (kind === "iec") {
+const iv = parseInt(asset === null || asset === void 0 ? void 0 : asset.intervalIec, 10);
+months = (iv && iv > 0) ? iv : 12;
+}
+else {
+const iv = parseInt(asset === null || asset === void 0 ? void 0 : asset.intervalFunc, 10);
+months = (iv && iv > 0) ? iv : 12;
+}
+d.setMonth(d.getMonth() + months);
+return d.toISOString().slice(0, 10);
+})();
+const nextLabel = kind === "iec" ? "Prossima sicurezza elettrica" : "Prossima funzionale";
+const appOrigin = (() => { try {
+return window.location.origin + window.location.pathname.replace(/\/+$/, "");
+}
+catch (e) {
+return "";
+} })();
+const assetUrl = (appOrigin ? appOrigin : "") + "/?asset=" + ((asset === null || asset === void 0 ? void 0 : asset.id) || "");
+const reportUrl = supaActive
+? (cfg.url.replace(/\/+$/, "") + "/report/" + (report.id || ""))
+: null;
+const qrText = isAssetSticker
+? assetUrl
+: (reportUrl || [
+((asset === null || asset === void 0 ? void 0 : asset.name) || "Apparecchio").slice(0, 30),
+"SN:" + ((asset === null || asset === void 0 ? void 0 : asset.serial) || "-").slice(0, 20),
+reportNum + " " + dateStr,
+esito,
+].filter(Boolean).join(String.fromCharCode(10)));
+const qrSvg = React.useMemo(() => {
+try {
+return QRGen.toSVG(qrText, { scale: 4, margin: 1, color: "#000000", bg: "#ffffff" });
+}
+catch (e) {
+return null;
+}
+}, [qrText]);
+const doPrint = () => {
+const w = window.open("", "_blank", "width=400,height=600");
+if (!w) {
+alert("Abilita i popup per stampare lo sticker.");
+return;
+}
+w.document.write(`<!DOCTYPE html><html><head><title>Sticker ${reportNum}</title>
+<style>
+@page { margin: 0; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, Arial, sans-serif; padding: 8px; }
+.sticker { width: 70mm; border: 1.5px solid #000; border-radius: 6px; padding: 10px; display:flex; gap:11px; align-items:center; }
+.qr { width: 24mm; height: 24mm; flex-shrink:0; }
+.qr svg { width:100%; height:100%; display:block; }
+.info { flex:1; min-width:0; }
+.title { font-size: 7pt; font-weight: 800; text-transform: uppercase; letter-spacing:.4px; color:#555; }
+.machine { font-size: 11pt; font-weight: 900; margin: 1px 0 3px; line-height:1.12; word-break:break-word; }
+.hr { height:1px; background:#ccc; margin:3px 0; }
+.row { font-size: 7.5pt; color:#222; line-height:1.5; }
+.esito { display:inline-block; font-size:8pt; font-weight:900; padding:2px 9px; border-radius:4px; margin-top:4px; letter-spacing:.5px;
+background:${esitoOk ? "#16a34a" : "#dc2626"}; color:#fff; }
+@media print { body { padding:0; } .noprint { display:none; } }
+</style></head><body><div class="wrap"><div class="side"></div><div class="main">
+<div class="sticker">
+<div class="qr">${qrSvg || ""}</div>
+<div class="info">
+${isAssetSticker ? `
+<div class="title">Apparecchiatura</div>
+<div class="machine">${(asset === null || asset === void 0 ? void 0 : asset.name) || "Apparecchio"}</div>
+<div class="hr"></div>
+${(asset === null || asset === void 0 ? void 0 : asset.brand) || (asset === null || asset === void 0 ? void 0 : asset.model) ? `<div class="row">${[asset === null || asset === void 0 ? void 0 : asset.brand, asset === null || asset === void 0 ? void 0 : asset.model].filter(Boolean).join(" ")}</div>` : ""}
+<div class="row">S/N: <b>${(asset === null || asset === void 0 ? void 0 : asset.serial) || "—"}</b></div>
+${(customer === null || customer === void 0 ? void 0 : customer.name) ? `<div class="row">${customer.name}</div>` : ""}
+<div class="row">Codice: <b>${(asset === null || asset === void 0 ? void 0 : asset.assetCode) || (asset === null || asset === void 0 ? void 0 : asset.id) || "—"}</b></div>
+<div class="row" style="margin-top:3px;font-size:6.5pt;color:#777">Inquadra per aprire la scheda</div>
+` : `
+<div class="title">${verLabel}</div>
+<div class="machine">${(asset === null || asset === void 0 ? void 0 : asset.name) || "Apparecchio"}</div>
+<div class="hr"></div>
+<div class="row">S/N: <b>${(asset === null || asset === void 0 ? void 0 : asset.serial) || "—"}</b></div>
+<div class="row">${reportNum} &middot; ${dateStr}</div>
+<div class="row">${norm}</div>
+${nextDueStr ? `<div class="row" style="margin-top:2px"><b>${nextLabel}:</b> ${nextDueStr}</div>` : ""}
+<div class="esito">${esito}</div>
+`}
+</div>
+</div>
+<script>window.onload=function(){setTimeout(function(){window.print();},300);};</script>
+</div></div></body></html>`);
+w.document.close();
+};
+return (React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", justifyContent: "center", marginBottom: 18 } },
+React.createElement("div", { style: { width: 360, maxWidth: "100%", border: "2px solid #2a3040", borderRadius: 12, padding: 16, display: "flex", gap: 16, alignItems: "center", background: "#fff" } },
+React.createElement("div", { style: { width: 104, height: 104, flexShrink: 0 }, dangerouslySetInnerHTML: { __html: qrSvg || "" } }),
+React.createElement("div", { style: { flex: 1, minWidth: 0, color: "#000", display: "flex", flexDirection: "column", gap: 3 } }, isAssetSticker ? (React.createElement(React.Fragment, null,
+React.createElement("div", { style: { fontSize: 8.5, fontWeight: 800, textTransform: "uppercase", letterSpacing: .4, color: "#666" } }, "Apparecchiatura"),
+React.createElement("div", { style: { fontSize: 16, fontWeight: 900, lineHeight: 1.15, color: "#000", wordBreak: "break-word" } }, (asset === null || asset === void 0 ? void 0 : asset.name) || "Apparecchio"),
+React.createElement("div", { style: { height: 1, background: "#e5e7eb", margin: "3px 0" } }),
+((asset === null || asset === void 0 ? void 0 : asset.brand) || (asset === null || asset === void 0 ? void 0 : asset.model)) && React.createElement("div", { style: { fontSize: 11, color: "#333", lineHeight: 1.4 } }, [asset === null || asset === void 0 ? void 0 : asset.brand, asset === null || asset === void 0 ? void 0 : asset.model].filter(Boolean).join(" ")),
+React.createElement("div", { style: { fontSize: 11, color: "#333", lineHeight: 1.4 } },
+"S/N: ",
+React.createElement("strong", null, (asset === null || asset === void 0 ? void 0 : asset.serial) || "—")),
+(customer === null || customer === void 0 ? void 0 : customer.name) && React.createElement("div", { style: { fontSize: 11, color: "#333", lineHeight: 1.4 } }, customer.name),
+React.createElement("div", { style: { fontSize: 11, color: "#333", lineHeight: 1.4 } },
+"ID: ",
+React.createElement("strong", null, (asset === null || asset === void 0 ? void 0 : asset.id) || "—")),
+React.createElement("div", { style: { fontSize: 9, color: "#777", marginTop: 3 } }, "Inquadra per aprire la scheda"))) : (React.createElement(React.Fragment, null,
+React.createElement("div", { style: { fontSize: 8.5, fontWeight: 800, textTransform: "uppercase", letterSpacing: .4, color: "#666" } }, verLabel),
+React.createElement("div", { style: { fontSize: 16, fontWeight: 900, lineHeight: 1.15, color: "#000", wordBreak: "break-word" } }, (asset === null || asset === void 0 ? void 0 : asset.name) || "Apparecchio"),
+React.createElement("div", { style: { height: 1, background: "#e5e7eb", margin: "3px 0" } }),
+React.createElement("div", { style: { fontSize: 11, color: "#333", lineHeight: 1.4 } },
+"S/N: ",
+React.createElement("strong", null, (asset === null || asset === void 0 ? void 0 : asset.serial) || "—")),
+React.createElement("div", { style: { fontSize: 11, color: "#333", lineHeight: 1.4 } },
+reportNum,
+" \u00B7 ",
+dateStr),
+React.createElement("div", { style: { fontSize: 10.5, color: "#666" } }, norm),
+nextDueStr && React.createElement("div", { style: { fontSize: 11, color: "#0F172A", lineHeight: 1.4, marginTop: 2 } },
+React.createElement("strong", null,
+nextLabel,
+":"),
+" ",
+nextDueStr),
+React.createElement("div", { style: { display: "inline-block", alignSelf: "flex-start", fontSize: 10, fontWeight: 900, padding: "3px 10px", borderRadius: 5, marginTop: 5,
+background: esitoOk ? "#16a34a" : "#dc2626", color: "#fff", letterSpacing: .5 } }, esito)))))),
+React.createElement("div", { style: { fontSize: 11.5, color: "#64748b", lineHeight: 1.5, background: "#1e2a3a44", borderRadius: 8, padding: "10px 12px", marginBottom: 16 } }, isAssetSticker
+? React.createElement("span", null,
+React.createElement("strong", { style: { color: "#2DD4BF" } }, "Sticker apparecchio:"),
+" inquadrando il QR con la fotocamera del telefono si apre l'app sulla scheda di questo apparecchio. Funziona se l'app \u00E8 installata/aperta su quel dispositivo.")
+: (supaActive
+? React.createElement("span", null,
+React.createElement("strong", { style: { color: "#2DD4BF" } }, "QR online:"),
+" scansionando si aprir\u00E0 il report sul cloud.")
+: React.createElement("span", null,
+React.createElement("strong", { style: { color: "#f59e0b" } }, "QR offline:"),
+" contiene le info della verifica (macchina, data, esito). Per far aprire il report online dal QR, attiva la sincronizzazione cloud nelle Impostazioni."))),
+React.createElement("div", { style: FORM_FOOTER },
+React.createElement("button", { onClick: onClose, style: FORM_BTN_GHOST }, "Chiudi"),
+React.createElement("button", { onClick: doPrint, style: FORM_BTN_PRIMARY }, "\uD83D\uDDA8 Stampa sticker"))));
+}
+function TemplateEditor({ initial, existingTemplates, onSave, onClose }) {
+const [tpl, setTpl] = React.useState(() => initial ? JSON.parse(JSON.stringify(initial)) : blankTemplate());
+const [errors, setErrors] = React.useState({});
+const setField = (k, v) => setTpl(t => (Object.assign(Object.assign({}, t), { [k]: v })));
+const addSection = () => setTpl(t => (Object.assign(Object.assign({}, t), { sections: [...t.sections, { id: "sez" + Date.now(), title: "", items: [], measures: [] }] })));
+const removeSection = (si) => setTpl(t => (Object.assign(Object.assign({}, t), { sections: t.sections.filter((_, i) => i !== si) })));
+const setSectionField = (si, k, v) => setTpl(t => {
+const sections = [...t.sections];
+sections[si] = Object.assign(Object.assign({}, sections[si]), { [k]: v });
+return Object.assign(Object.assign({}, t), { sections });
+});
+const addItem = (si) => setTpl(t => {
+const sections = [...t.sections];
+sections[si] = Object.assign(Object.assign({}, sections[si]), { items: [...(sections[si].items || []), { id: "item" + Date.now(), text: "" }] });
+return Object.assign(Object.assign({}, t), { sections });
+});
+const removeItem = (si, ii) => setTpl(t => {
+const sections = [...t.sections];
+sections[si] = Object.assign(Object.assign({}, sections[si]), { items: sections[si].items.filter((_, i) => i !== ii) });
+return Object.assign(Object.assign({}, t), { sections });
+});
+const setItemText = (si, ii, v) => setTpl(t => {
+const sections = [...t.sections];
+const items = [...sections[si].items];
+items[ii] = Object.assign(Object.assign({}, items[ii]), { text: v });
+sections[si] = Object.assign(Object.assign({}, sections[si]), { items });
+return Object.assign(Object.assign({}, t), { sections });
+});
+const addMeasure = (si) => setTpl(t => {
+const sections = [...t.sections];
+sections[si] = Object.assign(Object.assign({}, sections[si]), { measures: [...(sections[si].measures || []), { id: "meas" + Date.now(), name: "", unit: "", expected: "", limitMin: "", limitVal: "", value: "" }] });
+return Object.assign(Object.assign({}, t), { sections });
+});
+const removeMeasure = (si, mi) => setTpl(t => {
+const sections = [...t.sections];
+sections[si] = Object.assign(Object.assign({}, sections[si]), { measures: sections[si].measures.filter((_, i) => i !== mi) });
+return Object.assign(Object.assign({}, t), { sections });
+});
+const setMeasureField = (si, mi, k, v) => setTpl(t => {
+const sections = [...t.sections];
+const measures = [...sections[si].measures];
+measures[mi] = Object.assign(Object.assign({}, measures[mi]), { [k]: v });
+sections[si] = Object.assign(Object.assign({}, sections[si]), { measures });
+return Object.assign(Object.assign({}, t), { sections });
+});
+const handleSave = () => {
+var _a;
+const errs = {};
+if (!((_a = tpl.label) === null || _a === void 0 ? void 0 : _a.trim()))
+errs.label = "Il nome del template è obbligatorio";
+if (!tpl.sections.length)
+errs.sections = "Aggiungi almeno una sezione";
+tpl.sections.forEach((s, i) => {
+var _a;
+if (!((_a = s.title) === null || _a === void 0 ? void 0 : _a.trim()))
+errs["sec" + i] = "La sezione " + (i + 1) + " non ha titolo";
+const hasContent = (s.items || []).some(it => { var _a; return (_a = it.text) === null || _a === void 0 ? void 0 : _a.trim(); }) || (s.measures || []).some(m => { var _a; return (_a = m.name) === null || _a === void 0 ? void 0 : _a.trim(); });
+if (!hasContent)
+errs["secempty" + i] = "La sezione " + (s.title || (i + 1)) + " è vuota (aggiungi controlli o misure)";
+});
+const dupe = Object.values(existingTemplates || {}).find(x => { var _a, _b; return ((_a = x.label) === null || _a === void 0 ? void 0 : _a.toLowerCase().trim()) === ((_b = tpl.label) === null || _b === void 0 ? void 0 : _b.toLowerCase().trim()) && x.id !== tpl.id; });
+if (dupe)
+errs.label = "Esiste già un template con questo nome";
+setErrors(errs);
+if (Object.keys(errs).length)
+return;
+const clean = Object.assign(Object.assign({}, tpl), { sections: tpl.sections.map(s => (Object.assign(Object.assign({}, s), { items: (s.items || []).filter(it => { var _a; return (_a = it.text) === null || _a === void 0 ? void 0 : _a.trim(); }), measures: (s.measures || []).map(m => (Object.assign(Object.assign({}, m), { limitMin: m.limitMin === "" ? undefined : parseFloat(m.limitMin), limitVal: m.limitVal === "" ? undefined : parseFloat(m.limitVal) }))).filter(m => { var _a; return (_a = m.name) === null || _a === void 0 ? void 0 : _a.trim(); }) }))) });
+onSave(clean);
+};
+const SEC_BOX = { background: "#0F0F14", border: "1px solid #1e2a3a", borderRadius: 10, padding: 14, marginBottom: 14 };
+const MINI_BTN = { background: "#1a1a22", border: "1px solid #2a3040", borderRadius: 6, color: "#94a3b8", padding: "5px 10px", cursor: "pointer", fontSize: 11.5, fontWeight: 700 };
+const DEL_BTN = { background: "#ef444415", border: "1px solid #ef444433", borderRadius: 6, color: "#ef4444", padding: "4px 9px", cursor: "pointer", fontSize: 12, fontWeight: 700, flexShrink: 0 };
+return (React.createElement("div", null,
+React.createElement(ErrorSummary, { errors: errors }),
+React.createElement("div", { style: FORM_ROW },
+React.createElement("div", { style: FORM_COL },
+React.createElement("label", { style: FORM_LBL }, "Nome template *"),
+React.createElement("input", { style: Object.assign(Object.assign({}, FORM_INP), errorBorderStyle(errors.label)), value: tpl.label, onChange: e => setField("label", e.target.value), placeholder: "es. Defibrillatore EN 62745" })),
+React.createElement("div", { style: FORM_COL },
+React.createElement("label", { style: FORM_LBL }, "Norma di riferimento"),
+React.createElement("input", { style: FORM_INP, value: tpl.norm, onChange: e => setField("norm", e.target.value), placeholder: "es. EN 62745" }))),
+React.createElement("div", { style: { fontSize: 11, color: "#64748b", marginBottom: 14, lineHeight: 1.5, background: "#1e2a3a44", borderRadius: 8, padding: "10px 12px" } },
+"Costruisci il template aggiungendo ",
+React.createElement("strong", { style: { color: "#94a3b8" } }, "sezioni"),
+". Ogni sezione pu\u00F2 contenere",
+React.createElement("strong", { style: { color: "#5EEAD4" } }, " controlli s\u00EC/no"),
+" (ispezioni visive, funzionali) e",
+React.createElement("strong", { style: { color: "#a855f7" } }, " misure numeriche"),
+" (valori con limiti di accettazione)."),
+tpl.sections.map((sec, si) => (React.createElement("div", { key: sec.id, style: SEC_BOX },
+React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center", marginBottom: 12 } },
+React.createElement("span", { style: { fontSize: 11, fontWeight: 800, color: "#2DD4BF", flexShrink: 0 } },
+"SEZIONE ",
+si + 1),
+React.createElement("input", { style: Object.assign(Object.assign({}, FORM_INP), { padding: "8px 11px" }), value: sec.title, onChange: e => setSectionField(si, "title", e.target.value), placeholder: "Titolo sezione (es. Ispezione visiva)" }),
+React.createElement("button", { onClick: () => removeSection(si), style: DEL_BTN, title: "Elimina sezione" }, "\u2715")),
+React.createElement("input", { style: Object.assign(Object.assign({}, FORM_INP), { padding: "7px 11px", fontSize: 12, marginBottom: 12, fontStyle: "italic" }), value: sec.note || "", onChange: e => setSectionField(si, "note", e.target.value), placeholder: "Nota/istruzioni per questa sezione (opzionale)" }),
+(sec.items || []).length > 0 && (React.createElement("div", { style: { marginBottom: 10 } },
+React.createElement("div", { style: { fontSize: 10, color: "#5EEAD4", fontWeight: 700, marginBottom: 6, textTransform: "uppercase", letterSpacing: .5 } }, "\u2713 Controlli s\u00EC / no"),
+sec.items.map((it, ii) => (React.createElement("div", { key: it.id, style: { display: "flex", gap: 6, marginBottom: 6, alignItems: "center" } },
+React.createElement("span", { style: { color: "#475569", fontSize: 12, flexShrink: 0 } },
+ii + 1,
+"."),
+React.createElement("input", { style: Object.assign(Object.assign({}, FORM_INP), { padding: "7px 10px", fontSize: 13 }), value: it.text, onChange: e => setItemText(si, ii, e.target.value), placeholder: "Descrizione del controllo" }),
+React.createElement("button", { onClick: () => removeItem(si, ii), style: DEL_BTN, title: "Rimuovi" }, "\u2715")))))),
+(sec.measures || []).length > 0 && (React.createElement("div", { style: { marginBottom: 10 } },
+React.createElement("div", { style: { fontSize: 10, color: "#a855f7", fontWeight: 700, marginBottom: 6, textTransform: "uppercase", letterSpacing: .5 } }, "\u00B1 Misure numeriche"),
+sec.measures.map((m, mi) => (React.createElement("div", { key: m.id, style: { background: "#141418", border: "1px solid #2a3040", borderRadius: 8, padding: 10, marginBottom: 8 } },
+React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 7, alignItems: "center" } },
+React.createElement("input", { style: Object.assign(Object.assign({}, FORM_INP), { padding: "7px 10px", fontSize: 13 }), value: m.name, onChange: e => setMeasureField(si, mi, "name", e.target.value), placeholder: "Nome misura (es. Energia erogata)" }),
+React.createElement("button", { onClick: () => removeMeasure(si, mi), style: DEL_BTN, title: "Rimuovi" }, "\u2715")),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(90px,1fr))", gap: 6 } },
+React.createElement("input", { style: Object.assign(Object.assign({}, FORM_INP), { padding: "6px 9px", fontSize: 12 }), value: m.unit, onChange: e => setMeasureField(si, mi, "unit", e.target.value), placeholder: "Unit\u00E0 (J, V, \u00B5A)" }),
+React.createElement("input", { style: Object.assign(Object.assign({}, FORM_INP), { padding: "6px 9px", fontSize: 12 }), value: m.expected, onChange: e => setMeasureField(si, mi, "expected", e.target.value), placeholder: "Atteso (testo)" }),
+React.createElement("input", { style: Object.assign(Object.assign({}, FORM_INP), { padding: "6px 9px", fontSize: 12 }), type: "number", value: m.limitMin, onChange: e => setMeasureField(si, mi, "limitMin", e.target.value), placeholder: "Min" }),
+React.createElement("input", { style: Object.assign(Object.assign({}, FORM_INP), { padding: "6px 9px", fontSize: 12 }), type: "number", value: m.limitVal, onChange: e => setMeasureField(si, mi, "limitVal", e.target.value), placeholder: "Max" }))))))),
+React.createElement("div", { style: { display: "flex", gap: 8, marginTop: 10 } },
+React.createElement("button", { onClick: () => addItem(si), style: Object.assign(Object.assign({}, MINI_BTN), { color: "#5EEAD4", borderColor: "#2DD4BF33" }) }, "+ Controllo s\u00EC/no"),
+React.createElement("button", { onClick: () => addMeasure(si), style: Object.assign(Object.assign({}, MINI_BTN), { color: "#a855f7", borderColor: "#a855f733" }) }, "+ Misura numerica"))))),
+React.createElement("button", { onClick: addSection, style: Object.assign(Object.assign({}, FORM_BTN_GHOST), { width: "100%", marginBottom: 8, borderStyle: "dashed" }) }, "+ Aggiungi sezione"),
+React.createElement("div", { style: FORM_FOOTER },
+React.createElement("button", { onClick: onClose, style: FORM_BTN_GHOST }, "Annulla"),
+React.createElement("button", { onClick: handleSave, style: FORM_BTN_PRIMARY }, initial ? "Salva modifiche" : "Crea template"))));
+}
+function RichiestePage({ richieste, assets, customers, onConvert, onRefresh, online }) {
+const [busyId, setBusyId] = React.useState(null);
+const [filter, setFilter] = React.useState("attive");
+const assetLabel = (aid) => { const a = (assets || []).find(x => x.id === aid); return a ? (a.name + (a.serial ? (" · S/N " + a.serial) : "")) : "Apparecchio non trovato"; };
+const custLabel = (cid) => { const c = (customers || []).find(x => x.id === cid); return c ? c.name : ""; };
+const URGC = { normale: "#94a3b8", urgente: "#f59e0b", fermo_macchina: "#ef4444" };
+const URGL = { normale: "Normale", urgente: "Urgente", fermo_macchina: "Fermo macchina" };
+const STL = { nuova: "Nuova", presa_in_carico: "Presa in carico", convertita: "Convertita", chiusa: "Chiusa" };
+const STC = { nuova: "#2DD4BF", presa_in_carico: "#f59e0b", convertita: "#22c55e", chiusa: "#64748b" };
+const fmt = (iso) => { if (!iso)
+return "—"; try {
+return new Date(iso).toLocaleString("it-IT", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+catch (e) {
+return iso;
+} };
+let rows = (richieste || []).filter(r => filter === "tutte" ? true : (r.status === "nuova" || r.status === "presa_in_carico"));
+rows = rows.slice().sort((a, b) => ((a.status === "nuova" ? 0 : 1) - (b.status === "nuova" ? 0 : 1)) || (new Date(b.created_at) - new Date(a.created_at)));
+const doConvert = (r) => __awaiter(this, void 0, void 0, function* () { setBusyId(r.id); try {
+yield onConvert(r);
+}
+finally {
+setBusyId(null);
+} });
+const setStatus = (r, status) => __awaiter(this, void 0, void 0, function* () { setBusyId(r.id); try {
+yield supaDB.update("richieste", r.id, { status });
+}
+catch (e) { } yield onRefresh(); setBusyId(null); });
+return (React.createElement("div", { style: { maxWidth: 780, margin: "0 auto" } },
+React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14, gap: 10, flexWrap: "wrap" } },
+React.createElement("div", null,
+React.createElement("div", { style: { fontSize: 20, fontWeight: 900, color: "#e2e8f0" } }, "Richieste clienti"),
+React.createElement("div", { style: { fontSize: 12, color: "#64748b", marginTop: 2 } }, "Richieste di intervento arrivate dal portale")),
+React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center" } },
+React.createElement("div", { style: { display: "flex", background: "#141418", border: "1px solid #1e2a3a", borderRadius: 9, overflow: "hidden" } }, [{ v: "attive", l: "Da gestire" }, { v: "tutte", l: "Tutte" }].map(o => (React.createElement("button", { key: o.v, onClick: () => setFilter(o.v), style: { background: filter === o.v ? "#2DD4BF22" : "transparent", color: filter === o.v ? "#2DD4BF" : "#94a3b8", border: "none", padding: "8px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, o.l)))),
+React.createElement("button", { onClick: onRefresh, title: "Aggiorna", style: { background: "#141418", border: "1px solid #2a3040", color: "#94a3b8", borderRadius: 9, padding: "8px 13px", fontSize: 14, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\u21BB"))),
+!online && React.createElement("div", { style: { padding: "12px 14px", background: "#f59e0b18", border: "1px solid #f59e0b55", borderRadius: 10, color: "#f59e0b", fontSize: 12, marginBottom: 14 } }, "Le richieste arrivano dal cloud: serve la connessione e l'accesso."),
+rows.length === 0 ? (React.createElement("div", { style: { padding: "30px 20px", textAlign: "center", color: "#64748b", fontSize: 13, background: "#0F0F14", border: "1px dashed #1e2a3a", borderRadius: 12 } }, filter === "attive" ? "Nessuna richiesta da gestire." : "Nessuna richiesta.")) : (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12 } }, rows.map(r => {
+const busy = busyId === r.id;
+const done = r.status === "convertita" || r.status === "chiusa";
+return (React.createElement("div", { key: r.id, style: { background: "#141418", border: "1px solid #1e2a3a", borderLeft: "3px solid " + (STC[r.status] || "#64748b"), borderRadius: 12, padding: "14px 16px" } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10, marginBottom: 6, flexWrap: "wrap" } },
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+React.createElement("div", { style: { fontSize: 15, fontWeight: 800, color: "#e2e8f0" } }, assetLabel(r.asset_id)),
+custLabel(r.customer_id) && React.createElement("div", { style: { fontSize: 12, color: "#94a3b8", marginTop: 2 } },
+"\uD83C\uDFE2 ",
+custLabel(r.customer_id))),
+React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } },
+React.createElement("span", { style: { background: (URGC[r.urgency] || "#94a3b8") + "22", color: URGC[r.urgency] || "#94a3b8", border: "1px solid " + (URGC[r.urgency] || "#94a3b8") + "55", borderRadius: 6, padding: "3px 8px", fontSize: 10, fontWeight: 700 } }, URGL[r.urgency] || r.urgency),
+React.createElement("span", { style: { background: (STC[r.status] || "#64748b") + "22", color: STC[r.status] || "#64748b", border: "1px solid " + (STC[r.status] || "#64748b") + "55", borderRadius: 6, padding: "3px 8px", fontSize: 10, fontWeight: 700 } }, STL[r.status] || r.status))),
+React.createElement("div", { style: { fontSize: 11, color: "#64748b", marginBottom: 8 } }, fmt(r.created_at)),
+r.description && React.createElement("div", { style: { fontSize: 13, color: "#e2e8f0", lineHeight: 1.5, marginBottom: 10, whiteSpace: "pre-wrap" } }, r.description),
+r.photo && React.createElement("img", { src: r.photo, alt: "", style: { maxWidth: "100%", maxHeight: 240, borderRadius: 8, border: "1px solid #1e2a3a", marginBottom: 10, display: "block" } }),
+r.contact && React.createElement("div", { style: { fontSize: 12, color: "#94a3b8", marginBottom: 10 } },
+"\uD83D\uDCDE ",
+r.contact),
+React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
+!done && React.createElement("button", { disabled: busy, onClick: () => doConvert(r), style: { background: busy ? "#2a3040" : "#2DD4BF", color: busy ? "#64748b" : "#0a0a0f", border: "none", borderRadius: 8, padding: "9px 14px", fontSize: 13, fontWeight: 800, cursor: busy ? "default" : "pointer", touchAction: "manipulation" } }, busy ? "…" : "→ Converti in Job"),
+r.status === "nuova" && React.createElement("button", { disabled: busy, onClick: () => setStatus(r, "presa_in_carico"), style: { background: "transparent", color: "#f59e0b", border: "1px solid #f59e0b55", borderRadius: 8, padding: "9px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "Presa in carico"),
+!done && React.createElement("button", { disabled: busy, onClick: () => setStatus(r, "chiusa"), style: { background: "transparent", color: "#94a3b8", border: "1px solid #2a3040", borderRadius: 8, padding: "9px 14px", fontSize: 13, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "Ignora"))));
+})))));
+}
+function AppMain() {
+var _a, _b, _c, _d, _e;
+const isMobile = useMedia("(max-width:768px)");
+React.useEffect(() => {
+if (document.getElementById("mt-global-keyframes"))
+return;
+const style = document.createElement("style");
+style.id = "mt-global-keyframes";
+style.textContent = `
+@keyframes mtShake {
+10%, 90% { transform: translateX(-2px); }
+20%, 80% { transform: translateX(4px); }
+30%, 50%, 70% { transform: translateX(-6px); }
+40%, 60% { transform: translateX(6px); }
+}
+@keyframes mtFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes mtSpin { to { transform: rotate(360deg); } }
+/* Focus eleganti sui campi form */
+input:focus, select:focus, textarea:focus {
+border-color: #2DD4BF !important;
+box-shadow: 0 0 0 3px #2DD4BF22 !important;
+}
+/* Placeholder più leggibili */
+input::placeholder, textarea::placeholder { color: #475569; }
+/* Niente flash blu al tocco su mobile */
+* { -webkit-tap-highlight-color: transparent; }
+/* Feedback al tocco sui pulsanti: si "premono" davvero */
+button { transition: filter .12s ease, transform .08s ease; }
+button:active:not(:disabled) { transform: scale(0.97); filter: brightness(1.08); }
+button:disabled { cursor: not-allowed; opacity: .55; }
+/* Classe per dare lo stesso feedback a card/elementi cliccabili (non-button) */
+.mt-tap { transition: transform .08s ease, filter .12s ease; }
+.mt-tap:active { transform: scale(0.985); filter: brightness(1.05); }
+/* Hover righe tabella */
+.mt-table-row:hover { background: #16202e !important; }
+/* Scrollbar discrete e arrotondate (rifinitura) */
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2a2a38; border-radius: 8px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-thumb:hover { background: #3a3a4c; }
+* { scrollbar-width: thin; scrollbar-color: #2a2a38 transparent; }
+`;
+document.head.appendChild(style);
+}, []);
+const _emptyData = {
+assets: [], parts: [], jobs: [], orders: [], withdrawals: [],
+customers: [], invoices: [], quotes: [], instruments: [], procedures: [],
+company: { name: "MedTrace", subtitle: "Gestione Apparecchiature Elettromedicali", address: "", vat: "", iban: "", invoicePrefix: "F" }
+};
+const initialData = (typeof DEMO_LOCKED !== "undefined" && DEMO_LOCKED && typeof DEMO_SEED !== "undefined" && DEMO_SEED) ? DEMO_SEED : (loadData() || _emptyData);
+const [quotes, setQuotes] = React.useState(initialData.quotes || []);
+const [instruments, setInstruments] = React.useState(initialData.instruments || []);
+React.useEffect(() => { _instrumentsRegistry = instruments || []; }, [instruments]);
+const [procedures, setProcedures] = React.useState(initialData.procedures || []);
+const [portalMode, setPortalMode] = React.useState(false);
+const [tab, setTab] = React.useState("dashboard");
+const [assets, setAssets] = React.useState(initialData.assets);
+const [parts, setParts] = React.useState(initialData.parts);
+const [jobs, setJobs] = React.useState(initialData.jobs);
+const [orders, setOrders] = React.useState(initialData.orders);
+const [withdrawals, setWDs] = React.useState(initialData.withdrawals);
+const [customers, setCustomers] = React.useState(initialData.customers || []);
+React.useEffect(() => {
+if (!assets || assets.length === 0)
+return;
+const mancano = assets.some(a => !a.assetCode);
+if (!mancano)
+return;
+setAssets(prev => ensureAssetCodes(prev, customers));
+}, [assets, customers]);
+const [invoices, setInvoices] = React.useState(initialData.invoices || []);
+const [iecReports, setIecReports] = React.useState(initialData.iecReports || []);
+const [funcReports, setFuncReports] = React.useState(initialData.funcReports || []);
+const CESTINO_VUOTO = { assets: [], parts: [], jobs: [], orders: [], withdrawals: [], customers: [], invoices: [], quotes: [], instruments: [], procedures: [], iecReports: [], funcReports: [] };
+const [cestino, setCestino] = React.useState(initialData.cestino || CESTINO_VUOTO);
+React.useEffect(() => {
+const LIMITE_MS = 90 * 24 * 60 * 60 * 1000;
+const ora = Date.now();
+setCestino(prev => {
+let cambiato = false;
+const nuovo = {};
+for (const tipo of Object.keys(prev || {})) {
+const tenuti = (prev[tipo] || []).filter(r => {
+if (!r.deletedAt)
+return true;
+const eta = ora - (Date.parse(r.deletedAt) || ora);
+if (eta > LIMITE_MS) {
+cambiato = true;
+return false;
+}
+return true;
+});
+nuovo[tipo] = tenuti;
+}
+return cambiato ? nuovo : prev;
+});
+}, []);
+const [customTemplates, setCustomTemplates] = React.useState(() => loadCustomTemplates());
+React.useEffect(() => { saveCustomTemplates(customTemplates); }, [customTemplates]);
+const allTemplates = React.useMemo(() => getAllTemplates(customTemplates), [customTemplates]);
+const [company, setCompany] = React.useState(() => {
+const stored = initialData.company || { name: "", subtitle: "", invoicePrefix: "F" };
+if (stored.name && /4[sS]ervice/.test(stored.name)) {
+return Object.assign(Object.assign({}, stored), { name: "", subtitle: "" });
+}
+if (stored.name === "MedTrace" && /Gestione Apparecchiature/i.test(stored.subtitle || "")) {
+return Object.assign(Object.assign({}, stored), { name: "", subtitle: "" });
+}
+return stored;
+});
+const [userRole, setUserRole] = React.useState(() => {
+const isOffline = (typeof OFFLINE_MODE !== "undefined" && OFFLINE_MODE);
+const isDemo = (typeof DEMO_LOCKED !== "undefined" && DEMO_LOCKED);
+if (isOffline || isDemo)
+return "superuser";
+try {
+const saved = localStorage.getItem("medtrace-user-role");
+if (saved)
+return saved;
+}
+catch (e) { }
+return null;
+});
+const isSuperuser = userRole === "superuser";
+const isAdmin = userRole === "superuser" || userRole === "admin";
+React.useEffect(() => {
+const isOffline = (typeof OFFLINE_MODE !== "undefined" && OFFLINE_MODE);
+const isDemo = (typeof DEMO_LOCKED !== "undefined" && DEMO_LOCKED);
+if (isOffline || isDemo)
+return;
+let annullato = false;
+(() => __awaiter(this, void 0, void 0, function* () {
+try {
+if (typeof supabaseGetRole !== "function")
+return;
+const role = yield supabaseGetRole();
+if (annullato)
+return;
+if (role) {
+setUserRole(role);
+try {
+localStorage.setItem("medtrace-user-role", role);
+}
+catch (e) { }
+}
+else {
+let saved = null;
+try {
+saved = localStorage.getItem("medtrace-user-role");
+}
+catch (e) { }
+setUserRole(prev => prev || saved || "tecnico");
+}
+}
+catch (e) {
+if (annullato)
+return;
+let saved = null;
+try {
+saved = localStorage.getItem("medtrace-user-role");
+}
+catch (e2) { }
+setUserRole(prev => prev || saved || "tecnico");
+}
+}))();
+return () => { annullato = true; };
+}, []);
+const canSee = (sectionId) => {
+if (userRole === "superuser")
+return true;
+const custom = (company && company.rolePermissions) || null;
+const perms = (custom && custom[userRole]) || DEFAULT_ROLE_PERMS[userRole] || [];
+return perms.includes(sectionId);
+};
+React.useEffect(() => {
+if (userRole && tab && tab !== "dashboard" && !canSee(tab))
+setTab("dashboard");
+}, [userRole, tab, company]);
+React.useEffect(() => {
+const isOffline = (typeof OFFLINE_MODE !== "undefined" && OFFLINE_MODE);
+const isDemo = (typeof DEMO_LOCKED !== "undefined" && DEMO_LOCKED);
+if (isOffline || isDemo)
+return;
+let annullato = false;
+(() => __awaiter(this, void 0, void 0, function* () {
+try {
+if (typeof supabaseGetCompany !== "function")
+return;
+const orgCompany = yield supabaseGetCompany();
+if (!annullato && orgCompany) {
+const cloudTechs = Array.isArray(orgCompany.technicians) ? orgCompany.technicians : [];
+const localTechs = (company && company.technicians) || [];
+if (orgCompany.name) {
+setCompany(c => { const m = Object.assign(Object.assign({}, c), orgCompany); m.technicians = cloudTechs.length > 0 ? cloudTechs : (c.technicians || []); return m; });
+}
+else if (cloudTechs.length > 0) {
+setCompany(c => (Object.assign(Object.assign({}, c), { technicians: cloudTechs })));
+}
+if (cloudTechs.length === 0 && localTechs.length > 0 && typeof supabaseSaveTechnicians === "function") {
+supabaseSaveTechnicians(localTechs);
+}
+}
+}
+catch (e) { }
+}))();
+return () => { annullato = true; };
+}, []);
+const loadFilterState = (key, fallback) => {
+try {
+const raw = localStorage.getItem("medtrace-filters-" + key);
+return raw ? JSON.parse(raw) : fallback;
+}
+catch (e) {
+return fallback;
+}
+};
+const [mobileSearch, setMobileSearch] = React.useState(() => loadFilterState("search", { assets: "", jobs: "", customers: "", parts: "", invoices: "", iec: "", func: "" }));
+const [jobFilter, setJobFilter] = React.useState(() => loadFilterState("jobFilter", "open"));
+const DEFAULT_FILTERS = {
+assets: { brand: "", model: "", serial: "", name: "", location: "", status: "", customer: "", riskClass: "", iecNorm: "", iecClass: "", patientType: "" },
+jobs: { assetName: "", priority: "", type: "", assignee: "", customer: "", status: "" },
+customers: { city: "", vat: "" },
+parts: { brand: "", code: "", name: "", location: "", supplier: "", stockStatus: "" },
+invoices: { status: "", customer: "", number: "" },
+iec: { norm: "", equipClass: "", patientType: "", verifyType: "", customer: "", outcome: "", technician: "", assetBrand: "", assetModel: "", leakageMethod: "" },
+func: { templateId: "", verifyType: "", customer: "", outcome: "", technician: "", assetBrand: "", assetModel: "" },
+};
+const [activeFilters, setActiveFilters] = React.useState(() => {
+const stored = loadFilterState("activeFilters", null);
+if (!stored)
+return DEFAULT_FILTERS;
+const merged = {};
+Object.keys(DEFAULT_FILTERS).forEach(page => {
+merged[page] = Object.assign(Object.assign({}, DEFAULT_FILTERS[page]), (stored[page] || {}));
+});
+return merged;
+});
+React.useEffect(() => { try {
+localStorage.setItem("medtrace-filters-search", JSON.stringify(mobileSearch));
+}
+catch (e) { } }, [mobileSearch]);
+React.useEffect(() => { try {
+localStorage.setItem("medtrace-filters-jobFilter", JSON.stringify(jobFilter));
+}
+catch (e) { } }, [jobFilter]);
+React.useEffect(() => { try {
+localStorage.setItem("medtrace-filters-activeFilters", JSON.stringify(activeFilters));
+}
+catch (e) { } }, [activeFilters]);
+const setFilter = (page, key, value) => setActiveFilters(f => (Object.assign(Object.assign({}, f), { [page]: Object.assign(Object.assign({}, f[page]), { [key]: value }) })));
+const clearFilters = (page) => setActiveFilters(f => (Object.assign(Object.assign({}, f), { [page]: Object.keys(f[page]).reduce((o, k) => (Object.assign(Object.assign({}, o), { [k]: "" })), {}) })));
+const matchFilters = (item, page, mappers) => {
+const f = activeFilters[page];
+if (!f)
+return true;
+for (const key in f) {
+if (!f[key])
+continue;
+const fn = mappers[key];
+if (!fn)
+continue;
+if (String(fn(item)) !== String(f[key]))
+return false;
+}
+return true;
+};
+const updMS = (key, val) => setMobileSearch(s => (Object.assign(Object.assign({}, s), { [key]: val })));
+const [compactView, setCompactView] = React.useState(() => {
+try {
+return localStorage.getItem("medtrace-compact-view") === "1";
+}
+catch (e) {
+return false;
+}
+});
+const toggleCompact = () => setCompactView(v => { const nv = !v; try {
+localStorage.setItem("medtrace-compact-view", nv ? "1" : "0");
+}
+catch (e) { } return nv; });
+const [assetMobileView, setAssetMobileView] = React.useState(() => {
+try {
+return localStorage.getItem("medtrace-asset-view") === "table" ? "table" : "cards";
+}
+catch (e) {
+return "cards";
+}
+});
+const toggleAssetView = () => setAssetMobileView(v => { const nv = v === "table" ? "cards" : "table"; try {
+localStorage.setItem("medtrace-asset-view", nv);
+}
+catch (e) { } return nv; });
+const [modal, setModal] = React.useState(null);
+const [modalHistory, setModalHistory] = React.useState([]);
+const [loadingMsg, setLoadingMsg] = React.useState(null);
+const pushModal = (m) => {
+setModalHistory(h => modal ? [...h, modal] : h);
+setModal(m);
+};
+const popModal = () => {
+setModalHistory(h => {
+if (h.length > 0) {
+const prev = h[h.length - 1];
+setModal(prev);
+return h.slice(0, -1);
+}
+setModal(null);
+return h;
+});
+};
+const [search, setSearch] = React.useState("");
+const [toast, setToast] = React.useState(null);
+const [navOpen, setNavOpen] = React.useState(false);
+React.useEffect(() => {
+try {
+const params = new URLSearchParams(window.location.search);
+const assetId = params.get("asset");
+if (!assetId)
+return;
+const found = assets.find(a => a.id === assetId);
+if (found) {
+setTab("assets");
+setModal({ type: "assetDetail", data: found });
+}
+else {
+setToast("Apparecchio " + assetId + " non trovato su questo dispositivo.");
+}
+window.history.replaceState({}, "", window.location.pathname);
+}
+catch (e) { }
+}, [assets.length]);
+React.useEffect(() => {
+const onKey = (e) => {
+const tag = (e.target.tagName || "").toLowerCase();
+const isTyping = tag === "input" || tag === "textarea" || tag === "select" || e.target.isContentEditable;
+if (e.key === "Escape") {
+if (modal) {
+popModal();
+}
+else if (navOpen) {
+setNavOpen(false);
+}
+return;
+}
+if (isTyping)
+return;
+if (e.key === "/") {
+const searchInput = document.querySelector('input[data-mt-search="1"]');
+if (searchInput) {
+e.preventDefault();
+searchInput.focus();
+}
+return;
+}
+if (e.key === "n" || e.key === "N") {
+if (modal)
+return;
+const map = {
+assets: () => setModal({ type: "asset", data: null }),
+jobs: () => setModal({ type: "job", data: null }),
+customers: () => setModal({ type: "customer", data: null }),
+parts: () => setModal({ type: "part", data: null }),
+orders: () => setModal({ type: "order", data: null }),
+invoices: () => setModal({ type: "invoice", data: null }),
+iec: () => setModal({ type: "iec", data: null }),
+func: () => setModal({ type: "func", data: null }),
+};
+if (map[tab]) {
+e.preventDefault();
+map[tab]();
+}
+return;
+}
+};
+window.addEventListener("keydown", onKey);
+return () => window.removeEventListener("keydown", onKey);
+}, [modal, navOpen, tab]);
+const [pdfHtml, setPdfHtml] = React.useState(null);
+const [csvModal, setCsvModal] = React.useState(null);
+const [helpOpen, setHelpOpen] = React.useState({});
+const [filterStatus, setFilterStatus] = React.useState("");
+const [filterPriority, setFilterPriority] = React.useState("");
+const [filterCustomer, setFilterCustomer] = React.useState("");
+const [filterYear, setFilterYear] = React.useState(new Date().getFullYear());
+const [filterMonth, setFilterMonth] = React.useState("");
+const [scheduleYear, setScheduleYear] = React.useState(new Date().getFullYear());
+React.useEffect(() => {
+if (!isMobile)
+return;
+let startX = null, startY = null, startT = 0, locked = false;
+const onStart = (e) => {
+const t = e.touches[0];
+if (t.clientX > 24) {
+startX = null;
+return;
+}
+startX = t.clientX;
+startY = t.clientY;
+startT = Date.now();
+locked = false;
+};
+const onMove = (e) => {
+if (startX === null)
+return;
+const t = e.touches[0];
+const dx = t.clientX - startX;
+const dy = Math.abs(t.clientY - startY);
+if (!locked) {
+if (dx > 10 && dx > dy * 1.5)
+locked = true;
+else if (dy > 10) {
+startX = null;
+return;
+}
+}
+if (locked && dx > 50 && !navOpen && !modal) {
+setNavOpen(true);
+startX = null;
+}
+};
+const onEnd = () => { startX = null; locked = false; };
+document.addEventListener('touchstart', onStart, { passive: true });
+document.addEventListener('touchmove', onMove, { passive: true });
+document.addEventListener('touchend', onEnd, { passive: true });
+return () => {
+document.removeEventListener('touchstart', onStart);
+document.removeEventListener('touchmove', onMove);
+document.removeEventListener('touchend', onEnd);
+};
+}, [isMobile, navOpen, modal]);
+const [ptrPull, setPtrPull] = React.useState(0);
+const [ptrRefreshing, setPtrRefreshing] = React.useState(false);
+React.useEffect(() => {
+if (!isMobile)
+return;
+let startY = null;
+let pulling = false;
+const onStart = (e) => {
+if (window.scrollY > 0) {
+startY = null;
+return;
+}
+startY = e.touches[0].clientY;
+pulling = false;
+};
+const onMove = (e) => {
+if (startY === null)
+return;
+const dy = e.touches[0].clientY - startY;
+if (dy > 0 && window.scrollY <= 0) {
+pulling = true;
+setPtrPull(Math.min(dy * 0.5, 100));
+}
+};
+const onEnd = () => {
+if (pulling && ptrPull > 60) {
+setPtrRefreshing(true);
+setTimeout(() => {
+try {
+const raw = localStorage.getItem(STORAGE_KEY);
+if (raw) {
+const data = JSON.parse(raw);
+if (data.assets)
+setAssets(data.assets);
+if (data.jobs)
+setJobs(data.jobs);
+if (data.parts)
+setParts(data.parts);
+if (data.customers)
+setCustomers(data.customers);
+if (data.invoices)
+setInvoices(data.invoices);
+if (data.iecReports)
+setIecReports(data.iecReports);
+if (data.funcReports)
+setFuncReports(data.funcReports);
+}
+}
+catch (e) { }
+setPtrRefreshing(false);
+setPtrPull(0);
+showToast("Aggiornato", "#22c55e");
+}, 600);
+}
+else {
+setPtrPull(0);
+}
+startY = null;
+pulling = false;
+};
+document.addEventListener('touchstart', onStart, { passive: true });
+document.addEventListener('touchmove', onMove, { passive: true });
+document.addEventListener('touchend', onEnd, { passive: true });
+return () => {
+document.removeEventListener('touchstart', onStart);
+document.removeEventListener('touchmove', onMove);
+document.removeEventListener('touchend', onEnd);
+};
+}, [isMobile, ptrPull]);
+React.useEffect(() => {
+if (!window.history.state || window.history.state.medtrace !== true) {
+window.history.replaceState({ medtrace: true, tab: 'dashboard' }, '');
+}
+const onPopState = (e) => {
+if (csvModal) {
+setCsvModal(null);
+window.history.pushState({ medtrace: true, tab }, '');
+return;
+}
+if (pdfHtml) {
+setPdfHtml(null);
+window.history.pushState({ medtrace: true, tab }, '');
+return;
+}
+if (modal) {
+popModal();
+window.history.pushState({ medtrace: true, tab }, '');
+return;
+}
+if (navOpen) {
+setNavOpen(false);
+window.history.pushState({ medtrace: true, tab }, '');
+return;
+}
+if (tab !== 'dashboard') {
+setTab('dashboard');
+window.history.pushState({ medtrace: true, tab: 'dashboard' }, '');
+return;
+}
+};
+window.addEventListener('popstate', onPopState);
+return () => window.removeEventListener('popstate', onPopState);
+}, [modal, navOpen, tab, pdfHtml, csvModal]);
+React.useEffect(() => {
+if (modal || navOpen || tab !== 'dashboard' || pdfHtml || csvModal) {
+window.history.pushState({ medtrace: true, tab, modal: !!modal, navOpen }, '');
+}
+}, [modal, navOpen, tab, pdfHtml, csvModal]);
+React.useEffect(() => {
+const pdfHandler = (e) => setPdfHtml(e.detail);
+const csvHandler = (e) => setCsvModal(e.detail);
+const toastHandler = (e) => { setToast({ msg: e.detail.msg, color: e.detail.color || "#22c55e" }); setTimeout(() => setToast(null), 3000); };
+window.addEventListener('show-pdf', pdfHandler);
+window.addEventListener('show-csv', csvHandler);
+window.addEventListener('toast', toastHandler);
+return () => {
+window.removeEventListener('show-pdf', pdfHandler);
+window.removeEventListener('show-csv', csvHandler);
+window.removeEventListener('toast', toastHandler);
+};
+}, []);
+React.useEffect(() => {
+const t = setTimeout(() => {
+saveData({ assets, parts, jobs, orders, withdrawals, customers, invoices, quotes, instruments, procedures, iecReports, funcReports, company, cestino });
+}, 600);
+return () => clearTimeout(t);
+}, [assets, parts, jobs, orders, withdrawals, customers, invoices, quotes, instruments, procedures, iecReports, funcReports, company, cestino]);
+const showToast = React.useCallback((msg, color = "#22c55e") => {
+setToast({ msg, color });
+setTimeout(() => setToast(null), 3000);
+}, []);
+const checkLocked = React.useCallback(() => {
+if (typeof DEMO_LOCKED !== "undefined" && DEMO_LOCKED) {
+setToast({ msg: "Modalità DEMO: modifiche disabilitate. Scarica la versione completa per personalizzare.", color: "#f59e0b" });
+setTimeout(() => setToast(null), 3500);
+return true;
+}
+return false;
+}, []);
+const stats = React.useMemo(() => {
+const stockValue = parts.reduce((s, p) => s + p.qty * p.unitPrice, 0);
+const stockSellValue = parts.reduce((s, p) => s + p.qty * (p.sellPrice || p.unitPrice), 0);
+return {
+totalAssets: assets.length,
+operative: assets.filter(a => a.status === "operativo").length,
+maintenance: assets.filter(a => a.status === "in manutenzione").length,
+outOfService: assets.filter(a => a.status === "fuori servizio").length,
+openJobs: jobs.filter(j => j.status !== "chiuso").length,
+urgentJobs: jobs.filter(j => j.priority === "urgente" && j.status !== "chiuso").length,
+lowStock: parts.filter(p => p.qty <= p.minQty).length,
+stockValue, stockSellValue,
+pendingOrders: orders.filter(o => o.status !== "ricevuto" && o.status !== "annullato").length,
+customers: customers.length,
+pendingInvoices: invoices.filter(i => i.status === "emessa" || i.status === "bozza").length,
+};
+}, [assets, parts, jobs, orders, customers, invoices]);
+const financials = React.useMemo(() => {
+const yr = +filterYear;
+const matchPeriod = dateStr => {
+if (!dateStr)
+return false;
+const d = new Date(dateStr);
+if (d.getFullYear() !== yr)
+return false;
+if (filterMonth !== "" && d.getMonth() !== +filterMonth)
+return false;
+return true;
+};
+const periodInvoices = invoices.filter(i => matchPeriod(i.date));
+const periodOrders = orders.filter(o => matchPeriod(o.orderDate) && o.status === "ricevuto");
+const periodJobs = jobs.filter(j => matchPeriod(j.closeDate || j.openDate));
+let revenue = 0, vatCollected = 0;
+periodInvoices.forEach(inv => {
+if (inv.status === "annullato")
+return;
+const subtotal = inv.items.reduce((s, it) => s + it.qty * it.unitPrice, 0);
+const vat = inv.items.reduce((s, it) => s + (it.qty * it.unitPrice * it.vat / 100), 0);
+revenue += subtotal;
+vatCollected += vat;
+});
+let costsPartsBought = 0;
+periodOrders.forEach(o => { costsPartsBought += o.qty * o.unitPrice; });
+let costsPartsUsed = 0;
+periodJobs.forEach(j => {
+j.parts.forEach(p => { const pt = parts.find(x => x.id === p.partId); if (pt)
+costsPartsUsed += pt.unitPrice * p.qty; });
+});
+const margin = revenue - costsPartsUsed;
+const monthlyData = [];
+for (let m = 0; m < 12; m++) {
+let rev = 0;
+invoices.forEach(inv => {
+if (inv.status === "annullato")
+return;
+const d = new Date(inv.date);
+if (d.getFullYear() === yr && d.getMonth() === m) {
+rev += inv.items.reduce((s, it) => s + it.qty * it.unitPrice, 0);
+}
+});
+monthlyData.push({ label: ["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"][m], value: rev });
+}
+return { revenue, vatCollected, costsPartsBought, costsPartsUsed, margin, periodInvoices, monthlyData };
+}, [invoices, orders, jobs, parts, filterYear, filterMonth]);
+const scheduleRows = React.useMemo(() => {
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+return assets
+.filter(a => a.nextService)
+.map(a => {
+const d = new Date(a.nextService);
+const c = customers.find(x => x.id === a.customerId) || {};
+const days = Math.round((d - today) / 86400000);
+const lastIec = iecReports
+.filter(r => r.assetId === a.id)
+.sort((a, b) => { var _a; return (_a = b.date) === null || _a === void 0 ? void 0 : _a.localeCompare(a.date || ""); })[0];
+const normMap = { "62353": "IEC 62353", "61010": "IEC 61010-1" };
+return {
+assetId: a.id,
+assetName: a.name,
+brand: a.brand,
+serial: a.serial,
+location: a.location,
+customer: c.name || "",
+norm: lastIec ? (normMap[lastIec.norm] || "IEC 62353") : (a.iecNorm ? (normMap[a.iecNorm] || a.iecNorm) : "—"),
+lastService: (lastIec === null || lastIec === void 0 ? void 0 : lastIec.date) || a.lastService || "",
+nextService: a.nextService,
+status: a.status,
+month: d.getMonth(),
+year: d.getFullYear(),
+_days: days,
+};
+})
+.filter(r => r.year === scheduleYear);
+}, [assets, iecReports, customers, scheduleYear]);
+const MONTHS_IT = ["Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"];
+const scheduleMonths = React.useMemo(() => MONTHS_IT.map((monthLabel, month) => ({
+month, monthLabel,
+items: scheduleRows.filter(r => r.month === month)
+})), [scheduleRows]);
+const upcomingMaintenance = React.useMemo(() => {
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+const in30days = new Date(today);
+in30days.setDate(in30days.getDate() + 30);
+return assets
+.filter(a => a.nextService)
+.map(a => (Object.assign(Object.assign({}, a), { daysToService: Math.round((new Date(a.nextService) - today) / (1000 * 60 * 60 * 24)) })))
+.filter(a => a.daysToService <= 30)
+.sort((a, b) => a.daysToService - b.daysToService);
+}, [assets]);
+const scadenzeVerifiche = React.useMemo(() => {
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+const out = [];
+const lastOf = (reps, assetId) => reps
+.filter(r => r.assetId === assetId && r.date)
+.sort((a, b) => (b.date || "").localeCompare(a.date || ""))[0] || null;
+const addMonths = (dateStr, months) => {
+const d = new Date(dateStr);
+if (isNaN(d.getTime()))
+return null;
+d.setMonth(d.getMonth() + months);
+d.setHours(0, 0, 0, 0);
+return d;
+};
+assets.forEach(a => {
+const cust = customers.find(c => c.id === a.customerId) || null;
+const lastIec = lastOf(iecReports, a.id);
+if (lastIec) {
+const mesi = parseInt(a.intervalIec, 10) || 12;
+const due = (lastIec.nextDate ? new Date(lastIec.nextDate) : addMonths(lastIec.date, mesi));
+if (due) {
+due.setHours(0, 0, 0, 0);
+out.push({ assetId: a.id, assetName: a.name, brand: a.brand, model: a.model, serial: a.serial,
+customer: cust, tipo: "Sicurezza Elettrica", tipoKind: "iec",
+lastDate: lastIec.date, dueDate: due, days: Math.round((due - today) / 86400000) });
+}
+}
+const lastFunc = lastOf(funcReports, a.id);
+if (lastFunc) {
+const mesi = parseInt(a.intervalFunc, 10) || 12;
+const due = (lastFunc.nextDate ? new Date(lastFunc.nextDate) : addMonths(lastFunc.date, mesi));
+if (due) {
+due.setHours(0, 0, 0, 0);
+out.push({ assetId: a.id, assetName: a.name, brand: a.brand, model: a.model, serial: a.serial,
+customer: cust, tipo: "Verifica Funzionale", tipoKind: "func",
+lastDate: lastFunc.date, dueDate: due, days: Math.round((due - today) / 86400000) });
+}
+}
+});
+return out.sort((a, b) => a.days - b.days);
+}, [assets, iecReports, funcReports, customers]);
+const newId = (prefix, list) => {
+const nums = list.map(x => parseInt((x.id || "").replace(/\D/g, ""), 10)).filter(n => !isNaN(n));
+const next = (nums.length ? Math.max(...nums) : 0) + 1;
+return prefix + String(next).padStart(3, "0");
+};
+const generateInvoiceNumber = () => {
+const year = new Date().getFullYear();
+const existing = invoices.filter(i => { var _a; return (_a = i.number) === null || _a === void 0 ? void 0 : _a.includes("/" + (year)); }).length;
+return (company.invoicePrefix || "F") + "-" + (String(existing + 1).padStart(4, "0")) + "/" + (year);
+};
+const saveAsset = f => {
+if (checkLocked())
+return;
+if (modal.data) {
+const rec = withUpdateMeta(Object.assign(Object.assign({}, f), { id: modal.data.id, createdAt: modal.data.createdAt }));
+setAssets(a => upsertInList(a, rec));
+}
+else {
+const nuovo = withCreateMeta(f);
+if (!nuovo.assetCode) {
+const cust = customers.find(c => c.id === nuovo.customerId);
+const prefix = customerPrefix(cust ? cust.name : null);
+nuovo.assetCode = nextAssetCode(prefix, assets);
+}
+setAssets(a => upsertInList(a, nuovo));
+}
+setModal(null);
+showToast((f.name || "Apparecchio") + " salvato — lo trovi in cima alla lista");
+};
+const SETTER_PER_TIPO = {
+assets: setAssets, parts: setParts, jobs: setJobs, orders: setOrders, withdrawals: setWDs,
+customers: setCustomers, invoices: setInvoices, quotes: setQuotes, instruments: setInstruments,
+procedures: setProcedures, iecReports: setIecReports, funcReports: setFuncReports
+};
+const moveToTrash = (tipo, record) => {
+if (!record)
+return;
+const trashed = Object.assign(Object.assign({}, record), { deleted: true, deletedAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+setCestino(c => (Object.assign(Object.assign({}, c), { [tipo]: [...(c[tipo] || []), trashed] })));
+};
+const restoreFromTrash = (tipo, id) => {
+const rec = ((cestino[tipo]) || []).find(r => r.id === id);
+if (!rec)
+return;
+const restored = Object.assign(Object.assign({}, rec), { deleted: false, deletedAt: null, updatedAt: new Date().toISOString() });
+const setter = SETTER_PER_TIPO[tipo];
+if (setter)
+setter(arr => upsertInList(arr || [], restored));
+setCestino(c => (Object.assign(Object.assign({}, c), { [tipo]: (c[tipo] || []).filter(r => r.id !== id) })));
+showToast("Ripristinato");
+};
+const purgeFromTrash = (tipo, id) => {
+setCestino(c => (Object.assign(Object.assign({}, c), { [tipo]: (c[tipo] || []).filter(r => r.id !== id) })));
+showToast("Eliminato definitivamente", "#ef4444");
+};
+const delAsset = id => { if (checkLocked())
+return; appConfirm("Spostare questo apparecchio nel cestino?", () => { const r = assets.find(x => x.id === id); moveToTrash("assets", r); setAssets(a => a.filter(x => x.id !== id)); showToast("Spostato nel cestino", "#f59e0b"); }); };
+const savePart = f => {
+if (checkLocked())
+return;
+if (modal.data) {
+const rec = withUpdateMeta(Object.assign(Object.assign({}, f), { id: modal.data.id, createdAt: modal.data.createdAt }));
+setParts(p => upsertInList(p, rec));
+}
+else {
+setParts(p => upsertInList(p, withCreateMeta(f)));
+}
+setModal(null);
+showToast("Parte salvata");
+};
+const delPart = id => { if (checkLocked())
+return; appConfirm("Spostare questo ricambio nel cestino?", () => { const r = parts.find(x => x.id === id); moveToTrash("parts", r); setParts(p => p.filter(x => x.id !== id)); showToast("Spostato nel cestino", "#f59e0b"); }); };
+const [richieste, setRichieste] = React.useState([]);
+const loadRichieste = () => __awaiter(this, void 0, void 0, function* () {
+if (OFFLINE_MODE)
+return;
+try {
+const rows = yield supaDB.getAll("richieste");
+setRichieste(rows || []);
+}
+catch (e) { }
+});
+React.useEffect(() => { loadRichieste(); }, []);
+React.useEffect(() => { if (tab === "richieste")
+loadRichieste(); }, [tab]);
+const convertRichiesta = (req) => __awaiter(this, void 0, void 0, function* () {
+if (checkLocked && checkLocked())
+return;
+const prio = req.urgency === "fermo_macchina" ? "urgente" : (req.urgency === "urgente" ? "alta" : "normale");
+const job = withCreateMeta({ assetId: req.asset_id || "", customerId: req.customer_id || "", type: "correttiva", priority: prio, status: "aperto", assignee: "", openDate: new Date().toISOString().slice(0, 10), closeDate: "", description: req.description || "", parts: [], laborHours: 0, laborRate: 55, travelCost: 0, notes: req.contact ? ("Richiesta dal portale cliente. Contatto: " + req.contact) : "Richiesta dal portale cliente.", timeline: [], photos: req.photo ? [req.photo] : [] });
+setJobs(j => upsertInList(j, job));
+try {
+yield supaDB.update("richieste", req.id, { status: "convertita" });
+}
+catch (e) { }
+yield loadRichieste();
+showToast("Richiesta convertita in Job ✓", "#22c55e");
+});
+const saveJob = f => {
+if (checkLocked())
+return;
+const oldStatus = modal.data ? modal.data.status : null;
+const diventaChiuso = oldStatus !== "chiuso" && f.status === "chiuso";
+const tornaAperto = oldStatus === "chiuso" && f.status !== "chiuso";
+if (diventaChiuso && (f.parts || []).length > 0) {
+setParts(ps => ps.map(pt => {
+const used = (f.parts || []).filter(p => p.partId === pt.id).reduce((s, p) => s + (+p.qty || 0), 0);
+return used > 0 ? Object.assign(Object.assign({}, pt), { qty: (+pt.qty || 0) - used, updatedAt: new Date().toISOString() }) : pt;
+}));
+}
+else if (tornaAperto && (modal.data.parts || []).length > 0) {
+setParts(ps => ps.map(pt => {
+const used = (modal.data.parts || []).filter(p => p.partId === pt.id).reduce((s, p) => s + (+p.qty || 0), 0);
+return used > 0 ? Object.assign(Object.assign({}, pt), { qty: (+pt.qty || 0) + used, updatedAt: new Date().toISOString() }) : pt;
+}));
+}
+if (modal.data) {
+const rec = withUpdateMeta(Object.assign(Object.assign({}, f), { id: modal.data.id, createdAt: modal.data.createdAt }));
+setJobs(j => upsertInList(j, rec));
+}
+else {
+setJobs(j => upsertInList(j, withCreateMeta(Object.assign(Object.assign({}, f), { timeline: f.timeline || [], photos: f.photos || [] }))));
+}
+setModal(null);
+if (diventaChiuso && (f.parts || []).length > 0)
+showToast("Job chiuso — parti scaricate dal magazzino", "#22c55e");
+else if (tornaAperto && (modal.data.parts || []).length > 0)
+showToast("Job riaperto — parti rimesse in magazzino", "#f59e0b");
+else
+showToast("Job salvato");
+};
+const delJob = id => { if (checkLocked())
+return; appConfirm("Spostare questo job nel cestino?", () => { const r = jobs.find(x => x.id === id); moveToTrash("jobs", r); setJobs(j => j.filter(x => x.id !== id)); showToast("Spostato nel cestino", "#f59e0b"); }); };
+const saveTimeline = (jobId, data) => {
+setJobs(js => js.map(j => j.id === jobId ? Object.assign(Object.assign({}, j), { timeline: data.timeline, photos: data.photos }) : j));
+setModal(null);
+showToast("Timeline salvata");
+};
+const saveCustomer = f => {
+if (checkLocked())
+return;
+if (modal.data) {
+const rec = withUpdateMeta(Object.assign(Object.assign({}, f), { id: modal.data.id, createdAt: modal.data.createdAt }));
+setCustomers(c => upsertInList(c, rec));
+}
+else {
+setCustomers(c => upsertInList(c, withCreateMeta(f)));
+}
+setModal(null);
+showToast("Cliente salvato");
+};
+const delCustomer = id => {
+if (checkLocked())
+return;
+if (assets.some(a => a.customerId === id)) {
+alert("Non puoi spostare nel cestino: ci sono apparecchi associati a questo cliente.");
+return;
+}
+appConfirm("Spostare questo cliente nel cestino?", () => {
+const r = customers.find(x => x.id === id);
+moveToTrash("customers", r);
+setCustomers(c => c.filter(x => x.id !== id));
+showToast("Spostato nel cestino", "#f59e0b");
+});
+};
+const saveInvoice = f => {
+if (checkLocked())
+return;
+if (modal.data) {
+const rec = withUpdateMeta(Object.assign(Object.assign({}, f), { id: modal.data.id, createdAt: modal.data.createdAt }));
+setInvoices(i => upsertInList(i, rec));
+}
+else {
+setInvoices(i => upsertInList(i, withCreateMeta(f)));
+}
+setModal(null);
+showToast("Preventivo salvato");
+};
+const quoteFromJob = (job) => {
+if (!job)
+return;
+const asset = assets.find(a => a.id === job.assetId);
+const items = [];
+(job.parts || []).forEach(p => {
+const pt = parts.find(x => x.id === p.partId);
+if (pt)
+items.push({ description: (pt.name || "Ricambio") + (pt.code ? (" (" + pt.code + ")") : ""), qty: p.qty || 1, unitPrice: pt.sellPrice || pt.unitPrice || 0, vat: IVA_DEFAULT });
+});
+if (+job.laborHours > 0) {
+items.push({ description: "Manodopera - " + ((asset === null || asset === void 0 ? void 0 : asset.name) || "intervento") + " (rif. " + job.id + ")", qty: +job.laborHours, unitPrice: +job.laborRate || 0, vat: IVA_DEFAULT });
+}
+if (+job.travelCost > 0) {
+items.push({ description: "Viaggio / trasferta (rif. " + job.id + ")", qty: 1, unitPrice: +job.travelCost, vat: IVA_DEFAULT });
+}
+const prefill = {
+customerId: job.customerId || (asset === null || asset === void 0 ? void 0 : asset.customerId) || "",
+items,
+jobIds: [job.id],
+};
+pushModal({ type: "invoice", data: null, prefillFromJob: prefill });
+if (items.length === 0)
+showToast("Job senza parti/manodopera/viaggio — preventivo vuoto da compilare", "#f59e0b");
+};
+const delInvoice = id => { if (checkLocked())
+return; appConfirm("Spostare questo preventivo nel cestino?", () => { const r = invoices.find(x => x.id === id); moveToTrash("invoices", r); setInvoices(i => i.filter(x => x.id !== id)); showToast("Spostato nel cestino", "#f59e0b"); }); };
+const markInvoicePaid = inv => {
+setInvoices(is => is.map(i => i.id === inv.id ? Object.assign(Object.assign({}, i), { status: "pagata" }) : i));
+showToast("Preventivo pagato");
+};
+const saveOrder = f => {
+var _a;
+if (checkLocked())
+return;
+const isReceivedNow = f.status === "ricevuto" && ((_a = modal === null || modal === void 0 ? void 0 : modal.data) === null || _a === void 0 ? void 0 : _a.status) !== "ricevuto";
+if (modal === null || modal === void 0 ? void 0 : modal.data) {
+const rec = withUpdateMeta(Object.assign(Object.assign({}, f), { id: modal.data.id, createdAt: modal.data.createdAt }));
+setOrders(o => upsertInList(o, rec));
+}
+else {
+setOrders(o => upsertInList(o, withCreateMeta(f)));
+}
+if (isReceivedNow) {
+setParts(ps => ps.map(p => p.id === f.partId ? Object.assign(Object.assign({}, p), { qty: p.qty + f.qty }) : p));
+showToast("Ordine ricevuto — stock +" + (f.qty) + " pz.");
+}
+else
+showToast("Ordine salvato");
+setModal(null);
+};
+const delOrder = id => { if (checkLocked())
+return; appConfirm("Spostare questo ordine nel cestino?", () => { const r = orders.find(x => x.id === id); moveToTrash("orders", r); setOrders(o => o.filter(x => x.id !== id)); showToast("Spostato nel cestino", "#f59e0b"); }); };
+const quickReceive = o => {
+setOrders(os => os.map(x => x.id === o.id ? Object.assign(Object.assign({}, x), { status: "ricevuto" }) : x));
+setParts(ps => ps.map(p => p.id === o.partId ? Object.assign(Object.assign({}, p), { qty: p.qty + o.qty }) : p));
+showToast("Ordine ricevuto — stock +" + (o.qty) + " pz.");
+};
+const saveIecReport = f => {
+if (checkLocked())
+return;
+const isNew = !(f.id && iecReports.some(r => r.id === f.id));
+const savedReport = isNew ? withCreateMeta(f) : withUpdateMeta(f);
+const reportId = savedReport.id;
+if (isNew) {
+const asset = assets.find(a => a.id === f.assetId) || {};
+const normLabel = f.norm === "61010" ? "IEC 61010-1" : "IEC 62353";
+const ptLabel = f.norm !== "61010" ? (" — Tipo " + (f.patientType || "BF")) : "";
+const esitoLabel = f.overallPass ? "CONFORME" : "NON CONFORME";
+const newJobId = genUUID();
+const linkedJob = withCreateMeta({
+id: newJobId,
+assetId: f.assetId,
+customerId: f.customerId || asset.customerId || "",
+type: "verifica",
+priority: "normale",
+status: "chiuso",
+assignee: f.technician || "",
+openDate: f.date || new Date().toISOString().slice(0, 10),
+closeDate: f.date || new Date().toISOString().slice(0, 10),
+description: "Verifica di Sicurezza Elettrica " + normLabel + ptLabel + " — " + esitoLabel,
+notes: (f.reportNumber ? "Rif. rapporto: " + f.reportNumber + " " : "") + (f.notes || ""),
+parts: [],
+laborHours: 0,
+laborRate: 55,
+timeline: [],
+photos: [],
+iecReportId: reportId,
+});
+setJobs(js => [...js, linkedJob]);
+savedReport.jobId = newJobId;
+if (f.verifyStatus !== "non_disponibile" && f.overallPass === false) {
+const corrJob = withCreateMeta({
+id: genUUID(),
+assetId: f.assetId,
+customerId: f.customerId || asset.customerId || "",
+type: "correttiva",
+priority: "alta",
+status: "aperto",
+assignee: "",
+openDate: f.date || new Date().toISOString().slice(0, 10),
+closeDate: "",
+description: "Verifica di Sicurezza Elettrica " + normLabel + " non conforme — da correggere",
+notes: (f.reportNumber ? "Rif. rapporto: " + f.reportNumber + ". " : "") + "Generata automaticamente dalla verifica non conforme.",
+parts: [],
+laborHours: 0,
+laborRate: 55,
+timeline: [],
+photos: [],
+});
+setJobs(js => [...js, corrJob]);
+}
+const isExtraordinary = f.verifyType === "straordinaria";
+const isNotAvail = f.verifyStatus === "non_disponibile";
+if (isNotAvail) {
+showToast("Verifica non eseguibile registrata — la scadenza resta invariata (apparecchio non verificato)");
+}
+else if (!isExtraordinary) {
+const asset2 = assets.find(a => a.id === f.assetId) || {};
+const mesi = parseInt(asset2.intervalIec || asset2.serviceInterval || 12, 10) || 12;
+const verDate = new Date(f.date || new Date());
+verDate.setMonth(verDate.getMonth() + mesi);
+const nextServiceDate = verDate.toISOString().slice(0, 10);
+setAssets(as => as.map(a => a.id === f.assetId ? Object.assign(Object.assign({}, a), { lastService: f.date || new Date().toISOString().slice(0, 10), nextService: nextServiceDate }) : a));
+showToast("Verifica di Sicurezza Elettrica salvata + Job creato · Prossima: " + nextServiceDate);
+}
+else {
+setAssets(as => as.map(a => a.id === f.assetId ? Object.assign(Object.assign({}, a), { lastService: f.date || new Date().toISOString().slice(0, 10) }) : a));
+showToast("Verifica straordinaria salvata + Job creato (pianificazione invariata)");
+}
+if (f.verifyStatus !== "non_disponibile" && f.overallPass === false) {
+showToast("⚠ Verifica NON CONFORME — creata richiesta di manutenzione correttiva (la trovi nei Job, stato Aperto)");
+}
+}
+else {
+showToast("Rapporto di sicurezza elettrica aggiornato");
+}
+if (isNew) {
+setIecReports(rs => [...rs, savedReport]);
+}
+else {
+setIecReports(rs => rs.map(r => r.id === reportId ? savedReport : r));
+}
+if (isNew) {
+if (company.stickerPrompt) {
+appConfirm("Verifica salvata! Vuoi stampare lo sticker QR da applicare sull'apparecchio?", () => {
+setModal({ type: "sticker", data: savedReport, kind: "iec" });
+}, 'positive');
+}
+else if (f.verifyStatus !== "non_disponibile") {
+const _aid = f.assetId;
+setModal(null);
+appConfirm("Verifica elettrica salvata. Vuoi fare anche la verifica funzionale su questo apparecchio?", () => setModal({ type: "func", assetId: _aid, data: null }), 'positive');
+}
+else {
+setModal(null);
+}
+}
+else {
+setModal(null);
+}
+};
+const delIecReport = id => { if (checkLocked())
+return; appConfirm("Spostare questa verifica di sicurezza elettrica nel cestino?", () => { const r = iecReports.find(x => x.id === id); moveToTrash("iecReports", r); setIecReports(rs => rs.filter(r => r.id !== id)); showToast("Spostato nel cestino", "#f59e0b"); }); };
+const saveFuncReport = f => {
+if (checkLocked())
+return;
+const isNew = !(f.id && funcReports.some(r => r.id === f.id));
+if (!isNew) {
+const upd = withUpdateMeta(f);
+setFuncReports(rs => rs.map(r => r.id === f.id ? upd : r));
+}
+else {
+const saved = withCreateMeta(f);
+const rid = saved.id;
+const asset = assets.find(a => a.id === f.assetId) || {};
+const tpl = allTemplates[f.templateId] || allTemplates["generico"];
+const esitoLabel = f.overallPass ? "CONFORME" : "NON CONFORME";
+const jid = genUUID();
+setJobs(js => [...js, withCreateMeta({
+id: jid, assetId: f.assetId,
+customerId: f.customerId || asset.customerId || "",
+type: "verifica", priority: "normale", status: "chiuso",
+assignee: f.technician || "",
+openDate: f.date || new Date().toISOString().slice(0, 10),
+closeDate: f.date || new Date().toISOString().slice(0, 10),
+description: "Verifica Funzionale — " + tpl.label + " — " + esitoLabel,
+notes: (f.reportNumber ? "Rif.: " + f.reportNumber + " " : "") + (f.notes || ""),
+parts: [], laborHours: 0, laborRate: 55, timeline: [], photos: [],
+funcReportId: rid,
+})]);
+saved.jobId = jid;
+setFuncReports(rs => [...rs, saved]);
+if (f.verifyStatus !== "non_disponibile" && f.overallPass === false) {
+setJobs(js => [...js, withCreateMeta({
+id: genUUID(), assetId: f.assetId,
+customerId: f.customerId || asset.customerId || "",
+type: "correttiva", priority: "alta", status: "aperto",
+assignee: "",
+openDate: f.date || new Date().toISOString().slice(0, 10),
+closeDate: "",
+description: "Verifica Funzionale (" + tpl.label + ") non conforme — da correggere",
+notes: (f.reportNumber ? "Rif.: " + f.reportNumber + ". " : "") + "Generata automaticamente dalla verifica non conforme.",
+parts: [], laborHours: 0, laborRate: 55, timeline: [], photos: [],
+})]);
+showToast("⚠ Verifica NON CONFORME — creata richiesta di manutenzione correttiva (nei Job, stato Aperto)");
+}
+else {
+showToast("Verifica funzionale salvata + Job creato");
+}
+if (company.stickerPrompt) {
+appConfirm("Verifica salvata! Vuoi stampare lo sticker QR da applicare sull'apparecchio?", () => {
+setModal({ type: "sticker", data: saved, kind: "func" });
+}, 'positive');
+}
+else if (f.verifyStatus !== "non_disponibile") {
+const _aid = f.assetId;
+setModal(null);
+appConfirm("Verifica funzionale salvata. Vuoi fare anche la verifica di sicurezza elettrica su questo apparecchio?", () => setModal({ type: "iec", assetId: _aid, data: null }), 'positive');
+}
+else {
+setModal(null);
+}
+return;
+}
+setModal(null);
+showToast("Rapporto funzionale aggiornato");
+};
+const saveCustomTemplate = (tpl) => {
+if (checkLocked())
+return;
+setCustomTemplates(prev => (Object.assign(Object.assign({}, prev), { [tpl.id]: tpl })));
+setModal({ type: "templateManager" });
+showToast("✓ Template salvato");
+};
+const deleteCustomTemplate = (id) => {
+if (checkLocked())
+return;
+if (!confirm("Eliminare questo template? Le verifiche già fatte con questo template restano invariate."))
+return;
+setCustomTemplates(prev => { const c = Object.assign({}, prev); delete c[id]; return c; });
+showToast("Template eliminato", "#ef4444");
+};
+const duplicateAsset = a => {
+const clone = Object.assign({}, a);
+delete clone.id;
+clone.name = (a.name || "") + " (copia)";
+pushModal({ type: "asset", data: clone });
+};
+const duplicatePart = p => {
+const clone = Object.assign({}, p);
+delete clone.id;
+clone.code = (p.code || "") + "-COPIA";
+clone.qty = 0;
+pushModal({ type: "part", data: clone });
+};
+const duplicateJob = j => {
+const clone = Object.assign({}, j);
+delete clone.id;
+clone.openDate = new Date().toISOString().slice(0, 10);
+clone.closeDate = "";
+clone.status = "aperto";
+clone.timeline = [];
+clone.photos = [];
+pushModal({ type: "job", data: clone });
+};
+const duplicateIec = r => {
+const clone = Object.assign({}, r);
+delete clone.id;
+delete clone.reportNumber;
+clone.date = new Date().toISOString().slice(0, 10);
+if (clone.measures)
+clone.measures = clone.measures.map(m => (Object.assign(Object.assign({}, m), { value: "" })));
+clone.overallPass = null;
+clone.techSignature = "";
+clone.deptSignature = "";
+pushModal({ type: "iec", data: clone, assetId: clone.assetId });
+};
+const duplicateFunc = r => {
+const clone = Object.assign({}, r);
+delete clone.id;
+delete clone.reportNumber;
+clone.date = new Date().toISOString().slice(0, 10);
+if (clone.sections) {
+const newSections = {};
+Object.entries(clone.sections).forEach(([secId, sec]) => {
+newSections[secId] = {
+items: {},
+measures: {},
+};
+});
+clone.sections = newSections;
+}
+clone.techSignature = "";
+clone.deptSignature = "";
+pushModal({ type: "func", data: clone, assetId: clone.assetId });
+};
+const duplicateCustomer = c => {
+const clone = Object.assign({}, c);
+delete clone.id;
+clone.name = (c.name || "") + " (copia)";
+pushModal({ type: "customer", data: clone });
+};
+const delFuncReport = id => { if (checkLocked())
+return; appConfirm("Spostare questa verifica funzionale nel cestino?", () => { const r = funcReports.find(x => x.id === id); moveToTrash("funcReports", r); setFuncReports(rs => rs.filter(r => r.id !== id)); showToast("Spostato nel cestino", "#f59e0b"); }); };
+const handleWithdraw = data => {
+if (checkLocked())
+return;
+setParts(ps => ps.map(p => { const r = data.items.find(x => x.partId === p.id); return r ? Object.assign(Object.assign({}, p), { qty: p.qty - r.qty }) : p; }));
+setWDs(w => { const rec = withCreateMeta(data); return [rec, ...w]; });
+setModal(null);
+showToast("Scarico — €" + (data.total.toFixed(2)));
+};
+const mergeById = (locali, remoti) => {
+const map = new Map();
+(locali || []).forEach(r => { if (r && r.id != null)
+map.set(r.id, r); });
+(remoti || []).forEach(r => {
+if (!r || r.id == null)
+return;
+const esistente = map.get(r.id);
+if (!esistente) {
+map.set(r.id, r);
+return;
+}
+const tLoc = Date.parse(esistente.updatedAt || esistente.createdAt || 0) || 0;
+const tRem = Date.parse(r.updatedAt || r.createdAt || 0) || 0;
+map.set(r.id, tRem >= tLoc ? r : esistente);
+});
+return [...map.values()];
+};
+const handleCloudPull = (remote, remoteTrash) => {
+if (checkLocked())
+return;
+const applica = (remoteArr, trashArr, setter) => {
+if (!remoteArr && !trashArr)
+return;
+const trashIds = new Set((trashArr || []).map(r => r.id));
+const attivi = (remoteArr || []).filter(r => !trashIds.has(r.id));
+setter(attivi);
+};
+const rt = remoteTrash || {};
+applica(remote.assets, rt.assets, setAssets);
+applica(remote.parts, rt.parts, setParts);
+applica(remote.jobs, rt.jobs, setJobs);
+applica(remote.orders, rt.orders, setOrders);
+applica(remote.withdrawals, rt.withdrawals, setWDs);
+applica(remote.customers, rt.customers, setCustomers);
+applica(remote.invoices, rt.invoices, setInvoices);
+applica(remote.quotes, rt.quotes, setQuotes);
+applica(remote.instruments, rt.instruments, setInstruments);
+applica(remote.procedures, rt.procedures, setProcedures);
+applica(remote.iecReports, rt.iecReports, setIecReports);
+applica(remote.funcReports, rt.funcReports, setFuncReports);
+if (remoteTrash)
+setCestino(prev => (Object.assign(Object.assign(Object.assign({}, CESTINO_VUOTO), prev), remoteTrash)));
+showToast("☁ Dati uniti dal cloud (nessun dato perso)");
+};
+const handleImport = data => {
+if (checkLocked())
+return;
+try {
+const n = (data.assets || []).length;
+setAssets(Array.isArray(data.assets) ? data.assets : []);
+setParts(Array.isArray(data.parts) ? data.parts : []);
+setJobs(Array.isArray(data.jobs) ? data.jobs : []);
+setOrders(Array.isArray(data.orders) ? data.orders : []);
+setWDs(Array.isArray(data.withdrawals) ? data.withdrawals : []);
+setCustomers(Array.isArray(data.customers) ? data.customers : []);
+setInvoices(Array.isArray(data.invoices) ? data.invoices : []);
+setQuotes(Array.isArray(data.quotes) ? data.quotes : []);
+setInstruments(Array.isArray(data.instruments) ? data.instruments : []);
+setProcedures(Array.isArray(data.procedures) ? data.procedures : []);
+setIecReports(Array.isArray(data.iecReports) ? data.iecReports : []);
+setFuncReports(Array.isArray(data.funcReports) ? data.funcReports : []);
+if (data.company)
+setCompany(c => (Object.assign(Object.assign({}, c), data.company)));
+if (data.customTemplates)
+setCustomTemplates(data.customTemplates);
+setModal(null);
+showToast("✓ Backup importato: " + n + " apparecchi caricati");
+}
+catch (err) {
+showToast("✗ Errore import: " + ((err === null || err === void 0 ? void 0 : err.message) || "imprevisto"));
+}
+};
+const handleMerge = data => {
+if (checkLocked())
+return;
+const mergeArr = (existing, incoming, idField = 'id') => {
+if (!incoming || !incoming.length)
+return existing;
+const existingIds = new Set(existing.map(x => x[idField]));
+const newItems = incoming.filter(x => !existingIds.has(x[idField]));
+return [...existing, ...newItems];
+};
+setAssets(prev => mergeArr(prev, data.assets));
+setParts(prev => mergeArr(prev, data.parts));
+setJobs(prev => mergeArr(prev, data.jobs));
+setOrders(prev => mergeArr(prev, data.orders));
+setWDs(prev => mergeArr(prev, data.withdrawals));
+setCustomers(prev => mergeArr(prev, data.customers));
+setInvoices(prev => mergeArr(prev, data.invoices));
+setQuotes(prev => mergeArr(prev, data.quotes));
+setInstruments(prev => mergeArr(prev, data.instruments));
+setProcedures(prev => mergeArr(prev, data.procedures));
+setIecReports(prev => mergeArr(prev, data.iecReports));
+setFuncReports(prev => mergeArr(prev, data.funcReports));
+if (data.customTemplates)
+setCustomTemplates(prev => (Object.assign(Object.assign({}, data.customTemplates), (prev || {}))));
+setModal(null);
+showToast("✓ Backup unito — nuovi record aggiunti senza sovrascrivere");
+};
+const handleReset = () => {
+if (checkLocked())
+return;
+appConfirm("⚠ ATTENZIONE — Stai per cancellare TUTTI i dati:\n\n• Apparecchi, Clienti, Job\n• Verifiche di sicurezza elettrica e funzionali\n• Strumenti, Procedure\n• Magazzino, Ordini, Scarichi\n• Preventivi\n\nL'operazione è IRREVERSIBILE.\n\nProcedere?", () => {
+appConfirm("Confermi davvero? Tutti i dati saranno persi.", () => {
+appPromptCb('Per confermare, scrivi la parola: CANCELLA', (val) => {
+if (val !== 'CANCELLA') {
+showToast("Reset annullato", "#94a3b8");
+return;
+}
+setAssets([]);
+setParts([]);
+setJobs([]);
+setOrders([]);
+setWDs([]);
+setCustomers([]);
+setInvoices([]);
+setQuotes([]);
+setInstruments([]);
+setProcedures([]);
+setIecReports([]);
+setFuncReports([]);
+setModal(null);
+showToast("Sistema completamente azzerato", "#ef4444");
+});
+});
+});
+};
+const exportAssets = () => downloadXLSX("medtrace_apparecchi.xlsx", assets.map(a => { var _a; return (Object.assign(Object.assign({}, a), { cliente: ((_a = customers.find(c => c.id === a.customerId)) === null || _a === void 0 ? void 0 : _a.name) || "" })); }), [{ key: "id", label: "ID" }, { key: "name", label: "Nome" }, { key: "brand", label: "Marca" }, { key: "model", label: "Modello" }, { key: "serial", label: "N.Serie" }, { key: "location", label: "Ubicazione" }, { key: "cliente", label: "Cliente" }, { key: "status", label: "Stato" }, { key: "lastService", label: "Ultimo Serv." }, { key: "nextService", label: "Prossimo Serv." }, { key: "notes", label: "Note" }]);
+const exportParts = () => downloadXLSX("medtrace_parti.xlsx", parts.map(p => (Object.assign(Object.assign({}, p), { compatibile: (p.compatible || []).map(id => { var _a; return ((_a = assets.find(a => a.id === id)) === null || _a === void 0 ? void 0 : _a.name) || id; }).join(", ") }))), [{ key: "id", label: "ID" }, { key: "code", label: "Codice" }, { key: "name", label: "Nome" }, { key: "brand", label: "Marca" }, { key: "qty", label: "Q.tà" }, { key: "minQty", label: "Q.Min" }, { key: "unitPrice", label: "Costo" }, { key: "sellPrice", label: "Vendita" }, { key: "location", label: "Ubicazione" }, { key: "compatibile", label: "Compatibile con" }, { key: "notes", label: "Note" }]);
+const exportJobs = () => downloadXLSX("medtrace_job.xlsx", jobs.map(j => {
+const a = assets.find(x => x.id === j.assetId) || {};
+const c = customers.find(x => x.id === (j.customerId || a.customerId)) || {};
+const cp = j.parts.reduce((s, p) => { const pt = parts.find(x => x.id === p.partId); return s + (pt ? (pt.sellPrice || pt.unitPrice) * p.qty : 0); }, 0);
+return Object.assign(Object.assign({}, j), { apparecchio: a.name || j.assetId, cliente: c.name || "", partiUsate: j.parts.map(p => { const pt = parts.find(x => x.id === p.partId); return ((pt === null || pt === void 0 ? void 0 : pt.name) || p.partId) + " x" + p.qty; }).join(", "), costoParti: cp.toFixed(2), costoManodopera: (j.laborHours * j.laborRate).toFixed(2), totale: (cp + j.laborHours * j.laborRate).toFixed(2), parts: undefined, timeline: undefined, photos: undefined });
+}), [{ key: "id", label: "ID" }, { key: "apparecchio", label: "Apparecchio" }, { key: "cliente", label: "Cliente" }, { key: "type", label: "Tipo" }, { key: "priority", label: "Priorità" }, { key: "status", label: "Stato" }, { key: "assignee", label: "Tecnico" }, { key: "openDate", label: "Apertura" }, { key: "closeDate", label: "Chiusura" }, { key: "description", label: "Descrizione" }, { key: "partiUsate", label: "Parti" }, { key: "laborHours", label: "Ore" }, { key: "laborRate", label: "Tariffa €/h" }, { key: "costoParti", label: "Costo Parti" }, { key: "costoManodopera", label: "Manodopera" }, { key: "totale", label: "Totale" }]);
+const exportOrders = () => downloadXLSX("medtrace_ordini.xlsx", orders.map(o => { var _a; return (Object.assign(Object.assign({}, o), { nomeParte: ((_a = parts.find(p => p.id === o.partId)) === null || _a === void 0 ? void 0 : _a.name) || o.partId, totale: (o.qty * o.unitPrice).toFixed(2) })); }), [{ key: "id", label: "ID" }, { key: "supplier", label: "Fornitore" }, { key: "nomeParte", label: "Parte" }, { key: "qty", label: "Q.tà" }, { key: "unitPrice", label: "Prezzo Unit." }, { key: "totale", label: "Totale" }, { key: "status", label: "Stato" }, { key: "orderDate", label: "Data Ordine" }, { key: "expectedDate", label: "Consegna Prev." }, { key: "notes", label: "Note" }]);
+const exportInvoices = () => downloadXLSX("medtrace_preventivi.xlsx", invoices.map(i => { var _a; const sub = i.items.reduce((s, it) => s + it.qty * it.unitPrice, 0); const vat = i.items.reduce((s, it) => s + it.qty * it.unitPrice * it.vat / 100, 0); return Object.assign(Object.assign({}, i), { cliente: ((_a = customers.find(c => c.id === i.customerId)) === null || _a === void 0 ? void 0 : _a.name) || "", imponibile: sub.toFixed(2), iva: vat.toFixed(2), totale: (sub + vat).toFixed(2), items: undefined, jobIds: undefined }); }), [{ key: "number", label: "N.Preventivo" }, { key: "cliente", label: "Cliente" }, { key: "date", label: "Data" }, { key: "dueDate", label: "Scadenza" }, { key: "status", label: "Stato" }, { key: "imponibile", label: "Imponibile" }, { key: "iva", label: "IVA" }, { key: "totale", label: "Totale" }, { key: "paymentTerms", label: "Pagamento" }, { key: "notes", label: "Note" }]);
+const exportIecReports = () => downloadXLSX("medtrace_verifiche_sicurezza.xlsx", iecReports.map(r => { var _a; const a = assets.find(x => x.id === r.assetId) || {}; const c = customers.find(x => x.id === a.customerId) || {}; return Object.assign(Object.assign({}, r), { apparecchio: a.name || r.assetId || "", nSerie: a.serial || "", cliente: c.name || "", misure: ((_a = r.measures) === null || _a === void 0 ? void 0 : _a.map(m => m.name + ": " + m.value + m.unit + " (lim." + m.limit + ")").join("; ")) || "", measures: undefined, visual: undefined }); }), [{ key: "reportNumber", label: "N.Rapporto" }, { key: "date", label: "Data" }, { key: "norm", label: "Norma" }, { key: "apparecchio", label: "Apparecchio" }, { key: "nSerie", label: "N.Serie" }, { key: "cliente", label: "Cliente" }, { key: "technician", label: "Tecnico" }, { key: "instrument", label: "Strumento" }, { key: "equipClass", label: "Classe" }, { key: "patientType", label: "Tipo Paziente" }, { key: "verifyType", label: "Tipo Verifica" }, { key: "overallPass", label: "Esito" }, { key: "misure", label: "Misure" }, { key: "notes", label: "Note" }]);
+const NAV_GROUPS = [
+{
+id: "g_dash", label: null,
+items: [
+{ id: "dashboard", label: "Dashboard", icon: "◈" },
+]
+},
+{
+id: "g_maint", label: "MANUTENZIONE",
+items: [
+{ id: "jobs", label: "Job / Interventi", icon: "›", badge: stats.urgentJobs > 0 ? stats.urgentJobs : null, bColor: "#ef4444" },
+{ id: "richieste", label: "Richieste clienti", icon: "›", badge: (richieste.filter(r => r.status === "nuova").length) || null, bColor: "#2DD4BF" },
+{ id: "iec", label: "Sicurezza Elettrica", icon: "›" },
+{ id: "func", label: "Verif. Funzionale", icon: "›" },
+{ id: "agenda", label: "Agenda & Pianific.", icon: "›", badge: upcomingMaintenance.length > 0 ? upcomingMaintenance.length : null, bColor: "#f59e0b" },
+{ id: "scadenze", label: "Scadenze & Promemoria", icon: "›" },
+]
+},
+{
+id: "g_assets", label: "APPARECCHIATURE",
+items: [
+{ id: "assets", label: "Apparecchi", icon: "›", badge: stats.outOfService > 0 ? stats.outOfService : null, bColor: "#ef4444" },
+{ id: "instruments", label: "Strumenti", icon: "›" },
+{ id: "customers", label: "Clienti", icon: "›" },
+]
+},
+{
+id: "g_stock", label: "GESTIONE",
+items: [
+{ id: "parts", label: "Magazzino", icon: "›", badge: stats.lowStock > 0 ? stats.lowStock : null, bColor: "#f59e0b" },
+{ id: "invoices", label: "Preventivi", icon: "›", badge: stats.pendingInvoices > 0 ? stats.pendingInvoices : null, bColor: "#2DD4BF" },
+]
+},
+{
+id: "g_sys", label: "DOCUMENTAZIONE & AIUTO",
+items: [
+{ id: "procedures", label: "Procedure", icon: "›" },
+{ id: "help", label: "Guida / Help", icon: "›" },
+]
+},
+];
+const NAV_GROUPS_VISIBLE = NAV_GROUPS
+.map(g => (Object.assign(Object.assign({}, g), { items: g.items.filter(it => canSee(it.id)) })))
+.filter(g => g.items.length > 0);
+const NAV = NAV_GROUPS_VISIBLE.flatMap(g => g.items);
+const filteredJobs = React.useMemo(() => {
+return jobs.filter(j => {
+if (filterStatus && j.status !== filterStatus)
+return false;
+if (filterPriority && j.priority !== filterPriority)
+return false;
+if (filterCustomer) {
+const asset = assets.find(a => a.id === j.assetId);
+if ((j.customerId || (asset === null || asset === void 0 ? void 0 : asset.customerId)) !== filterCustomer)
+return false;
+}
+if (search) {
+const q = search.toLowerCase();
+return [j.id, j.assignee, j.description].join(" ").toLowerCase().includes(q);
+}
+return true;
+});
+}, [jobs, assets, search, filterStatus, filterPriority, filterCustomer]);
+const filteredAssets = React.useMemo(() => assets.filter(a => !search || [a.name, a.brand, a.model, a.serial, a.location].join(" ").toLowerCase().includes(search.toLowerCase())), [assets, search]);
+const filteredParts = React.useMemo(() => parts.filter(p => !search || [p.code, p.name, p.brand, p.location].join(" ").toLowerCase().includes(search.toLowerCase())), [parts, search]);
+const filteredOrders = React.useMemo(() => orders.filter(o => !search || [o.id, o.supplier, o.notes].join(" ").toLowerCase().includes(search.toLowerCase())), [orders, search]);
+const filteredCustomers = React.useMemo(() => customers.filter(c => !search || [c.name, c.vat, c.email, c.contact].join(" ").toLowerCase().includes(search.toLowerCase())), [customers, search]);
+const filteredInvoices = React.useMemo(() => invoices.filter(i => {
+if (!search)
+return true;
+const customer = customers.find(c => c.id === i.customerId);
+return [i.number, customer === null || customer === void 0 ? void 0 : customer.name, i.status].join(" ").toLowerCase().includes(search.toLowerCase());
+}), [invoices, customers, search]);
+const sideW = 230;
+const isEmpty = assets.length === 0 && parts.length === 0 && jobs.length === 0 && customers.length === 0;
+return (React.createElement("div", { style: { minHeight: "100vh", background: "#0D0D12" } },
+loadingMsg && React.createElement(LoadingOverlay, { message: loadingMsg }),
+toast && React.createElement("div", { style: { position: "fixed", top: 16, right: 16, background: toast.color + "22", border: "1px solid " + (toast.color) + "55", color: toast.color, borderRadius: 10, padding: "11px 18px", zIndex: 2000, fontSize: 13, fontWeight: 700, maxWidth: "90vw" } }, toast.msg),
+isMobile && (React.createElement("div", { style: {
+position: "fixed", inset: 0, background: "#000b", zIndex: 800, backdropFilter: "blur(4px)",
+opacity: navOpen ? 1 : 0,
+pointerEvents: navOpen ? "auto" : "none",
+transition: "opacity .25s ease"
+}, onClick: () => setNavOpen(false) },
+React.createElement("aside", { style: {
+position: "absolute", left: 0, top: 0, bottom: 0, width: 260,
+background: "linear-gradient(180deg, #0a0a12 0%, #06080d 100%)",
+borderRight: "1px solid #14182a",
+display: "flex", flexDirection: "column", overflowY: "auto",
+boxShadow: "4px 0 24px rgba(0,0,0,0.6)",
+transform: navOpen ? "translateX(0)" : "translateX(-100%)",
+transition: "transform .28s cubic-bezier(0.22, 1, 0.36, 1)"
+}, onClick: e => e.stopPropagation() },
+React.createElement("div", { style: { padding: "22px 20px 16px", borderBottom: "1px solid #14182a", position: "relative" } },
+React.createElement("div", { style: { position: "absolute", top: 0, left: 0, right: 0, height: "1px", background: "linear-gradient(90deg, transparent, #2DD4BF44, transparent)" } }),
+React.createElement("svg", { viewBox: "0 0 220 48", xmlns: "http://www.w3.org/2000/svg", style: { width: "100%", maxWidth: 200, height: 38, display: "block", marginBottom: 6 } },
+React.createElement("defs", null,
+React.createElement("linearGradient", { id: "logoGradM", x1: "0", y1: "0", x2: "1", y2: "0" },
+React.createElement("stop", { offset: "0%", stopColor: "#2DD4BF" }),
+React.createElement("stop", { offset: "100%", stopColor: "#0d9488" }))),
+React.createElement("g", { fill: "none", stroke: "url(#logoGradM)", strokeLinecap: "round", strokeLinejoin: "round" },
+React.createElement("path", { d: "M6 24 Q11 14 16 24 Q21 34 26 24", strokeWidth: "2.5" }),
+React.createElement("path", { d: "M1 24 Q9 10 16 24 Q23 38 31 24", strokeWidth: "2.5" }),
+React.createElement("path", { d: "M-4 24 Q7 6 16 24 Q25 42 36 24", strokeWidth: "2.5" }),
+React.createElement("circle", { cx: "42", cy: "24", r: "3.5", fill: "#2DD4BF", stroke: "none" })),
+React.createElement("text", { x: "54", y: "28", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif", fontSize: "20", fontWeight: "800", fill: "#F8FAFC", letterSpacing: "-0.3" }, "MedTrace"),
+React.createElement("text", { x: "54", y: "40", fontFamily: "-apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontSize: "8.5", fontWeight: "600", fill: "#475569", letterSpacing: "2" }, "MEDICAL \u00B7 CMMS")),
+company.name && React.createElement("div", { style: { fontSize: 10, fontWeight: 600, color: "#64748b", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, company.name)),
+React.createElement("nav", { style: { flex: 1, padding: "14px 8px" } }, NAV_GROUPS_VISIBLE.map((group, gi) => (React.createElement("div", { key: group.id, style: { marginBottom: gi < NAV_GROUPS_VISIBLE.length - 1 ? 10 : 0 } },
+group.label && (React.createElement("div", { style: { padding: "8px 12px 4px", fontSize: 9, color: "#475569", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.5 } }, group.label)),
+group.items.map(n => {
+const active = tab === n.id;
+return (React.createElement("button", { key: n.id, onClick: () => { setTab(n.id); setSearch(""); setNavOpen(false); }, style: {
+width: "100%", textAlign: "left",
+background: active ? "linear-gradient(90deg, #2DD4BF22, #2DD4BF08)" : "transparent",
+border: "none", borderRadius: 8, margin: "1px 0",
+color: active ? "#F8FAFC" : "#94a3b8",
+padding: "11px 14px", fontSize: 13, cursor: "pointer",
+display: "flex", alignItems: "center", gap: 10,
+fontWeight: active ? 600 : 500,
+position: "relative",
+touchAction: "manipulation",
+WebkitTapHighlightColor: "transparent"
+} },
+active && React.createElement("span", { style: { position: "absolute", left: -8, top: 9, bottom: 9, width: 3, background: "#2DD4BF", borderRadius: "0 3px 3px 0" } }),
+React.createElement("span", { style: { fontSize: 15, minWidth: 20, textAlign: "center", color: active ? "#2DD4BF" : "#64748b" } }, n.icon),
+React.createElement("span", { style: { flex: 1 } }, n.label),
+n.badge && React.createElement("span", { style: { background: n.bColor, color: "#fff", borderRadius: 10, padding: "1px 7px", fontSize: 10, fontWeight: 700, letterSpacing: .3 } }, n.badge)));
+}))))),
+React.createElement("div", { style: { padding: "12px 14px", borderTop: "1px solid #14182a", display: "flex", flexDirection: "column", gap: 10 } },
+React.createElement("button", { onClick: () => { setModal({ type: "settings" }); setNavOpen(false); }, style: {
+background: "transparent", border: "1px solid #1e2a3a", borderRadius: 6,
+color: "#94a3b8", fontSize: 12, fontWeight: 600, padding: "8px",
+cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+touchAction: "manipulation"
+} }, "\u2699 Impostazioni"))))),
+!isMobile && (React.createElement("aside", { style: {
+position: "fixed", left: 0, top: 0, bottom: 0, width: sideW, zIndex: 100,
+background: "linear-gradient(180deg, #0a0a12 0%, #06080d 100%)",
+borderRight: "1px solid #14182a",
+display: "flex", flexDirection: "column",
+boxShadow: "4px 0 24px rgba(0,0,0,0.4)"
+} },
+React.createElement("div", { style: { padding: "22px 20px 18px", borderBottom: "1px solid #14182a", position: "relative" } },
+React.createElement("div", { style: { position: "absolute", top: 0, left: 0, right: 0, height: "1px", background: "linear-gradient(90deg, transparent, #2DD4BF44, transparent)" } }),
+React.createElement("svg", { viewBox: "0 0 220 48", xmlns: "http://www.w3.org/2000/svg", style: { width: "100%", maxWidth: 200, height: 38, display: "block", marginBottom: 6 } },
+React.createElement("defs", null,
+React.createElement("linearGradient", { id: "logoGrad", x1: "0", y1: "0", x2: "1", y2: "0" },
+React.createElement("stop", { offset: "0%", stopColor: "#2DD4BF" }),
+React.createElement("stop", { offset: "100%", stopColor: "#0d9488" }))),
+React.createElement("g", { fill: "none", stroke: "url(#logoGrad)", strokeLinecap: "round", strokeLinejoin: "round" },
+React.createElement("path", { d: "M6 24 Q11 14 16 24 Q21 34 26 24", strokeWidth: "2.5" }),
+React.createElement("path", { d: "M1 24 Q9 10 16 24 Q23 38 31 24", strokeWidth: "2.5" }),
+React.createElement("path", { d: "M-4 24 Q7 6 16 24 Q25 42 36 24", strokeWidth: "2.5" }),
+React.createElement("circle", { cx: "42", cy: "24", r: "3.5", fill: "#2DD4BF", stroke: "none" })),
+React.createElement("text", { x: "54", y: "28", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif", fontSize: "20", fontWeight: "800", fill: "#F8FAFC", letterSpacing: "-0.3" }, "MedTrace"),
+React.createElement("text", { x: "54", y: "40", fontFamily: "-apple-system, BlinkMacSystemFont, system-ui, sans-serif", fontSize: "8.5", fontWeight: "600", fill: "#475569", letterSpacing: "2" }, "MEDICAL \u00B7 CMMS")),
+company.name && React.createElement("div", { style: { fontSize: 10, fontWeight: 600, color: "#64748b", marginTop: 4, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, company.name)),
+React.createElement("nav", { style: { flex: 1, padding: "14px 8px", overflowY: "auto" } }, NAV_GROUPS_VISIBLE.map((group, gi) => (React.createElement("div", { key: group.id, style: { marginBottom: gi < NAV_GROUPS_VISIBLE.length - 1 ? 8 : 0 } },
+group.label && (React.createElement("div", { style: { padding: "8px 12px 4px", fontSize: 9, color: "#475569", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.5 } }, group.label)),
+group.items.map(n => {
+const active = tab === n.id;
+return (React.createElement("button", { key: n.id, onClick: () => { setTab(n.id); setSearch(""); }, onMouseEnter: e => { if (!active)
+e.currentTarget.style.background = "#14182a"; }, onMouseLeave: e => { if (!active)
+e.currentTarget.style.background = "transparent"; }, style: {
+width: "100%", textAlign: "left",
+background: active ? "linear-gradient(90deg, #2DD4BF22, #2DD4BF08)" : "transparent",
+border: "none",
+borderRadius: 8,
+margin: "1px 0",
+color: active ? "#F8FAFC" : "#94a3b8",
+padding: "9px 14px",
+fontSize: 12.5,
+cursor: "pointer",
+display: "flex", alignItems: "center", gap: 10,
+fontWeight: active ? 600 : 500,
+position: "relative",
+transition: "all .15s ease"
+} },
+active && React.createElement("span", { style: { position: "absolute", left: -8, top: 7, bottom: 7, width: 3, background: "#2DD4BF", borderRadius: "0 3px 3px 0" } }),
+React.createElement("span", { style: { fontSize: 14, minWidth: 18, textAlign: "center", color: active ? "#2DD4BF" : "#64748b" } }, n.icon),
+React.createElement("span", { style: { flex: 1 } }, n.label),
+n.badge && React.createElement("span", { style: { background: n.bColor, color: "#fff", borderRadius: 10, padding: "1px 7px", fontSize: 10, fontWeight: 700, letterSpacing: .3 } }, n.badge)));
+}))))),
+React.createElement("div", { style: { padding: "12px 14px", borderTop: "1px solid #14182a", display: "flex", flexDirection: "column", gap: 8 } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center" } },
+React.createElement("span", { style: { fontSize: 10, color: "#334155", fontFamily: "monospace", letterSpacing: .5 } },
+"v",
+APP_VERSION),
+React.createElement("button", { onClick: () => setModal({ type: "settings" }), onMouseEnter: e => e.currentTarget.style.color = "#2DD4BF", onMouseLeave: e => e.currentTarget.style.color = "#64748b", style: { background: "none", border: "none", color: "#64748b", fontSize: 14, cursor: "pointer", transition: "color .15s" } }, "\u2699 Impostazioni"))))),
+React.createElement("div", { style: { marginLeft: isMobile ? 0 : sideW, padding: isMobile ? "16px 14px" : "26px 28px", minHeight: "100vh" } },
+typeof DEMO_LOCKED !== "undefined" && DEMO_LOCKED && (React.createElement("div", { style: {
+background: "linear-gradient(90deg, #f59e0b22, #f59e0b08)",
+border: "1px solid #f59e0b66",
+borderRadius: 8,
+padding: "8px 14px",
+marginBottom: 12,
+fontSize: 12,
+color: "#fbbf24",
+display: "flex",
+alignItems: "center",
+gap: 8,
+fontWeight: 600
+} },
+React.createElement("span", { style: { fontSize: 14 } }, "\uD83D\uDC41"),
+React.createElement("span", null, "Modalit\u00E0 DEMO \u2014 sola lettura. Esplora liberamente: le modifiche non sono salvate."))),
+isMobile && (ptrPull > 0 || ptrRefreshing) && (React.createElement("div", { style: { position: "fixed", top: 8, left: "50%", transform: `translateX(-50%) translateY(${Math.min(ptrPull, 50) - 50}px)`, zIndex: 500, background: "#0D0D12", border: "1px solid #2DD4BF66", borderRadius: 24, padding: "8px 16px", display: "flex", alignItems: "center", gap: 8, boxShadow: "0 4px 14px #000a", opacity: ptrRefreshing ? 1 : Math.min(ptrPull / 60, 1), transition: ptrRefreshing ? "none" : "transform .15s" } },
+React.createElement("span", { style: { display: "inline-block", width: 14, height: 14, border: "2px solid #2A2A38", borderTopColor: "#2DD4BF", borderRadius: "50%", animation: ptrRefreshing ? "ptr-spin .6s linear infinite" : "none", transform: ptrRefreshing ? "none" : `rotate(${ptrPull * 4}deg)` } }),
+React.createElement("span", { style: { fontSize: 12, color: "#2DD4BF", fontWeight: 700 } }, ptrRefreshing ? "Aggiornamento…" : ptrPull > 60 ? "Rilascia per aggiornare" : "Tira per aggiornare"))),
+React.createElement("style", null, `@keyframes ptr-spin { to { transform: rotate(360deg); } }`),
+isMobile && (React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, background: "#06090f", borderRadius: 12, padding: "10px 12px", border: "1px solid #1a2030", gap: 8 } },
+React.createElement("button", { onClick: () => setNavOpen(true), style: { background: "none", border: "none", color: "#e2e8f0", fontSize: 22, cursor: "pointer", padding: "4px 8px", touchAction: "manipulation", WebkitTapHighlightColor: "transparent" } }, "\u2261"),
+React.createElement("div", { style: { flex: 1, textAlign: "center", minWidth: 0 } },
+company.name && React.createElement("div", { style: { fontSize: 9, color: "#2DD4BF", letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, company.name),
+React.createElement("div", { style: { fontSize: 15, fontWeight: 900, color: "#F0F0F5", textTransform: "uppercase", letterSpacing: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } }, ((_a = NAV.find(n => n.id === tab)) === null || _a === void 0 ? void 0 : _a.label) || "MedTrace")),
+React.createElement("button", { onClick: () => setModal({ type: "settings" }), style: { background: "none", border: "none", color: "#64748b", fontSize: 20, cursor: "pointer", padding: "4px 8px", touchAction: "manipulation", WebkitTapHighlightColor: "transparent" } }, "\u2699"))),
+tab === "dashboard" && (React.createElement("div", null,
+!isMobile && React.createElement("h1", { style: { margin: "0 0 20px", fontSize: 20, fontWeight: 900 } }, "Dashboard"),
+isEmpty ? (React.createElement("div", { style: { maxWidth: 520, margin: "20px auto" } },
+React.createElement("div", { style: { textAlign: "center", marginBottom: 24 } },
+React.createElement("div", { style: { fontSize: 22, fontWeight: 900, color: "#fff", marginBottom: 6 } }, "Benvenuto" + (company.name ? " in " + company.name : " in MedTrace")),
+React.createElement("div", { style: { fontSize: 13, color: "#94a3b8", lineHeight: 1.5 } }, "Tre passi per iniziare. Bastano un paio di minuti.")),
+[
+{ n: 1, t: "Aggiungi un cliente", d: "La struttura o lo studio dove si trovano gli apparecchi.", show: isAdmin, btn: "+ Nuovo cliente", go: () => { setTab("customers"); setModal({ type: "customer", data: null }); } },
+{ n: 2, t: "Registra un apparecchio", d: "Il dispositivo da gestire: nome, marca, numero di serie.", show: true, btn: "+ Nuovo apparecchio", go: () => { setTab("assets"); setModal({ type: "asset", data: null }); } },
+{ n: 3, t: "Esegui la prima verifica", d: "Sicurezza elettrica o funzionale, dalla scheda dell'apparecchio.", show: true, btn: "Vai agli apparecchi", go: () => setTab("assets") },
+].filter(s => s.show).map(s => (React.createElement("div", { key: s.n, style: { display: "flex", gap: 14, alignItems: "center", background: "#141418", border: "1px solid #24242F", borderRadius: 12, padding: "14px 16px", marginBottom: 10 } },
+React.createElement("div", { style: { width: 32, height: 32, borderRadius: "50%", background: "#2DD4BF22", border: "1px solid #2DD4BF55", color: "#5EEAD4", fontWeight: 900, fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 } }, s.n),
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+React.createElement("div", { style: { fontSize: 14, fontWeight: 800, color: "#e2e8f0" } }, s.t),
+React.createElement("div", { style: { fontSize: 11.5, color: "#64748b", lineHeight: 1.4 } }, s.d)),
+React.createElement("button", { onClick: s.go, style: { background: "#2DD4BF", color: "#0a0a0e", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 12.5, fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 } }, s.btn)))),
+React.createElement("div", { style: { textAlign: "center", fontSize: 11, color: "#475569", marginTop: 16, lineHeight: 1.5 } }, "I dati restano sul tuo dispositivo. Puoi sincronizzarli sul cloud dalle Impostazioni."))) : (() => {
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+const in7days = new Date(today);
+in7days.setDate(in7days.getDate() + 7);
+const in30days = new Date(today);
+in30days.setDate(in30days.getDate() + 30);
+const openJobs = jobs.filter(j => j.status !== "chiuso");
+const urgentJobs = openJobs.filter(j => j.priority === "urgente");
+const dueThisWeek = assets.filter(a => {
+if (!a.nextService)
+return false;
+const d = new Date(a.nextService);
+d.setHours(0, 0, 0, 0);
+return d <= in7days;
+}).map(a => (Object.assign(Object.assign({}, a), { daysToService: Math.round((new Date(a.nextService) - today) / 86400000) }))).sort((a, b) => a.daysToService - b.daysToService);
+const expiredService = assets.filter(a => {
+if (!a.nextService)
+return false;
+const d = new Date(a.nextService);
+d.setHours(0, 0, 0, 0);
+return d < today;
+});
+const warrantyExpiring = assets.filter(a => {
+if (!a.warrantyExpiry)
+return false;
+const d = new Date(a.warrantyExpiry);
+d.setHours(0, 0, 0, 0);
+return d >= today && d <= in30days;
+});
+const lowStock = parts.filter(p => p.qty <= p.minQty);
+const upcoming30 = assets.filter(a => {
+if (!a.nextService)
+return false;
+const d = new Date(a.nextService);
+d.setHours(0, 0, 0, 0);
+return d >= today && d <= in30days;
+}).map(a => (Object.assign(Object.assign({}, a), { daysToService: Math.round((new Date(a.nextService) - today) / 86400000) }))).sort((a, b) => a.daysToService - b.daysToService).slice(0, 5);
+const totalTodo = urgentJobs.length + expiredService.length + dueThisWeek.length + lowStock.length;
+return (React.createElement(React.Fragment, null,
+React.createElement("div", { style: { marginBottom: 28 } },
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(auto-fit,minmax(160px,1fr))", gap: 10 } },
+React.createElement(Pill, { label: "Apparecchi", value: stats.totalAssets, color: "#2DD4BF", onClick: () => setTab("assets") }),
+React.createElement(Pill, { label: "Job aperti", value: stats.openJobs, color: "#2DD4BF", sub: stats.urgentJobs > 0 ? stats.urgentJobs + " urgenti" : "", onClick: () => setTab("jobs") }),
+React.createElement(Pill, { label: "Sicurezza elettrica", value: iecReports.length, color: "#a855f7", sub: "verifiche", onClick: () => setTab("iec") }),
+React.createElement(Pill, { label: "Funzionale", value: funcReports.length, color: "#0891b2", sub: "verifiche", onClick: () => setTab("func") }),
+React.createElement(Pill, { label: "Clienti", value: stats.customers, color: "#2DD4BF", onClick: () => setTab("customers") }))),
+React.createElement("div", { style: { marginBottom: 28 } },
+React.createElement("div", { style: { display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10, paddingBottom: 6, borderBottom: "1px solid #1e2a3a" } },
+React.createElement("h2", { style: { margin: 0, fontSize: 13, fontWeight: 800, color: "#e2e8f0", letterSpacing: .5, textTransform: "uppercase" } }, "Da fare"),
+React.createElement("span", { style: { fontSize: 11, color: "#64748b", fontFamily: "monospace" } }, totalTodo === 0 ? "tutto in ordine" : totalTodo + " attività")),
+totalTodo === 0 ? (React.createElement("div", { style: { padding: "20px 16px", textAlign: "center", color: "#64748b", fontSize: 12, background: "#0D0D12", borderRadius: 8, border: "1px dashed #1e2a3a" } }, "Nessuna scadenza imminente. Tutto sotto controllo.")) : (React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } },
+urgentJobs.length > 0 && (React.createElement("div", { className: "mt-tap", onClick: () => setTab("jobs"), style: { padding: "10px 14px", background: "#0D0D12", border: "1px solid #1e2a3a", borderLeft: "3px solid #ef4444", borderRadius: 8, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", touchAction: "manipulation", WebkitTapHighlightColor: "transparent" } },
+React.createElement("div", null,
+React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: "#e2e8f0" } },
+urgentJobs.length,
+" ",
+urgentJobs.length === 1 ? "job urgente" : "job urgenti"),
+React.createElement("div", { style: { fontSize: 11, color: "#64748b", marginTop: 2 } }, "Da prendere in carico subito")),
+React.createElement("span", { style: { color: "#ef4444", fontSize: 14 } }, "\u203A"))),
+expiredService.length > 0 && (React.createElement("div", { className: "mt-tap", onClick: () => setTab("agenda"), style: { padding: "10px 14px", background: "#0D0D12", border: "1px solid #1e2a3a", borderLeft: "3px solid #ef4444", borderRadius: 8, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", touchAction: "manipulation", WebkitTapHighlightColor: "transparent" } },
+React.createElement("div", null,
+React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: "#e2e8f0" } },
+expiredService.length,
+" ",
+expiredService.length === 1 ? "manutenzione scaduta" : "manutenzioni scadute"),
+React.createElement("div", { style: { fontSize: 11, color: "#64748b", marginTop: 2 } }, "Da pianificare con priorit\u00E0")),
+React.createElement("span", { style: { color: "#ef4444", fontSize: 14 } }, "\u203A"))),
+dueThisWeek.filter(a => a.daysToService >= 0).length > 0 && (React.createElement("div", { className: "mt-tap", onClick: () => setTab("agenda"), style: { padding: "10px 14px", background: "#0D0D12", border: "1px solid #1e2a3a", borderLeft: "3px solid #f59e0b", borderRadius: 8, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", touchAction: "manipulation", WebkitTapHighlightColor: "transparent" } },
+React.createElement("div", null,
+React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: "#e2e8f0" } },
+dueThisWeek.filter(a => a.daysToService >= 0).length,
+" manutenzioni questa settimana"),
+React.createElement("div", { style: { fontSize: 11, color: "#64748b", marginTop: 2 } }, "Scadenza entro 7 giorni")),
+React.createElement("span", { style: { color: "#f59e0b", fontSize: 14 } }, "\u203A"))),
+lowStock.length > 0 && (React.createElement("div", { className: "mt-tap", onClick: () => setTab("parts"), style: { padding: "10px 14px", background: "#0D0D12", border: "1px solid #1e2a3a", borderLeft: "3px solid #f59e0b", borderRadius: 8, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", touchAction: "manipulation", WebkitTapHighlightColor: "transparent" } },
+React.createElement("div", null,
+React.createElement("div", { style: { fontSize: 13, fontWeight: 700, color: "#e2e8f0" } },
+lowStock.length,
+" ",
+lowStock.length === 1 ? "parte sotto scorta" : "parti sotto scorta"),
+React.createElement("div", { style: { fontSize: 11, color: "#64748b", marginTop: 2 } }, "Da riordinare")),
+React.createElement("span", { style: { color: "#f59e0b", fontSize: 14 } }, "\u203A")))))),
+(urgentJobs.length > 0 || expiredService.length > 0) && (React.createElement("div", { style: { marginBottom: 28 } },
+React.createElement("div", { style: { display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10, paddingBottom: 6, borderBottom: "1px solid #1e2a3a" } },
+React.createElement("h2", { style: { margin: 0, fontSize: 13, fontWeight: 800, color: "#ef4444", letterSpacing: .5, textTransform: "uppercase" } }, "Critico"),
+React.createElement("span", { style: { fontSize: 11, color: "#64748b", fontFamily: "monospace" } },
+urgentJobs.length + expiredService.length,
+" elementi")),
+React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } },
+urgentJobs.slice(0, 3).map(j => {
+const a = assets.find(x => x.id === j.assetId) || {};
+return (React.createElement("div", { key: j.id, onClick: () => setModal({ type: "jobDetail", data: j }), style: { padding: "10px 14px", background: "#141418", border: "1px solid #ef444433", borderRadius: 8, cursor: "pointer", touchAction: "manipulation", WebkitTapHighlightColor: "transparent" } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 } },
+React.createElement("span", { style: { fontSize: 10, color: "#ef4444", fontWeight: 800, letterSpacing: .5, textTransform: "uppercase" } },
+"Job urgente \u00B7 ",
+j.id),
+React.createElement("span", { style: { fontSize: 10, color: "#64748b", fontFamily: "monospace" } }, j.openDate)),
+React.createElement("div", { style: { fontSize: 13, color: "#e2e8f0", fontWeight: 600 } }, a.name || "(apparecchio sconosciuto)"),
+j.description && React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, j.description)));
+}),
+expiredService.slice(0, 3).map(a => {
+const c = customers.find(x => x.id === a.customerId) || {};
+const days = Math.round((today - new Date(a.nextService)) / 86400000);
+return (React.createElement("div", { key: a.id, onClick: () => setModal({ type: "assetDetail", data: a }), style: { padding: "10px 14px", background: "#141418", border: "1px solid #ef444433", borderRadius: 8, cursor: "pointer", touchAction: "manipulation", WebkitTapHighlightColor: "transparent" } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 } },
+React.createElement("span", { style: { fontSize: 10, color: "#ef4444", fontWeight: 800, letterSpacing: .5, textTransform: "uppercase" } },
+"Manut. scaduta da ",
+days,
+"gg"),
+React.createElement("span", { style: { fontSize: 10, color: "#64748b", fontFamily: "monospace" } }, a.nextService)),
+React.createElement("div", { style: { fontSize: 13, color: "#e2e8f0", fontWeight: 600 } }, a.name),
+c.name && React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", marginTop: 2 } }, c.name)));
+}),
+(urgentJobs.length + expiredService.length > 6) && (React.createElement("div", { onClick: () => setTab("jobs"), style: { padding: "8px 14px", textAlign: "center", fontSize: 11, color: "#64748b", cursor: "pointer", touchAction: "manipulation" } },
+"+ altri ",
+urgentJobs.length + expiredService.length - 6,
+" elementi critici \u203A"))))),
+upcoming30.length > 0 && (React.createElement("div", { style: { marginBottom: 28 } },
+React.createElement("div", { style: { display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 10, paddingBottom: 6, borderBottom: "1px solid #1e2a3a" } },
+React.createElement("h2", { style: { margin: 0, fontSize: 13, fontWeight: 800, color: "#e2e8f0", letterSpacing: .5, textTransform: "uppercase" } }, "Prossimi 30 giorni"),
+React.createElement("span", { onClick: () => setTab("agenda"), style: { fontSize: 11, color: "#2DD4BF", cursor: "pointer", fontWeight: 600 } }, "vedi agenda \u203A")),
+React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4 } }, upcoming30.map(a => {
+const c = customers.find(x => x.id === a.customerId) || {};
+const col = a.daysToService <= 7 ? "#f59e0b" : "#64748b";
+return (React.createElement("div", { key: a.id, onClick: () => setModal({ type: "assetDetail", data: a }), style: { padding: "8px 14px", background: "#0D0D12", borderRadius: 6, cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, touchAction: "manipulation", WebkitTapHighlightColor: "transparent" } },
+React.createElement("div", { style: { minWidth: 0, flex: 1 } },
+React.createElement("div", { style: { fontSize: 12, color: "#e2e8f0", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, a.name),
+c.name && React.createElement("div", { style: { fontSize: 10, color: "#64748b", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, c.name)),
+React.createElement("div", { style: { textAlign: "right", flexShrink: 0 } },
+React.createElement("div", { style: { fontSize: 11, color: col, fontWeight: 700, fontFamily: "monospace" } }, a.daysToService === 0 ? "oggi" : a.daysToService === 1 ? "domani" : "tra " + a.daysToService + "gg"),
+React.createElement("div", { style: { fontSize: 9, color: "#475569", fontFamily: "monospace" } }, a.nextService))));
+})))),
+React.createElement("div", { style: { padding: "12px 14px", background: "#0D0D12", border: "1px solid #1e2a3a", borderRadius: 8, marginBottom: 18, display: "flex", flexWrap: "wrap", gap: isMobile ? 12 : 20, fontSize: 11, color: "#64748b", alignItems: "center", justifyContent: "space-around" } },
+React.createElement("span", { onClick: () => setTab("assets"), style: { cursor: "pointer" } },
+React.createElement("strong", { style: { color: "#e2e8f0", fontFamily: "monospace" } }, stats.operative),
+" operativi"),
+React.createElement("span", { onClick: () => setTab("assets"), style: { cursor: "pointer" } },
+React.createElement("strong", { style: { color: "#94a3b8", fontFamily: "monospace" } }, stats.maintenance),
+" in manut."),
+React.createElement("span", { onClick: () => setTab("assets"), style: { cursor: "pointer" } },
+React.createElement("strong", { style: { color: stats.outOfService > 0 ? "#ef4444" : "#94a3b8", fontFamily: "monospace" } }, stats.outOfService),
+" fuori serv."),
+warrantyExpiring.length > 0 && React.createElement("span", { onClick: () => setTab("assets"), style: { cursor: "pointer" } },
+React.createElement("strong", { style: { color: "#f59e0b", fontFamily: "monospace" } }, warrantyExpiring.length),
+" garanzie in scad."),
+stats.pendingInvoices > 0 && React.createElement("span", { onClick: () => setTab("invoices"), style: { cursor: "pointer" } },
+React.createElement("strong", { style: { color: "#94a3b8", fontFamily: "monospace" } }, stats.pendingInvoices),
+" preventivi aperti"))));
+})())),
+tab === "assets" && (React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 } },
+React.createElement("div", null,
+React.createElement("h1", { style: { margin: 0, fontSize: isMobile ? 14 : 18, fontWeight: 900, display: isMobile ? "none" : "block" } }, "Apparecchi Medicali"),
+React.createElement("p", { style: { color: "#64748b", margin: isMobile ? 0 : "2px 0 0", fontSize: 12, fontFamily: "monospace" } },
+assets.length,
+" totali \u00B7 ",
+assets.filter(a => a.status === "fuori servizio").length,
+" fuori servizio")),
+React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } },
+isMobile && assets.length > 0 && (React.createElement("button", { onClick: toggleAssetView, style: { background: "#16161C", border: "1px solid #2DD4BF44", borderRadius: 8, padding: "6px 12px", color: "#5EEAD4", fontSize: 12, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 } }, assetMobileView === "table" ? "▦ Schede" : "▤ Tabella")),
+React.createElement(Btn, { sm: true, variant: "ghost", onClick: exportAssets }, "\u2B07 Excel"),
+React.createElement(Btn, { sm: true, onClick: () => setModal({ type: "asset", data: null }) }, "+ Nuovo"))),
+!isMobile && React.createElement("div", { style: { fontSize: 11, color: "#475569", marginBottom: 8, fontStyle: "italic" } }, "\u2192 Doppio click su una riga per aprire la scheda dettaglio dell'apparecchio"),
+isMobile && assetMobileView === "table" && assets.length > 0 && React.createElement("div", { style: { fontSize: 11, color: "#475569", marginBottom: 8, fontStyle: "italic" } }, "\u2192 Tocca le intestazioni per ordinare \u00B7 scorri lateralmente \u00B7 filtri sotto ogni colonna"),
+assets.length === 0 ? (React.createElement(EmptyState, { icon: "\uD83C\uDFE5", title: "Nessun apparecchio ancora", subtitle: "Inizia aggiungendo il primo apparecchio del tuo parco macchine. Potrai poi gestirne verifiche di sicurezza, interventi e manutenzioni programmate.", actions: [
+{ label: "+ Nuovo apparecchio", onClick: () => setModal({ type: "asset", data: null }), primary: true },
+{ label: "Importa backup", onClick: () => setModal({ type: "settings" }) }
+] })) : (isMobile && assetMobileView === "cards") ? (React.createElement(React.Fragment, null, (() => {
+const filteredAssets = assets.filter(a => {
+const q = mobileSearch.assets.toLowerCase();
+if (q && ![a.name, a.brand, a.model, a.serial, a.location, a.id].some(f => String(f || "").toLowerCase().includes(q)))
+return false;
+return matchFilters(a, "assets", {
+name: x => x.name || "",
+brand: x => x.brand || "", model: x => x.model || "", serial: x => x.serial || "",
+location: x => x.location || "", status: x => x.status || "",
+customer: x => { var _a; return ((_a = customers.find(c => c.id === x.customerId)) === null || _a === void 0 ? void 0 : _a.name) || ""; },
+riskClass: x => x.riskClass || "",
+iecNorm: x => x.iecNorm || "", iecClass: x => x.iecClass || "",
+patientType: x => x.patientType || ""
+});
+}).sort((a, b) => {
+const ta = a.updatedAt || a.createdAt || "";
+const tb = b.updatedAt || b.createdAt || "";
+return tb.localeCompare(ta);
+});
+return (React.createElement(React.Fragment, null,
+React.createElement(MobileSearch, { value: mobileSearch.assets, onChange: v => updMS("assets", v), placeholder: "Cerca apparecchio, marca, S/N\u2026", count: filteredAssets.length, total: assets.length }),
+React.createElement(FilterDropdown, { filters: {
+name: { label: "Nome apparecchio", options: [...new Set(assets.map(a => a.name).filter(Boolean))].sort(), value: activeFilters.assets.name },
+brand: { label: "Marca", options: [...new Set(assets.map(a => a.brand).filter(Boolean))].sort(), value: activeFilters.assets.brand },
+model: { label: "Modello", options: [...new Set(assets.map(a => a.model).filter(Boolean))].sort(), value: activeFilters.assets.model },
+serial: { label: "Numero di serie", options: [...new Set(assets.map(a => a.serial).filter(Boolean))].sort(), value: activeFilters.assets.serial },
+location: { label: "Ubicazione", options: [...new Set(assets.map(a => a.location).filter(Boolean))].sort(), value: activeFilters.assets.location },
+status: { label: "Stato", options: ["operativo", "in manutenzione", "fuori servizio"], value: activeFilters.assets.status },
+customer: { label: "Cliente", options: [...new Set(assets.map(a => { var _a; return (_a = customers.find(c => c.id === a.customerId)) === null || _a === void 0 ? void 0 : _a.name; }).filter(Boolean))].sort(), value: activeFilters.assets.customer },
+riskClass: { label: "Classe rischio (MDR)", options: ["I", "IIa", "IIb", "III"], value: activeFilters.assets.riskClass },
+iecClass: { label: "Classe elettrica", options: ["I", "II", "III"], value: activeFilters.assets.iecClass },
+patientType: { label: "Tipo parte applicata", options: ["B", "BF", "CF"], value: activeFilters.assets.patientType },
+}, onChange: (k, v) => setFilter("assets", k, v), onClearAll: () => clearFilters("assets") }),
+React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", marginBottom: 8 } },
+React.createElement("button", { onClick: toggleCompact, style: { background: "#16161C", border: "1px solid #1e2a3a", borderRadius: 8, padding: "6px 12px", color: "#94a3b8", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 } }, compactView ? "▤ Vista estesa" : "≣ Vista compatta")),
+React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: compactView ? 0 : 10 } },
+filteredAssets.length === 0 && (React.createElement("div", { style: { textAlign: "center", padding: "30px 20px", background: "#141418", borderRadius: 10, border: "1px dashed #2a3040", fontSize: 13, color: "#64748b" } }, "Nessun apparecchio corrisponde ai filtri")),
+filteredAssets.map(a => {
+const cust = customers.find(c => c.id === a.customerId);
+const days = a.nextService ? Math.round((new Date(a.nextService) - new Date()) / 86400000) : null;
+const statusColor = STATUS_COLOR[a.status] || "#64748b";
+const displayName = a.name || a.brand || a.model || ("Apparecchio " + a.id);
+const brandModel = [a.brand, a.model].filter(Boolean).join(" ");
+if (compactView) {
+return (React.createElement("div", { key: a.id, onClick: () => setModal({ type: "assetDetail", data: a }), style: { display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderBottom: "1px solid #1A1A24", cursor: "pointer", background: "#101014" } },
+React.createElement("span", { style: { width: 8, height: 8, borderRadius: "50%", background: statusColor, flexShrink: 0 } }),
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 7, whiteSpace: "nowrap", overflow: "hidden" } },
+React.createElement("span", { style: { color: "#5EEAD4", fontSize: 13, fontWeight: 700, fontFamily: "monospace", flexShrink: 0 } }, a.assetCode || a.id),
+React.createElement("span", { style: { color: "#cbd5e1", fontSize: 12.5, overflow: "hidden", textOverflow: "ellipsis" } }, displayName)),
+React.createElement("div", { style: { color: "#64748b", fontSize: 10.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, [a.serial && ("S/N " + a.serial), brandModel, a.location].filter(Boolean).join(" · ") || "—")),
+days !== null && React.createElement(AlertChip, { days: days })));
+}
+return (React.createElement(SwipeableCard, { key: a.id, onDelete: () => delAsset(a.id) },
+React.createElement("div", { style: { background: "#141418", border: "1px solid #1e2a3a", borderRadius: 12, overflow: "hidden" } },
+React.createElement("div", { onClick: () => setModal({ type: "assetDetail", data: a }), style: { padding: "12px 14px 10px", cursor: "pointer", touchAction: "manipulation", WebkitTapHighlightColor: "transparent", borderBottom: "1px solid #1e2a3a" } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 5 } },
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+React.createElement("div", { style: { display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" } },
+React.createElement("strong", { style: { color: "#5EEAD4", fontSize: 16, fontFamily: "monospace", letterSpacing: .5, lineHeight: 1.2 } }, a.assetCode || a.id),
+a.serial && React.createElement("span", { style: { fontSize: 11.5, color: "#94a3b8", fontFamily: "monospace" } },
+"S/N ",
+a.serial)),
+React.createElement("div", { style: { color: "#e2e8f0", fontSize: 13, marginTop: 3, wordBreak: "break-word", lineHeight: 1.3 } }, displayName)),
+React.createElement(Badge, { text: a.status, color: statusColor })),
+brandModel && React.createElement("div", { style: { fontSize: 11.5, color: "#94a3b8", marginBottom: 3 } }, brandModel),
+cust && React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", marginTop: 5 } },
+"\uD83C\uDFE2 ",
+cust.name),
+(a.riskClass || a.location || days !== null) && (React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginTop: 8 } },
+React.createElement("div", { style: { display: "flex", gap: 5, fontSize: 10, color: "#64748b", alignItems: "center", flexWrap: "wrap" } },
+a.riskClass && React.createElement("span", { style: { padding: "1px 6px", border: "1px solid #2a3040", borderRadius: 4 } },
+"Cl.",
+a.riskClass),
+a.location && React.createElement("span", null,
+"\uD83D\uDCCD ",
+a.location)),
+days !== null && React.createElement(AlertChip, { days: days })))),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 1fr 36px", gap: 0, background: "#0D0D12" } },
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); setModal({ type: "iec", assetId: a.id, data: null }); }, style: { background: "transparent", color: "#a855f7", border: "none", borderRight: "1px solid #1e2a3a", padding: "10px 4px", fontSize: 11, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\u26A1 Sicur."),
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); setModal({ type: "func", assetId: a.id, data: null }); }, style: { background: "transparent", color: "#06b6d4", border: "none", borderRight: "1px solid #1e2a3a", padding: "10px 4px", fontSize: 11, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\u2713 Funz."),
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); setModal({ type: "asset", data: a }); }, style: { background: "transparent", color: "#94a3b8", border: "none", borderRight: "1px solid #1e2a3a", padding: "10px 4px", fontSize: 11, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\u270F Mod."),
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); delAsset(a.id); }, title: "Elimina apparecchio", style: { background: "transparent", color: "#ef4444", border: "none", padding: "10px 4px", fontSize: 14, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\u2715")))));
+}))));
+})())) : (React.createElement(ExcelTable, { exportName: "MedTrace_apparecchi", defaultSort: "assetCode", onRowClick: row => setModal({ type: "assetDetail", data: assets.find(a => a.id === row.id) }), rowBg: row => row.status === "fuori servizio" ? "#ef333308" : row.status === "in manutenzione" ? "#f59e0b08" : "", cols: [
+{ key: "assetCode", label: "Codice", render: v => React.createElement("strong", { style: { color: "#5EEAD4", fontFamily: "monospace" } }, v || "—") },
+{ key: "name", label: "Apparecchio", render: v => React.createElement("span", { style: { color: "#cbd5e1" } }, v) },
+{ key: "brand", label: "Marca" },
+{ key: "model", label: "Modello" },
+{ key: "serial", label: "N. Serie", render: v => React.createElement("span", { style: { fontFamily: "monospace", fontSize: 11 } }, v || "—") },
+{ key: "location", label: "Ubicazione", opts: [...new Set(assets.map(a => a.location).filter(Boolean))] },
+{ key: "cliente", label: "Cliente", opts: [...new Set(assets.map(a => { var _a; return ((_a = customers.find(c => c.id === a.customerId)) === null || _a === void 0 ? void 0 : _a.name) || ""; }).filter(Boolean))] },
+{ key: "status", label: "Stato", opts: ["operativo", "in manutenzione", "fuori servizio"],
+render: v => React.createElement(Badge, { text: v, color: STATUS_COLOR[v] || "#64748b" }) },
+{ key: "nextService", label: "Prossimo Serv.", render: (v) => {
+const d = v ? Math.round((new Date(v) - new Date()) / 86400000) : null;
+return React.createElement(AlertChip, { days: d });
+} },
+{ key: "riskClass", label: "Classe R.", render: v => v ? React.createElement("span", { style: { fontWeight: 700, color: v === "C" ? "#ef4444" : v === "B" ? "#f59e0b" : "#22c55e" } }, "Cl." + v) : React.createElement("span", { style: { color: "#475569" } }, "\u2014") },
+{ key: "warrantyExpiry", label: "Scad. Garanzia", render: (v) => {
+if (!v)
+return React.createElement("span", { style: { color: "#475569" } }, "\u2014");
+const d = Math.round((new Date(v) - new Date()) / 86400000);
+return React.createElement("span", { style: { color: d < 0 ? "#ef4444" : d < 90 ? "#f59e0b" : "#22c55e", fontFamily: "monospace", fontSize: 11 } }, v);
+} },
+], rows: assets.map(a => { var _a; return (Object.assign(Object.assign({}, a), { cliente: ((_a = customers.find(c => c.id === a.customerId)) === null || _a === void 0 ? void 0 : _a.name) || "" })); }), onEdit: row => setModal({ type: "asset", data: assets.find(a => a.id === row.id) }), onDelete: id => delAsset(id), actions: row => (React.createElement(React.Fragment, null,
+React.createElement("button", { onClick: () => setModal({ type: "assetDetail", data: assets.find(a => a.id === row.id) }), title: "Scheda apparecchio", style: { background: "#202028", border: "1px solid #2a3040", borderRadius: 5, color: "#94a3b8", padding: "3px 8px", cursor: "pointer", fontSize: 11 } }, "\uD83D\uDCCB"),
+React.createElement("button", { onClick: () => setModal({ type: "iec", assetId: row.id, data: null }), title: "Verifica di Sicurezza Elettrica", style: { background: "#202028", border: "1px solid #2a3040", borderRadius: 5, color: "#5EEAD4", padding: "3px 8px", cursor: "pointer", fontSize: 11 } }, "\u26A1"),
+React.createElement("button", { onClick: () => setModal({ type: "func", assetId: row.id, data: null }), title: "Verifica funzionale", style: { background: "#202028", border: "1px solid #2a3040", borderRadius: 5, color: "#a855f7", padding: "3px 8px", cursor: "pointer", fontSize: 11 } }, "\u2713"))) })))),
+tab === "jobs" && (React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 10 } },
+React.createElement("div", null,
+React.createElement("h1", { style: { margin: 0, fontSize: 18, fontWeight: 900, display: isMobile ? "none" : "block" } }, "Job / Interventi"),
+React.createElement("p", { style: { color: "#64748b", margin: "2px 0 0", fontSize: 12, fontFamily: "monospace" } },
+jobs.filter(j => j.status !== "chiuso").length,
+" aperti \u00B7 ",
+jobs.length,
+" totali")),
+React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } },
+React.createElement(Btn, { sm: true, variant: "ghost", onClick: exportJobs }, "\u2B07 Excel"),
+React.createElement(Btn, { sm: true, onClick: () => setModal({ type: "job", data: null }) }, "+ Nuovo"))),
+jobs.length > 0 && (React.createElement("div", { style: { display: "flex", gap: 0, marginBottom: 14, background: "#0D0D12", borderRadius: 8, padding: 3, border: "1px solid #1e2a3a", width: "fit-content", maxWidth: "100%", overflow: "auto" } }, [
+{ id: "open", label: "Aperti", count: jobs.filter(j => j.status !== "chiuso").length, color: "#2DD4BF" },
+{ id: "all", label: "Tutti", count: jobs.length, color: "#94a3b8" },
+{ id: "closed", label: "Chiusi", count: jobs.filter(j => j.status === "chiuso").length, color: "#64748b" },
+].map(f => (React.createElement("button", { key: f.id, onClick: () => setJobFilter(f.id), style: {
+background: jobFilter === f.id ? f.color + "22" : "transparent",
+color: jobFilter === f.id ? f.color : "#94a3b8",
+border: "none",
+borderRadius: 6,
+padding: "6px 14px",
+cursor: "pointer",
+fontSize: 12,
+fontWeight: 700,
+touchAction: "manipulation",
+WebkitTapHighlightColor: "transparent",
+whiteSpace: "nowrap",
+display: "flex",
+alignItems: "center",
+gap: 6,
+} },
+f.label,
+React.createElement("span", { style: { fontSize: 10, opacity: .7, fontFamily: "monospace" } }, f.count)))))),
+jobs.length === 0 ? (React.createElement(EmptyState, { icon: "\uD83D\uDD27", title: "Nessun intervento registrato", subtitle: assets.length === 0 ? "Prima registra un apparecchio dal menu Apparecchi, poi potrai aprire job di intervento (correttivi, preventivi, tarature)." : "Apri il primo job per tracciare un intervento sui tuoi apparecchi. Puoi gestire timeline, parti utilizzate, ore di manodopera e generare PDF.", actions: assets.length === 0 ? [
+{ label: "+ Nuovo apparecchio", onClick: () => setModal({ type: "asset", data: null }), primary: true }
+] : [
+{ label: "+ Nuovo intervento", onClick: () => setModal({ type: "job", data: null }), primary: true }
+] })) : isMobile ? (React.createElement(React.Fragment, null, (() => {
+const filteredJobs = jobs.filter(j => {
+if (jobFilter === "open" && j.status === "chiuso")
+return false;
+if (jobFilter === "closed" && j.status !== "chiuso")
+return false;
+const q = mobileSearch.jobs.toLowerCase();
+if (q) {
+const a = assets.find(x => x.id === j.assetId) || {};
+if (![j.id, a.name, a.brand, j.assignee, j.type, j.status, j.priority].some(f => String(f || "").toLowerCase().includes(q)))
+return false;
+}
+return matchFilters(j, "jobs", {
+assetName: x => { var _a; return ((_a = assets.find(a => a.id === x.assetId)) === null || _a === void 0 ? void 0 : _a.name) || ""; },
+priority: x => x.priority || "", type: x => x.type || "",
+status: x => x.status || "",
+assignee: x => x.assignee || "",
+customer: x => { var _a; return ((_a = customers.find(c => { var _a; return c.id === (x.customerId || ((_a = assets.find(a => a.id === x.assetId)) === null || _a === void 0 ? void 0 : _a.customerId)); })) === null || _a === void 0 ? void 0 : _a.name) || ""; }
+});
+});
+return (React.createElement(React.Fragment, null,
+React.createElement(MobileSearch, { value: mobileSearch.jobs, onChange: v => updMS("jobs", v), placeholder: "Cerca job, apparecchio, tecnico\u2026", count: filteredJobs.length, total: jobs.length }),
+React.createElement(FilterDropdown, { filters: {
+assetName: { label: "Apparecchio", options: [...new Set(jobs.map(j => { var _a; return (_a = assets.find(a => a.id === j.assetId)) === null || _a === void 0 ? void 0 : _a.name; }).filter(Boolean))].sort(), value: activeFilters.jobs.assetName },
+priority: { label: "Priorità", options: ["urgente", "alta", "normale", "bassa"], value: activeFilters.jobs.priority },
+type: { label: "Tipo", options: [...new Set(jobs.map(j => j.type).filter(Boolean))].sort(), value: activeFilters.jobs.type },
+status: { label: "Stato", options: [...new Set(jobs.map(j => j.status).filter(Boolean))].sort(), value: activeFilters.jobs.status },
+assignee: { label: "Tecnico", options: [...new Set(jobs.map(j => j.assignee).filter(Boolean))].sort(), value: activeFilters.jobs.assignee },
+customer: { label: "Cliente", options: [...new Set(jobs.map(j => { var _a; return (_a = customers.find(c => { var _a; return c.id === (j.customerId || ((_a = assets.find(a => a.id === j.assetId)) === null || _a === void 0 ? void 0 : _a.customerId)); })) === null || _a === void 0 ? void 0 : _a.name; }).filter(Boolean))].sort(), value: activeFilters.jobs.customer },
+}, onChange: (k, v) => setFilter("jobs", k, v), onClearAll: () => clearFilters("jobs") }),
+React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } },
+filteredJobs.length === 0 && (React.createElement("div", { style: { textAlign: "center", padding: "30px 20px", background: "#141418", borderRadius: 10, border: "1px dashed #2a3040", fontSize: 13, color: "#64748b" } }, "Nessun job corrisponde ai filtri")),
+filteredJobs.map(j => {
+const a = assets.find(x => x.id === j.assetId) || {};
+const c = customers.find(x => x.id === (j.customerId || a.customerId)) || {};
+const total = j.parts.reduce((s, p) => { const pt = parts.find(x => x.id === p.partId); return s + (pt ? (pt.sellPrice || pt.unitPrice) * p.qty : 0); }, 0) + j.laborHours * j.laborRate;
+const priColor = PRI_COLOR[j.priority] || "#64748b";
+const statColor = STATUS_COLOR[j.status] || "#64748b";
+return (React.createElement(SwipeableCard, { key: j.id, onDelete: () => delJob(j.id) },
+React.createElement("div", { style: { background: "#141418", border: "1px solid #1e2a3a", borderRadius: 12, overflow: "hidden", borderLeft: "3px solid " + priColor } },
+React.createElement("div", { onClick: () => setModal({ type: "jobDetail", data: j }), style: { padding: "12px 14px 10px", cursor: "pointer", touchAction: "manipulation", WebkitTapHighlightColor: "transparent", borderBottom: "1px solid #1e2a3a" } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 6 } },
+React.createElement("strong", { style: { color: "#e2e8f0", fontSize: 14, flex: 1, minWidth: 0, wordBreak: "break-word" } }, a.name || ("Job " + j.id)),
+React.createElement(Badge, { text: j.status, color: statColor })),
+React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, marginBottom: 6, fontSize: 11, color: "#94a3b8" } },
+React.createElement("span", { style: { padding: "1px 6px", background: priColor + "22", color: priColor, borderRadius: 4, fontSize: 10, fontWeight: 700, textTransform: "uppercase" } }, j.priority),
+React.createElement("span", { style: { padding: "1px 6px", background: "#1E1E28", border: "1px solid #2a3040", borderRadius: 4, fontSize: 10 } }, j.type)),
+c.name && React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", marginBottom: 3 } },
+"\uD83C\uDFE2 ",
+c.name),
+React.createElement("div", { style: { fontSize: 10, color: "#64748b", fontFamily: "monospace" } },
+"Aperto: ",
+j.openDate,
+j.closeDate ? " · Chiuso: " + j.closeDate : ""),
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 } },
+React.createElement("span", { style: { fontSize: 11, color: "#94a3b8" } }, j.assignee || "Tecnico non assegnato"),
+React.createElement("span", { style: { fontSize: 13, color: "#a855f7", fontWeight: 800, fontFamily: "monospace" } },
+"\u20AC",
+total.toFixed(0)))),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 36px", gap: 0, background: "#0D0D12" } },
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); generateJobPDF(j, assets, parts, customers, company); }, style: { background: "transparent", color: "#94a3b8", border: "none", borderRight: "1px solid #1e2a3a", padding: "10px 4px", fontSize: 11, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\uD83D\uDCC4 PDF"),
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); setModal({ type: "job", data: j }); }, style: { background: "transparent", color: "#94a3b8", border: "none", borderRight: "1px solid #1e2a3a", padding: "10px 4px", fontSize: 11, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\u270F Modifica"),
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); delJob(j.id); }, title: "Elimina job", style: { background: "transparent", color: "#ef4444", border: "none", padding: "10px 4px", fontSize: 14, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\u2715")))));
+}))));
+})())) : (React.createElement(ExcelTable, { exportName: "MedTrace_job", defaultSort: "openDate", rowBg: row => row.priority === "urgente" && row.status !== "chiuso" ? "#ef333308" : row.priority === "alta" && row.status !== "chiuso" ? "#f9730008" : "", cols: [
+{ key: "apparecchio", label: "Apparecchio", render: v => React.createElement("strong", { style: { color: "#e2e8f0" } }, v) },
+{ key: "cliente", label: "Cliente", opts: [...new Set(jobs.map(j => { var _a; const a = assets.find(x => x.id === j.assetId); return ((_a = customers.find(c => c.id === (j.customerId || (a === null || a === void 0 ? void 0 : a.customerId)))) === null || _a === void 0 ? void 0 : _a.name) || ""; }).filter(Boolean))] },
+{ key: "type", label: "Tipo", opts: ["correttiva", "preventiva", "verifica", "calibrazione"] },
+{ key: "priority", label: "Priorità", opts: ["urgente", "alta", "normale", "bassa"],
+render: v => React.createElement(Badge, { text: v, color: PRI_COLOR[v] || "#64748b" }) },
+{ key: "status", label: "Stato", opts: ["aperto", "in corso", "chiuso"],
+render: v => React.createElement(Badge, { text: v, color: STATUS_COLOR[v] || "#64748b" }) },
+{ key: "assignee", label: "Tecnico" },
+{ key: "openDate", label: "Apertura" },
+{ key: "closeDate", label: "Chiusura", render: v => v || "—" },
+{ key: "totale", label: "Costo", render: v => React.createElement("span", { style: { color: "#a855f7", fontWeight: 700, fontFamily: "monospace" } },
+"\u20AC",
+parseFloat(v || 0).toFixed(0)) },
+{ key: "steps", label: "Timeline", render: (v, row) => React.createElement("span", { style: { color: "#64748b", fontSize: 11, display: "flex", gap: 6, alignItems: "center" } },
+row.hasIec && React.createElement("span", { title: "Verifica di Sicurezza Elettrica collegata" }, "\u26A1"),
+row.hasFunc && React.createElement("span", { title: "Verifica Funzionale collegata" }, "\uD83E\uDE7A"),
+v > 0 ? React.createElement("span", { title: "Passaggi registrati" },
+"\uD83D\uDD52 ",
+v) : (!row.hasIec && !row.hasFunc && React.createElement("span", { style: { color: "#3a3a48" } }, "\u2014"))) },
+], rows: jobs.filter(j => { if (jobFilter === "open" && j.status === "chiuso")
+return false; if (jobFilter === "closed" && j.status !== "chiuso")
+return false; return true; }).map(j => {
+var _a;
+const a = assets.find(x => x.id === j.assetId) || {};
+const c = customers.find(x => x.id === (j.customerId || a.customerId)) || {};
+const tot = j.parts.reduce((s, p) => { const pt = parts.find(x => x.id === p.partId); return s + (pt ? (pt.sellPrice || pt.unitPrice) * p.qty : 0); }, 0) + j.laborHours * j.laborRate;
+return Object.assign(Object.assign({}, j), { apparecchio: a.name || j.assetId, cliente: c.name || "", totale: tot.toFixed(2), steps: ((_a = j.timeline) === null || _a === void 0 ? void 0 : _a.length) || 0, hasIec: !!j.iecReportId, hasFunc: !!j.funcReportId });
+}), onEdit: row => setModal({ type: "jobDetail", data: jobs.find(j => j.id === row.id) }), onDelete: id => delJob(id), actions: row => (React.createElement(React.Fragment, null,
+React.createElement("button", { onClick: () => setModal({ type: "timeline", data: jobs.find(j => j.id === row.id) }), title: "Timeline interventi", style: { background: "#202028", border: "1px solid #2a3040", borderRadius: 5, color: "#94a3b8", padding: "3px 8px", cursor: "pointer", fontSize: 11 } }, "\uD83D\uDD52"),
+React.createElement("button", { onClick: () => generateJobPDF(jobs.find(j => j.id === row.id), assets, parts, customers, company), title: "PDF rapporto", style: { background: "#202028", border: "1px solid #2a3040", borderRadius: 5, color: "#94a3b8", padding: "3px 8px", cursor: "pointer", fontSize: 11 } }, "\uD83D\uDCC4"))) })))),
+(tab === "parts" || tab === "withdrawals" || tab === "orders") && (React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 14, borderBottom: "1px solid #2a3040", paddingBottom: 0, flexWrap: "wrap" } },
+React.createElement("button", { onClick: () => setTab("parts"), style: { background: tab === "parts" ? "#2DD4BF18" : "transparent", color: tab === "parts" ? "#2DD4BF" : "#94a3b8", border: "none", borderBottom: tab === "parts" ? "2px solid #2DD4BF" : "2px solid transparent", padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 700, marginBottom: -1, touchAction: "manipulation" } },
+" Stock parti",
+stats.lowStock > 0 ? ` (${stats.lowStock}⚠)` : ""),
+React.createElement("button", { onClick: () => setTab("withdrawals"), style: { background: tab === "withdrawals" ? "#2DD4BF18" : "transparent", color: tab === "withdrawals" ? "#2DD4BF" : "#94a3b8", border: "none", borderBottom: tab === "withdrawals" ? "2px solid #2DD4BF" : "2px solid transparent", padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 700, marginBottom: -1, touchAction: "manipulation" } },
+" Scarichi (",
+withdrawals.length,
+")"),
+React.createElement("button", { onClick: () => setTab("orders"), style: { background: tab === "orders" ? "#2DD4BF18" : "transparent", color: tab === "orders" ? "#2DD4BF" : "#94a3b8", border: "none", borderBottom: tab === "orders" ? "2px solid #2DD4BF" : "2px solid transparent", padding: "8px 14px", cursor: "pointer", fontSize: 13, fontWeight: 700, marginBottom: -1, touchAction: "manipulation" } },
+" Ordini (",
+orders.length,
+")")))),
+tab === "parts" && (React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 } },
+React.createElement("div", null,
+React.createElement("h1", { style: { margin: 0, fontSize: 18, fontWeight: 900, display: isMobile ? "none" : "block" } }, "Stock Parti"),
+React.createElement("p", { style: { color: "#64748b", margin: "2px 0 0", fontSize: 12, fontFamily: "monospace" } },
+"Costo: \u20AC",
+stats.stockValue.toFixed(2),
+" \u00B7 Vendita: \u20AC",
+stats.stockSellValue.toFixed(2),
+" \u00B7 ",
+stats.lowStock,
+" sotto min.")),
+React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } },
+React.createElement(Btn, { sm: true, variant: "ghost", onClick: exportParts }, "\u2B07 Excel"),
+React.createElement(Btn, { sm: true, variant: "success", onClick: () => setModal({ type: "withdrawal" }) }, " Scarica"),
+React.createElement(Btn, { sm: true, onClick: () => setModal({ type: "part", data: null }) }, "+ Nuova"))),
+parts.length === 0 ? (React.createElement(EmptyState, { icon: "\uD83D\uDCE6", title: "Magazzino vuoto", subtitle: "Aggiungi le parti di ricambio del tuo magazzino: avrai sotto controllo stock minimo, alert sotto-scorta, costo e prezzo vendita per ogni codice.", actions: [
+{ label: "+ Nuova parte", onClick: () => setModal({ type: "part", data: null }), primary: true }
+] })) : isMobile ? (React.createElement(React.Fragment, null, (() => {
+const filteredParts = parts.filter(p => {
+const q = mobileSearch.parts.toLowerCase();
+if (q && ![p.code, p.name, p.brand, p.location, p.id].some(f => String(f || "").toLowerCase().includes(q)))
+return false;
+return matchFilters(p, "parts", {
+code: x => x.code || "", name: x => x.name || "",
+brand: x => x.brand || "", location: x => x.location || "",
+supplier: x => x.supplier || "",
+stockStatus: x => x.qty === 0 ? "esaurita" : (x.qty <= x.minQty ? "sotto scorta" : "disponibile")
+});
+});
+return (React.createElement(React.Fragment, null,
+React.createElement(MobileSearch, { value: mobileSearch.parts, onChange: v => updMS("parts", v), placeholder: "Cerca codice, nome, marca\u2026", count: filteredParts.length, total: parts.length }),
+React.createElement(FilterDropdown, { filters: {
+code: { label: "Codice", options: [...new Set(parts.map(p => p.code).filter(Boolean))].sort(), value: activeFilters.parts.code },
+name: { label: "Nome parte", options: [...new Set(parts.map(p => p.name).filter(Boolean))].sort(), value: activeFilters.parts.name },
+brand: { label: "Marca", options: [...new Set(parts.map(p => p.brand).filter(Boolean))].sort(), value: activeFilters.parts.brand },
+location: { label: "Ubicazione", options: [...new Set(parts.map(p => p.location).filter(Boolean))].sort(), value: activeFilters.parts.location },
+supplier: { label: "Fornitore", options: [...new Set(parts.map(p => p.supplier).filter(Boolean))].sort(), value: activeFilters.parts.supplier },
+stockStatus: { label: "Stato stock", options: ["disponibile", "sotto scorta", "esaurita"], value: activeFilters.parts.stockStatus },
+}, onChange: (k, v) => setFilter("parts", k, v), onClearAll: () => clearFilters("parts") }),
+React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } },
+filteredParts.length === 0 && (React.createElement("div", { style: { textAlign: "center", padding: "30px 20px", background: "#141418", borderRadius: 10, border: "1px dashed #2a3040", fontSize: 13, color: "#64748b" } }, "Nessuna parte corrisponde ai filtri")),
+filteredParts.map(p => {
+const low = p.qty <= p.minQty;
+const zero = p.qty === 0;
+const borderC = zero ? "#ef4444" : low ? "#f59e0b" : "#22c55e";
+return (React.createElement(SwipeableCard, { key: p.id, onDelete: () => delPart(p.id) },
+React.createElement("div", { style: { background: "#141418", border: "1px solid #1e2a3a", borderRadius: 12, overflow: "hidden", borderLeft: "3px solid " + borderC } },
+React.createElement("div", { onClick: () => setModal({ type: "part", data: p }), style: { padding: "12px 14px 10px", cursor: "pointer", touchAction: "manipulation", WebkitTapHighlightColor: "transparent", borderBottom: "1px solid #1e2a3a" } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 6 } },
+React.createElement("strong", { style: { color: "#e2e8f0", fontSize: 14, flex: 1, minWidth: 0, wordBreak: "break-word" } }, p.name || p.code || ("Parte " + p.id)),
+React.createElement("span", { style: { padding: "2px 8px", background: borderC + "22", color: borderC, borderRadius: 5, fontSize: 13, fontWeight: 800, whiteSpace: "nowrap", fontFamily: "monospace" } }, p.qty)),
+p.code && React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", fontFamily: "monospace", marginBottom: 3 } }, p.code),
+p.brand && React.createElement("div", { style: { fontSize: 11, color: "#64748b", marginBottom: 3 } }, p.brand),
+p.location && React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", marginTop: 3 } },
+"\uD83D\uDCCD ",
+p.location),
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8, paddingTop: 8, borderTop: "1px solid #1e2a3a", fontSize: 11 } },
+React.createElement("span", { style: { color: "#64748b" } },
+"Min: ",
+React.createElement("span", { style: { color: "#94a3b8", fontFamily: "monospace" } }, p.minQty)),
+React.createElement("span", { style: { color: "#64748b" } },
+"Acquisto: ",
+React.createElement("span", { style: { color: "#94a3b8", fontFamily: "monospace" } },
+"\u20AC",
+parseFloat(p.unitPrice || 0).toFixed(2))),
+React.createElement("span", { style: { color: "#22c55e", fontWeight: 700, fontFamily: "monospace" } },
+"\u20AC",
+parseFloat(p.sellPrice || p.unitPrice || 0).toFixed(2)))),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 36px", gap: 0, background: "#0D0D12" } },
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); setModal({ type: "withdrawal", partId: p.id }); }, style: { background: "transparent", color: "#22c55e", border: "none", borderRight: "1px solid #1e2a3a", padding: "10px 4px", fontSize: 11, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\u2193 Scarica"),
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); setModal({ type: "part", data: p }); }, style: { background: "transparent", color: "#94a3b8", border: "none", borderRight: "1px solid #1e2a3a", padding: "10px 4px", fontSize: 11, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\u270F Modifica"),
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); delPart(p.id); }, title: "Elimina", style: { background: "transparent", color: "#ef4444", border: "none", padding: "10px 4px", fontSize: 14, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\u2715")))));
+}))));
+})())) : (React.createElement(ExcelTable, { exportName: "MedTrace_ricambi", defaultSort: "name", rowBg: row => row.qty === 0 ? "#ef333308" : row.qty <= row.minQty ? "#f59e0b08" : "", cols: [
+{ key: "code", label: "Codice", render: v => React.createElement("span", { style: { fontFamily: "monospace", fontSize: 11 } }, v) },
+{ key: "name", label: "Nome", render: v => React.createElement("strong", { style: { color: "#e2e8f0" } }, v) },
+{ key: "brand", label: "Marca", opts: [...new Set(parts.map(p => p.brand).filter(Boolean))] },
+{ key: "location", label: "Ubicazione", opts: [...new Set(parts.map(p => p.location).filter(Boolean))] },
+{ key: "qty", label: "Q.tà", render: (v, row) => React.createElement("span", { style: { fontWeight: 800, color: v === 0 ? "#ef4444" : v <= row.minQty ? "#f59e0b" : "#22c55e" } }, v) },
+{ key: "minQty", label: "Min.", render: v => React.createElement("span", { style: { color: "#64748b" } }, v) },
+{ key: "unitPrice", label: "Acquisto", render: v => React.createElement("span", { style: { fontFamily: "monospace" } },
+"\u20AC",
+parseFloat(v).toFixed(2)) },
+{ key: "sellPrice", label: "Vendita", render: v => React.createElement("span", { style: { color: "#a855f7", fontFamily: "monospace" } },
+"\u20AC",
+parseFloat(v || 0).toFixed(2)) },
+{ key: "margine", label: "Margine", render: v => React.createElement("span", { style: { color: "#22c55e", fontFamily: "monospace" } },
+"\u20AC",
+parseFloat(v || 0).toFixed(2)) },
+{ key: "valoreStock", label: "Val. Stock", render: v => React.createElement("span", { style: { fontFamily: "monospace" } },
+"\u20AC",
+parseFloat(v || 0).toFixed(2)) },
+], rows: parts.map(p => (Object.assign(Object.assign({}, p), { sellPrice: p.sellPrice || p.unitPrice, margine: ((p.sellPrice || p.unitPrice) - p.unitPrice).toFixed(2), valoreStock: (p.qty * p.unitPrice).toFixed(2) }))), onEdit: row => setModal({ type: "part", data: parts.find(p => p.id === row.id) }), onDelete: id => delPart(id), actions: row => (React.createElement("button", { onClick: () => duplicatePart(parts.find(p => p.id === row.id)), title: "Duplica parte", style: { background: "#202028", border: "1px solid #2a3040", borderRadius: 5, color: "#94a3b8", padding: "3px 7px", cursor: "pointer", fontSize: 11, fontWeight: 700 } }, "\u2398")) })))),
+tab === "customers" && (React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 } },
+React.createElement("div", null,
+React.createElement("h1", { style: { margin: 0, fontSize: 18, fontWeight: 900, display: isMobile ? "none" : "block" } }, "Clienti"),
+React.createElement("p", { style: { color: "#64748b", margin: "2px 0 0", fontSize: 12, fontFamily: "monospace" } },
+customers.length,
+" totali")),
+isAdmin && React.createElement(Btn, { sm: true, onClick: () => setModal({ type: "customer", data: null }) }, "+ Nuovo")),
+customers.length === 0 ? (React.createElement(EmptyState, { icon: "\uD83C\uDFE2", title: "Nessun cliente registrato", subtitle: "Aggiungi i tuoi clienti (cliniche, ospedali, studi medici, RSA) per associare apparecchi, preventivi e interventi.", actions: isAdmin ? [
+{ label: "+ Nuovo cliente", onClick: () => setModal({ type: "customer", data: null }), primary: true }
+] : [] })) : isMobile ? (React.createElement(React.Fragment, null, (() => {
+const filteredCust = customers.filter(c => {
+const q = mobileSearch.customers.toLowerCase();
+if (q && ![c.name, c.contact, c.email, c.phone, c.vat, c.address].some(f => String(f || "").toLowerCase().includes(q)))
+return false;
+return matchFilters(c, "customers", {
+city: x => { const addr = x.address || ""; const parts = addr.split(","); return (parts[parts.length - 1] || "").trim(); },
+vat: x => x.vat || ""
+});
+});
+return (React.createElement(React.Fragment, null,
+React.createElement(MobileSearch, { value: mobileSearch.customers, onChange: v => updMS("customers", v), placeholder: "Cerca cliente, contatto, email\u2026", count: filteredCust.length, total: customers.length }),
+React.createElement(FilterDropdown, { filters: {
+city: { label: "Città / Località", options: [...new Set(customers.map(c => { const addr = c.address || ""; const parts = addr.split(","); return (parts[parts.length - 1] || "").trim(); }).filter(Boolean))].sort(), value: activeFilters.customers.city },
+vat: { label: "P.IVA", options: [...new Set(customers.map(c => c.vat).filter(Boolean))].sort(), value: activeFilters.customers.vat },
+}, onChange: (k, v) => setFilter("customers", k, v), onClearAll: () => clearFilters("customers") }),
+React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } },
+filteredCust.length === 0 && (React.createElement("div", { style: { textAlign: "center", padding: "30px 20px", background: "#141418", borderRadius: 10, border: "1px dashed #2a3040", fontSize: 13, color: "#64748b" } }, "Nessun cliente corrisponde ai filtri")),
+filteredCust.map(c => {
+const nApp = assets.filter(a => a.customerId === c.id).length;
+return (React.createElement(SwipeableCard, { key: c.id, onDelete: isAdmin ? (() => delCustomer(c.id)) : undefined },
+React.createElement("div", { style: { background: "#141418", border: "1px solid #1e2a3a", borderRadius: 12, overflow: "hidden" } },
+React.createElement("div", { onClick: () => setModal({ type: "customer", data: c }), style: { padding: "12px 14px 10px", cursor: "pointer", touchAction: "manipulation", WebkitTapHighlightColor: "transparent", borderBottom: "1px solid #1e2a3a" } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 6 } },
+React.createElement("strong", { style: { color: "#e2e8f0", fontSize: 14, flex: 1, minWidth: 0, wordBreak: "break-word" } }, c.name || ("Cliente " + c.id)),
+nApp > 0 && React.createElement("span", { style: { padding: "2px 8px", background: "#2DD4BF22", color: "#2DD4BF", borderRadius: 5, fontSize: 11, fontWeight: 700, whiteSpace: "nowrap" } },
+nApp,
+" app.")),
+c.contact && React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", marginBottom: 3 } },
+" ",
+c.contact),
+c.email && React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", marginBottom: 3, wordBreak: "break-all" } },
+" ",
+c.email),
+c.phone && React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", marginBottom: 3, fontFamily: "monospace" } },
+" ",
+c.phone),
+c.vat && React.createElement("div", { style: { fontSize: 10, color: "#64748b", fontFamily: "monospace", marginTop: 4 } },
+"P.IVA: ",
+c.vat),
+c.address && React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", marginTop: 4 } },
+"\uD83D\uDCCD ",
+c.address)),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: "44px 1fr 36px", gap: 0, background: "#0D0D12" } },
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); setModal({ type: "clientReport", data: c }); }, title: "Report parco macchine", style: { background: "transparent", color: "#5EEAD4", border: "none", borderRight: "1px solid #1e2a3a", padding: "10px 0", cursor: "pointer", fontSize: 14 } }, "\uD83D\uDCCB"),
+isAdmin && React.createElement("button", { onClick: (e) => { e.stopPropagation(); setModal({ type: "customer", data: c }); }, style: { background: "transparent", color: "#94a3b8", border: "none", borderRight: "1px solid #1e2a3a", padding: "10px 4px", fontSize: 11, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\u270F Modifica"),
+isAdmin && React.createElement("button", { onClick: (e) => { e.stopPropagation(); delCustomer(c.id); }, title: "Elimina cliente", style: { background: "transparent", color: "#ef4444", border: "none", padding: "10px 4px", fontSize: 14, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\u2715")))));
+}))));
+})())) : (React.createElement(ExcelTable, { exportName: "MedTrace_clienti", defaultSort: "name", cols: [
+{ key: "name", label: "Ragione Sociale", render: v => React.createElement("strong", { style: { color: "#e2e8f0" } }, v) },
+{ key: "vat", label: "P.IVA", render: v => React.createElement("span", { style: { fontFamily: "monospace", fontSize: 11 } }, v || "—") },
+{ key: "contact", label: "Referente" },
+{ key: "email", label: "Email" },
+{ key: "phone", label: "Telefono", render: v => React.createElement("span", { style: { fontFamily: "monospace" } }, v || "—") },
+{ key: "address", label: "Indirizzo" },
+{ key: "nApparecchi", label: "Apparecchi", render: v => React.createElement("span", { style: { color: "#2DD4BF", fontWeight: 700 } }, v) },
+], rows: customers.map(c => (Object.assign(Object.assign({}, c), { nApparecchi: assets.filter(a => a.customerId === c.id).length }))), onEdit: isAdmin ? (row => setModal({ type: "customer", data: customers.find(c => c.id === row.id) })) : undefined, onDelete: isAdmin ? (id => delCustomer(id)) : undefined, actions: row => (React.createElement(React.Fragment, null,
+React.createElement("button", { onClick: () => setModal({ type: "clientReport", data: customers.find(c => c.id === row.id) }), title: "Report parco macchine", style: { background: "#2DD4BF15", border: "1px solid #2DD4BF33", borderRadius: 5, color: "#5EEAD4", padding: "3px 7px", cursor: "pointer", fontSize: 11, fontWeight: 700, marginRight: 2 } }, "\uD83D\uDCCB"),
+React.createElement("button", { onClick: () => duplicateCustomer(customers.find(c => c.id === row.id)), title: "Duplica cliente", style: { background: "#202028", border: "1px solid #2a3040", borderRadius: 5, color: "#94a3b8", padding: "3px 7px", cursor: "pointer", fontSize: 11, fontWeight: 700 } }, "\u2398"))) })))),
+tab === "invoices" && (React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 } },
+React.createElement("div", null,
+React.createElement("h1", { style: { margin: 0, fontSize: 18, fontWeight: 900, display: isMobile ? "none" : "block" } }, "Preventivi"),
+React.createElement("p", { style: { color: "#64748b", margin: "2px 0 0", fontSize: 12, fontFamily: "monospace" } },
+stats.pendingInvoices,
+" in sospeso \u00B7 ",
+invoices.length,
+" totali")),
+React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } },
+React.createElement(Btn, { sm: true, variant: "ghost", onClick: exportInvoices }, "\u2B07 Excel"),
+React.createElement(Btn, { sm: true, onClick: () => setModal({ type: "invoice", data: null }) }, "+ Nuova"))),
+invoices.length === 0 ? (React.createElement(EmptyState, { icon: "\uD83D\uDCC4", title: "Nessun preventivo emesso", subtitle: "Crea preventivi professionali per i tuoi clienti. Puoi importare manodopera e parti direttamente da un job esistente.", actions: [
+{ label: "+ Nuovo preventivo", onClick: () => setModal({ type: "invoice", data: null }), primary: true }
+] })) : isMobile ? (React.createElement(React.Fragment, null, (() => {
+const filteredInvoices = invoices.filter(i => {
+const q = mobileSearch.invoices.toLowerCase();
+if (q) {
+const c = customers.find(x => x.id === i.customerId) || {};
+if (![i.number, i.date, i.status, c.name].some(f => String(f || "").toLowerCase().includes(q)))
+return false;
+}
+return matchFilters(i, "invoices", {
+number: x => x.number || "",
+status: x => x.status || "",
+customer: x => { var _a; return ((_a = customers.find(c => c.id === x.customerId)) === null || _a === void 0 ? void 0 : _a.name) || ""; }
+});
+});
+return (React.createElement(React.Fragment, null,
+React.createElement(MobileSearch, { value: mobileSearch.invoices, onChange: v => updMS("invoices", v), placeholder: "Cerca preventivo, cliente\u2026", count: filteredInvoices.length, total: invoices.length }),
+React.createElement(FilterDropdown, { filters: {
+number: { label: "Numero preventivo", options: [...new Set(invoices.map(i => i.number).filter(Boolean))].sort(), value: activeFilters.invoices.number },
+status: { label: "Stato", options: ["bozza", "emessa", "pagata", "scaduta", "annullato"], value: activeFilters.invoices.status },
+customer: { label: "Cliente", options: [...new Set(invoices.map(i => { var _a; return (_a = customers.find(c => c.id === i.customerId)) === null || _a === void 0 ? void 0 : _a.name; }).filter(Boolean))].sort(), value: activeFilters.invoices.customer },
+}, onChange: (k, v) => setFilter("invoices", k, v), onClearAll: () => clearFilters("invoices") }),
+React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } },
+filteredInvoices.length === 0 && (React.createElement("div", { style: { textAlign: "center", padding: "30px 20px", background: "#141418", borderRadius: 10, border: "1px dashed #2a3040", fontSize: 13, color: "#64748b" } }, "Nessun preventivo corrisponde ai filtri")),
+filteredInvoices.map(i => {
+const c = customers.find(x => x.id === i.customerId) || {};
+const sub = i.items.reduce((s, it) => s + it.qty * it.unitPrice, 0);
+const vat = i.items.reduce((s, it) => s + it.qty * it.unitPrice * it.vat / 100, 0);
+const tot = sub + vat;
+const statColor = STATUS_COLOR[i.status] || "#94a3b8";
+return (React.createElement(SwipeableCard, { key: i.id, onDelete: () => delInvoice(i.id) },
+React.createElement("div", { style: { background: "#141418", border: "1px solid #1e2a3a", borderRadius: 12, overflow: "hidden" } },
+React.createElement("div", { onClick: () => setModal({ type: "invoice", data: i }), style: { padding: "12px 14px 10px", cursor: "pointer", touchAction: "manipulation", WebkitTapHighlightColor: "transparent", borderBottom: "1px solid #1e2a3a" } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 6 } },
+React.createElement("strong", { style: { color: "#e2e8f0", fontSize: 14, fontFamily: "monospace", flex: 1, minWidth: 0, wordBreak: "break-word" } }, i.number),
+React.createElement(Badge, { text: i.status, color: statColor })),
+c.name && React.createElement("div", { style: { fontSize: 12, color: "#94a3b8", marginBottom: 3 } },
+"\uD83C\uDFE2 ",
+c.name),
+React.createElement("div", { style: { fontSize: 11, color: "#64748b", fontFamily: "monospace" } },
+"Data: ",
+i.date,
+i.dueDate ? " · Scad: " + i.dueDate : ""),
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8, paddingTop: 8, borderTop: "1px solid #1e2a3a" } },
+React.createElement("div", { style: { fontSize: 10, color: "#64748b" } },
+i.items.length,
+" ",
+i.items.length === 1 ? "voce" : "voci",
+" \u00B7 IVA \u20AC",
+vat.toFixed(0)),
+React.createElement("span", { style: { fontSize: 16, color: "#22c55e", fontWeight: 900, fontFamily: "monospace" } },
+"\u20AC",
+tot.toFixed(2)))),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: "1fr 1fr 36px", gap: 0, background: "#0D0D12" } },
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); generateInvoicePDF(i, c, jobs, assets, parts, company); }, style: { background: "transparent", color: "#94a3b8", border: "none", borderRight: "1px solid #1e2a3a", padding: "10px 4px", fontSize: 11, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\uD83D\uDCC4 PDF"),
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); setModal({ type: "invoice", data: i }); }, style: { background: "transparent", color: "#94a3b8", border: "none", borderRight: "1px solid #1e2a3a", padding: "10px 4px", fontSize: 11, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\u270F Modifica"),
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); delInvoice(i.id); }, title: "Elimina", style: { background: "transparent", color: "#ef4444", border: "none", padding: "10px 4px", fontSize: 14, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\u2715")))));
+}))));
+})())) : (React.createElement(ExcelTable, { exportName: "MedTrace_fatture", defaultSort: "date", cols: [
+{ key: "number", label: "N. Preventivo", render: v => React.createElement("span", { style: { fontFamily: "monospace", fontWeight: 700, color: "#e2e8f0" } }, v) },
+{ key: "cliente", label: "Cliente", opts: [...new Set(invoices.map(i => { var _a; return ((_a = customers.find(c => c.id === i.customerId)) === null || _a === void 0 ? void 0 : _a.name) || ""; }).filter(Boolean))] },
+{ key: "date", label: "Data" },
+{ key: "dueDate", label: "Scadenza", render: v => v || "—" },
+{ key: "status", label: "Stato", opts: ["bozza", "emessa", "pagata", "scaduta", "annullato"], render: v => React.createElement(Badge, { text: v, color: STATUS_COLOR[v] || "#94a3b8" }) },
+{ key: "imponibile", label: "Imponibile", render: v => React.createElement("span", { style: { fontFamily: "monospace" } },
+"\u20AC",
+v) },
+{ key: "iva", label: "IVA", render: v => React.createElement("span", { style: { fontFamily: "monospace", color: "#64748b" } },
+"\u20AC",
+v) },
+{ key: "totale", label: "Totale", render: v => React.createElement("span", { style: { fontFamily: "monospace", fontWeight: 800, color: "#22c55e" } },
+"\u20AC",
+v) },
+], rows: invoices.map(i => { var _a; const sub = i.items.reduce((s, it) => s + it.qty * it.unitPrice, 0); const vat = i.items.reduce((s, it) => s + it.qty * it.unitPrice * it.vat / 100, 0); return Object.assign(Object.assign({}, i), { cliente: ((_a = customers.find(c => c.id === i.customerId)) === null || _a === void 0 ? void 0 : _a.name) || "—", imponibile: sub.toFixed(2), iva: vat.toFixed(2), totale: (sub + vat).toFixed(2) }); }), onEdit: row => setModal({ type: "invoice", data: invoices.find(i => i.id === row.id) }), onDelete: id => delInvoice(id), actions: row => {
+const inv = invoices.find(i => i.id === row.id);
+const cust = customers.find(c => c.id === (inv === null || inv === void 0 ? void 0 : inv.customerId));
+return (React.createElement(React.Fragment, null,
+React.createElement("button", { onClick: () => generateInvoicePDF(inv, cust, jobs, assets, parts, company), title: "PDF", style: { background: "#202028", border: "1px solid #2a3040", borderRadius: 5, color: "#94a3b8", padding: "3px 8px", cursor: "pointer", fontSize: 11 } }),
+(inv === null || inv === void 0 ? void 0 : inv.status) !== "pagata" && (inv === null || inv === void 0 ? void 0 : inv.status) !== "annullato" && React.createElement("button", { onClick: () => markInvoicePaid(inv), title: "Segna pagata", style: { background: "#22c55e15", border: "1px solid #22c55e33", borderRadius: 5, color: "#22c55e", padding: "3px 8px", cursor: "pointer", fontSize: 11 } }, "\u2713")));
+} })))),
+tab === "calendar" && (React.createElement("div", null,
+React.createElement("h1", { style: { margin: "0 0 16px", fontSize: 18, fontWeight: 900 } }, "Calendario Manutenzioni"),
+upcomingMaintenance.filter(a => a.daysToService < 0).length > 0 && (React.createElement("div", { style: { background: "#ef444415", border: "1px solid #ef444433", borderLeft: "4px solid #ef4444", borderRadius: 8, padding: "10px 16px", marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" } },
+React.createElement("span", { style: { color: "#ef4444", fontWeight: 700, fontSize: 13 } },
+"! ",
+upcomingMaintenance.filter(a => a.daysToService < 0).length,
+" manutenzioni SCADUTE \u2014 intervenire subito"))),
+upcomingMaintenance.filter(a => a.daysToService >= 0 && a.daysToService <= 7).length > 0 && (React.createElement("div", { style: { background: "#f9730015", border: "1px solid #f9730033", borderLeft: "4px solid #f97316", borderRadius: 8, padding: "10px 16px", marginBottom: 10 } },
+React.createElement("span", { style: { color: "#f97316", fontWeight: 700, fontSize: 13 } },
+"\u26A0 ",
+upcomingMaintenance.filter(a => a.daysToService >= 0 && a.daysToService <= 7).length,
+" manutenzioni entro 7 giorni"))),
+React.createElement(ExcelTable, { exportName: "MedTrace_scadenzario_verifiche", defaultSort: "daysToService", rowBg: row => row.daysToService < 0 ? "#ef333308" : row.daysToService <= 7 ? "#f9730008" : row.daysToService <= 30 ? "#f59e0b08" : "", cols: [
+{ key: "name", label: "Apparecchio", render: v => React.createElement("strong", { style: { color: "#e2e8f0" } }, v) },
+{ key: "brand", label: "Marca" },
+{ key: "location", label: "Ubicazione", opts: [...new Set(assets.map(a => a.location).filter(Boolean))] },
+{ key: "cliente", label: "Cliente", opts: [...new Set(assets.map(a => { var _a; return ((_a = customers.find(c => c.id === a.customerId)) === null || _a === void 0 ? void 0 : _a.name) || ""; }).filter(Boolean))] },
+{ key: "status", label: "Stato", opts: ["operativo", "in manutenzione", "fuori servizio"], render: v => React.createElement(Badge, { text: v, color: STATUS_COLOR[v] || "#64748b" }) },
+{ key: "nextService", label: "Data manut." },
+{ key: "daysToService", label: "Scadenza", render: v => React.createElement(AlertChip, { days: v }) },
+{ key: "serviceInterval", label: "Intervallo (mesi)" },
+], rows: assets.filter(a => a.nextService).map(a => { var _a; return (Object.assign(Object.assign({}, a), { cliente: ((_a = customers.find(c => c.id === a.customerId)) === null || _a === void 0 ? void 0 : _a.name) || "", daysToService: Math.round((new Date(a.nextService) - new Date()) / 86400000) })); }), actions: row => (React.createElement("button", { onClick: () => setModal({ type: "job", data: { assetId: row.id, type: "preventiva", priority: "normale", status: "aperto", description: "Manutenzione programmata", openDate: new Date().toISOString().slice(0, 10), parts: [], laborHours: 0, laborRate: 55, notes: "", timeline: [], photos: [] } }), style: { background: "#2DD4BF15", border: "1px solid #2563eb33", borderRadius: 5, color: "#5EEAD4", padding: "3px 8px", cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" } }, "+ Job")) }))),
+tab === "finance" && (React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 } },
+React.createElement("div", { style: { fontSize: 18, fontWeight: 900 } }, "Analytics & Report"),
+React.createElement("div", { style: { display: "flex", gap: 6 } },
+React.createElement("select", { value: filterYear, onChange: e => setFilterYear(e.target.value), style: { background: "#1E1E28", border: "1px solid #2a3040", borderRadius: 7, padding: "6px 11px", color: "#e2e8f0", fontSize: 12 } }, [new Date().getFullYear() - 2, new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1].map(y => React.createElement("option", { key: y, value: y }, y))),
+React.createElement("select", { value: filterMonth, onChange: e => setFilterMonth(e.target.value), style: { background: "#1E1E28", border: "1px solid #2a3040", borderRadius: 7, padding: "6px 11px", color: "#e2e8f0", fontSize: 12 } },
+React.createElement("option", { value: "" }, "Anno intero"),
+["Gen", "Feb", "Mar", "Apr", "Mag", "Giu", "Lug", "Ago", "Set", "Ott", "Nov", "Dic"].map((m, i) => React.createElement("option", { key: i, value: i }, m))))),
+React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 14 } },
+React.createElement(Pill, { label: "Ricavi (imponibile)", value: "€" + financials.revenue.toFixed(2), color: "#22c55e" }),
+React.createElement(Pill, { label: "IVA da versare", value: "€" + financials.vatCollected.toFixed(2), color: "#f59e0b" }),
+React.createElement(Pill, { label: "Costo parti acquistate", value: "€" + financials.costsPartsBought.toFixed(2), color: "#ef4444" }),
+React.createElement(Pill, { label: "Costo parti usate", value: "€" + financials.costsPartsUsed.toFixed(2), color: "#f97316" })),
+React.createElement("div", { style: { background: "#141418", borderRadius: 12, padding: "16px", border: "1px solid #1e2a3a", marginBottom: 14, display: "flex", justifyContent: "space-between", alignItems: "center" } },
+React.createElement("div", null,
+React.createElement("div", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700, marginBottom: 4 } }, " Margine Lordo Stimato"),
+React.createElement("div", { style: { fontSize: 11, color: "#475569" } }, "Ricavi \u2212 costo parti usate nei job")),
+React.createElement("span", { style: { color: "#22c55e", fontWeight: 800, fontSize: 22, fontFamily: "monospace" } },
+"\u20AC",
+financials.margin.toFixed(2))),
+React.createElement("div", { style: { background: "#141418", borderRadius: 12, padding: "16px", border: "1px solid #1e2a3a", marginBottom: 14 } },
+React.createElement("div", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700, marginBottom: 8 } },
+"Ricavi mensili \u2014 ",
+filterYear),
+React.createElement(BarChart, { data: financials.monthlyData, color: "#22c55e" })),
+financials.periodInvoices.length > 0 && (React.createElement("div", { style: { background: "#141418", borderRadius: 12, padding: "16px", border: "1px solid #1e2a3a" } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 } },
+React.createElement("div", { style: { fontSize: 10, color: "#64748b", textTransform: "uppercase", letterSpacing: .8, fontWeight: 700 } },
+"Preventivi del periodo (",
+financials.periodInvoices.length,
+")"),
+React.createElement(Btn, { sm: true, variant: "ghost", onClick: exportInvoices }, "\u2B07 Excel")),
+financials.periodInvoices.map(inv => {
+const cust = customers.find(c => c.id === inv.customerId);
+const tot = inv.items.reduce((s, it) => s + it.qty * it.unitPrice * (1 + it.vat / 100), 0);
+return (React.createElement("div", { key: inv.id, style: { display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: "1px solid #1a2030", gap: 10, flexWrap: "wrap", alignItems: "center" } },
+React.createElement("span", { style: { fontSize: 12, color: "#64748b", fontFamily: "monospace" } }, inv.number),
+React.createElement(Badge, { text: inv.status, color: STATUS_COLOR[inv.status] || "#94a3b8" }),
+React.createElement("span", { style: { fontSize: 12, color: "#94a3b8", flex: 1, minWidth: 100 } }, (cust === null || cust === void 0 ? void 0 : cust.name) || "—"),
+React.createElement("span", { style: { fontSize: 11, color: "#64748b" } }, inv.date),
+React.createElement("span", { style: { fontSize: 13, fontWeight: 800, color: "#22c55e", fontFamily: "monospace" } },
+"\u20AC",
+tot.toFixed(2))));
+}))))),
+tab === "func" && (React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 } },
+React.createElement("div", null,
+React.createElement("h1", { style: { margin: 0, fontSize: 18, fontWeight: 900, display: isMobile ? "none" : "block" } }, " Verifiche Funzionali"),
+React.createElement("p", { style: { color: "#64748b", margin: "2px 0 0", fontSize: 12, fontFamily: "monospace" } },
+"IEC 60601-1/2 \u2014 ",
+funcReports.length,
+" rapporti \u00B7 ",
+Object.keys(allTemplates).length - 1,
+" template disponibili")),
+React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } },
+React.createElement(Btn, { sm: true, variant: "ghost", onClick: () => setModal({ type: "templateManager" }) }, "\u2699 Template"),
+React.createElement(Btn, { sm: true, onClick: () => setModal({ type: "func", data: null, assetId: null }) }, "+ Nuova verifica"))),
+funcReports.length === 0 ? (React.createElement(EmptyState, { icon: "\u2713", title: "Nessuna verifica funzionale", subtitle: "Esegui test di funzionalità periodici sui tuoi apparecchi. Template disponibili: " + Object.values(allTemplates).map(t => t.label).join(", ") + ".", actions: [
+{ label: "+ Nuova verifica funzionale", onClick: () => setModal({ type: "func", data: null, assetId: null }), primary: true }
+] })) : isMobile ? (React.createElement(React.Fragment, null, (() => {
+const filteredFunc = funcReports.filter(r => {
+const q = mobileSearch.func.toLowerCase();
+if (q) {
+const a = assets.find(x => x.id === r.assetId) || {};
+const tpl = allTemplates[r.templateId] || {};
+if (![r.reportNumber, r.date, a.name, a.serial, r.technician, tpl.label].some(f => String(f || "").toLowerCase().includes(q)))
+return false;
+}
+return matchFilters(r, "func", {
+templateId: x => { var _a; return ((_a = allTemplates[x.templateId]) === null || _a === void 0 ? void 0 : _a.label) || ""; },
+verifyType: x => x.verifyType || "",
+assetBrand: x => { var _a; return ((_a = assets.find(a => a.id === x.assetId)) === null || _a === void 0 ? void 0 : _a.brand) || ""; },
+assetModel: x => { var _a; return ((_a = assets.find(a => a.id === x.assetId)) === null || _a === void 0 ? void 0 : _a.model) || ""; },
+technician: x => x.technician || "",
+customer: x => { var _a; return ((_a = customers.find(c => { var _a; return c.id === ((_a = assets.find(a => a.id === x.assetId)) === null || _a === void 0 ? void 0 : _a.customerId); })) === null || _a === void 0 ? void 0 : _a.name) || ""; },
+outcome: x => x.verifyStatus === "non_disponibile" ? "non eseguita" : ((x.overallPass === true || x.overallPass === "true") ? "conforme" : "non conforme")
+});
+});
+return (React.createElement(React.Fragment, null,
+React.createElement(MobileSearch, { value: mobileSearch.func, onChange: v => updMS("func", v), placeholder: "Cerca verifica funzionale\u2026", count: filteredFunc.length, total: funcReports.length }),
+React.createElement(FilterDropdown, { filters: {
+templateId: { label: "Tipo apparecchio", options: Object.values(allTemplates).map(t => t.label).sort(), value: activeFilters.func.templateId },
+verifyType: { label: "Tipo verifica", options: ["periodica", "dopo riparazione", "prima messa in servizio", "straordinaria"], value: activeFilters.func.verifyType },
+assetBrand: { label: "Marca apparecchio", options: [...new Set(funcReports.map(r => { var _a; return (_a = assets.find(a => a.id === r.assetId)) === null || _a === void 0 ? void 0 : _a.brand; }).filter(Boolean))].sort(), value: activeFilters.func.assetBrand },
+assetModel: { label: "Modello apparecchio", options: [...new Set(funcReports.map(r => { var _a; return (_a = assets.find(a => a.id === r.assetId)) === null || _a === void 0 ? void 0 : _a.model; }).filter(Boolean))].sort(), value: activeFilters.func.assetModel },
+technician: { label: "Tecnico", options: [...new Set(funcReports.map(r => r.technician).filter(Boolean))].sort(), value: activeFilters.func.technician },
+customer: { label: "Cliente", options: [...new Set(funcReports.map(r => { var _a; return (_a = customers.find(c => { var _a; return c.id === ((_a = assets.find(a => a.id === r.assetId)) === null || _a === void 0 ? void 0 : _a.customerId); })) === null || _a === void 0 ? void 0 : _a.name; }).filter(Boolean))].sort(), value: activeFilters.func.customer },
+outcome: { label: "Esito", options: ["conforme", "non conforme", "non eseguita"], value: activeFilters.func.outcome },
+}, onChange: (k, v) => setFilter("func", k, v), onClearAll: () => clearFilters("func") }),
+React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } },
+filteredFunc.length === 0 && (React.createElement("div", { style: { textAlign: "center", padding: "30px 20px", background: "#141418", borderRadius: 10, border: "1px dashed #2a3040", fontSize: 13, color: "#64748b" } }, "Nessuna verifica corrisponde ai filtri")),
+filteredFunc.map(r => {
+const a = assets.find(x => x.id === r.assetId) || {};
+const c = customers.find(x => x.id === a.customerId) || {};
+const tpl = allTemplates[r.templateId] || { label: "Generico" };
+const isNA = r.verifyStatus === "non_disponibile";
+const pass = r.overallPass === true || r.overallPass === "true";
+const borderC = isNA ? "#f59e0b" : (pass ? "#22c55e" : "#ef4444");
+const badgeC = isNA ? "#f59e0b" : (pass ? "#22c55e" : "#ef4444");
+const badgeLabel = isNA ? "⚠ N/E" : (pass ? "✓ OK" : "✗ FAIL");
+return (React.createElement(SwipeableCard, { key: r.id, onDelete: () => delFuncReport(r.id) },
+React.createElement("div", { style: { background: "#141418", border: "1px solid #1e2a3a", borderRadius: 12, overflow: "hidden", borderLeft: "3px solid " + borderC } },
+React.createElement("div", { onClick: () => setModal({ type: "func", data: r }), style: { padding: "12px 14px 10px", cursor: "pointer", touchAction: "manipulation", WebkitTapHighlightColor: "transparent", borderBottom: "1px solid #1e2a3a" } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 4 } },
+React.createElement("strong", { style: { color: "#e2e8f0", fontSize: 14, fontFamily: "monospace", flex: 1, minWidth: 0, wordBreak: "break-word" } }, r.reportNumber || r.id),
+React.createElement("span", { style: { padding: "2px 8px", background: badgeC + "22", color: badgeC, borderRadius: 5, fontSize: 11, fontWeight: 800, whiteSpace: "nowrap" } }, badgeLabel)),
+React.createElement("div", { style: { fontSize: 12, color: "#06b6d4", fontWeight: 700, marginBottom: 3 } }, tpl.label),
+React.createElement("div", { style: { fontSize: 12, color: "#94a3b8", marginBottom: 3 } }, a.name || "(apparecchio eliminato)"),
+a.brand && React.createElement("div", { style: { fontSize: 11, color: "#64748b" } },
+a.brand,
+" ",
+a.model),
+c.name && React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", marginTop: 3 } },
+"\uD83C\uDFE2 ",
+c.name),
+React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap", fontSize: 10 } },
+React.createElement("span", { style: { padding: "2px 6px", background: "#1E1E28", border: "1px solid #2a3040", borderRadius: 4, color: r.verifyType === "straordinaria" ? "#f59e0b" : "#64748b" } }, r.verifyType || "periodica"),
+React.createElement("span", { style: { padding: "2px 6px", color: "#64748b", fontFamily: "monospace" } }, r.date)),
+r.technician && React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", marginTop: 6 } },
+" ",
+r.technician)),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: "40px 1fr 1fr 36px", gap: 0, background: "#0D0D12" } },
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); setModal({ type: "sticker", data: r, kind: "func" }); }, title: "Sticker QR", style: { background: "transparent", color: "#c084fc", border: "none", borderRight: "1px solid #1e2a3a", padding: "10px 0", cursor: "pointer", fontSize: 14 } }, "\uD83C\uDFF7"),
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); generateFuncPDF(r, a, c, company, allTemplates); }, style: { background: "transparent", color: "#94a3b8", border: "none", borderRight: "1px solid #1e2a3a", padding: "10px 4px", fontSize: 11, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\uD83D\uDCC4 PDF"),
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); setModal({ type: "func", data: r }); }, style: { background: "transparent", color: "#94a3b8", border: "none", borderRight: "1px solid #1e2a3a", padding: "10px 4px", fontSize: 11, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\u270F Modifica"),
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); delFuncReport(r.id); }, title: "Elimina", style: { background: "transparent", color: "#ef4444", border: "none", padding: "10px 4px", fontSize: 14, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\u2715")))));
+}))));
+})())) : (React.createElement(ExcelTable, { exportName: "MedTrace_verifiche_funzionali", defaultSort: "date", rowBg: row => row.overallPass === false || row.overallPass === "false" ? "#ef333308" : "", cols: [
+{ key: "reportNumber", label: "N. Rapporto", render: v => React.createElement("span", { style: { fontFamily: "monospace", fontWeight: 700 } }, v || "—") },
+{ key: "date", label: "Data" },
+{ key: "tplLabel", label: "Tipo apparecchio", render: v => React.createElement("span", { style: { fontWeight: 700, color: "#e2e8f0" } }, v) },
+{ key: "assetName", label: "Apparecchio", render: v => React.createElement("span", { style: { color: "#94a3b8" } }, v) },
+{ key: "serial", label: "N. Serie", render: v => React.createElement("span", { style: { fontFamily: "monospace", fontSize: 11 } }, v || "—") },
+{ key: "cliente", label: "Cliente", opts: [...new Set(funcReports.map(r => { var _a; const a = assets.find(x => x.id === r.assetId); return ((_a = customers.find(c => c.id === (a === null || a === void 0 ? void 0 : a.customerId))) === null || _a === void 0 ? void 0 : _a.name) || ""; }).filter(Boolean))] },
+{ key: "verifyType", label: "Tipo", render: v => React.createElement("span", { style: { fontSize: 11, color: v === "straordinaria" ? "#f59e0b" : "#64748b" } }, v || "periodica") },
+{ key: "technician", label: "Tecnico" },
+{ key: "overallPass", label: "Esito", render: v => React.createElement("span", { style: { fontWeight: 800, color: v === true || v === "true" ? "#22c55e" : "#ef4444" } }, v === true || v === "true" ? "✓ OK" : "✗ NO") },
+{ key: "jobId", label: "Intervento", render: v => v ? React.createElement("span", { title: "Questa verifica \u00E8 registrata anche come intervento nello storico/agenda", style: { fontSize: 11, color: "#5EEAD4", background: "#2DD4BF15", border: "1px solid #2DD4BF33", borderRadius: 5, padding: "2px 8px", fontWeight: 700, whiteSpace: "nowrap" } }, "\u2713 in agenda") : React.createElement("span", { style: { color: "#475569" } }, "\u2014") },
+], rows: funcReports.map(r => {
+const a = assets.find(x => x.id === r.assetId) || {};
+const c = customers.find(x => x.id === a.customerId) || {};
+const tpl = allTemplates[r.templateId] || allTemplates["generico"];
+return Object.assign(Object.assign({}, r), { tplLabel: tpl.icon + " " + tpl.label, assetName: a.name || r.assetId || "—", serial: a.serial || "", cliente: c.name || "" });
+}), onEdit: row => setModal({ type: "func", data: funcReports.find(r => r.id === row.id), assetId: row.assetId }), onDelete: id => delFuncReport(id), actions: row => {
+const rep = funcReports.find(r => r.id === row.id);
+const a = assets.find(x => x.id === (rep === null || rep === void 0 ? void 0 : rep.assetId)) || {};
+const c = customers.find(x => x.id === a.customerId) || {};
+return (React.createElement(React.Fragment, null,
+React.createElement("button", { onClick: () => setModal({ type: "sticker", data: rep, kind: "func" }), title: "Sticker QR", style: { background: "#a855f715", border: "1px solid #a855f733", borderRadius: 5, color: "#c084fc", padding: "3px 7px", cursor: "pointer", fontSize: 11, marginRight: 2 } }, "\uD83C\uDFF7"),
+React.createElement("button", { onClick: () => generateFuncPDF(rep, a, c, company, allTemplates), title: "PDF", style: { background: "#2DD4BF15", border: "1px solid #2563eb33", borderRadius: 5, color: "#5EEAD4", padding: "3px 8px", cursor: "pointer", fontSize: 11 } }, " PDF")));
+} })))),
+tab === "iec" && (React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 } },
+React.createElement("div", null,
+React.createElement("h1", { style: { margin: 0, fontSize: 18, fontWeight: 900, display: isMobile ? "none" : "block" } }, "\u26A1 Verifiche di Sicurezza Elettrica"),
+React.createElement("p", { style: { color: "#64748b", margin: "2px 0 0", fontSize: 12, fontFamily: "monospace" } },
+"IEC 62353 \u00B7 IEC 61010-1 \u00B7 ",
+iecReports.length,
+" rapporti")),
+React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } },
+React.createElement(Btn, { sm: true, variant: "ghost", onClick: exportIecReports }, "\u2B07 Excel"),
+React.createElement(Btn, { sm: true, onClick: () => setModal({ type: "iec", data: null, assetId: null }) }, "+ Nuova verifica"))),
+iecReports.length === 0 ? (React.createElement(EmptyState, { icon: "\u26A1", title: "Nessuna verifica di sicurezza elettrica", subtitle: "Esegui verifiche periodiche IEC 62353 (elettromedicali) o IEC 61010-1 (laboratorio): misure di PE, isolamento, dispersioni Equipment Leakage e Applied Part. Metodi supportati: diretto, differenziale, alternativo.", actions: [
+{ label: "+ Nuova verifica sicurezza elettrica", onClick: () => setModal({ type: "iec", data: null, assetId: null }), primary: true }
+] })) : isMobile ? (React.createElement(React.Fragment, null, (() => {
+const filteredIec = iecReports.filter(r => {
+const q = mobileSearch.iec.toLowerCase();
+if (q) {
+const a = assets.find(x => x.id === r.assetId) || {};
+if (![r.reportNumber, r.date, a.name, a.serial, r.technician, r.norm].some(f => String(f || "").toLowerCase().includes(q)))
+return false;
+}
+return matchFilters(r, "iec", {
+norm: x => x.norm || "", equipClass: x => x.equipClass || "",
+patientType: x => x.patientType || "",
+leakageMethod: x => x.leakageMethod || "diretto",
+verifyType: x => x.verifyType || "",
+assetBrand: x => { var _a; return ((_a = assets.find(a => a.id === x.assetId)) === null || _a === void 0 ? void 0 : _a.brand) || ""; },
+assetModel: x => { var _a; return ((_a = assets.find(a => a.id === x.assetId)) === null || _a === void 0 ? void 0 : _a.model) || ""; },
+technician: x => x.technician || "",
+customer: x => { var _a; return ((_a = customers.find(c => { var _a; return c.id === ((_a = assets.find(a => a.id === x.assetId)) === null || _a === void 0 ? void 0 : _a.customerId); })) === null || _a === void 0 ? void 0 : _a.name) || ""; },
+outcome: x => x.verifyStatus === "non_disponibile" ? "non eseguita" : ((x.overallPass === true || x.overallPass === "true") ? "conforme" : "non conforme")
+});
+});
+return (React.createElement(React.Fragment, null,
+React.createElement(MobileSearch, { value: mobileSearch.iec, onChange: v => updMS("iec", v), placeholder: "Cerca rapporto, apparecchio, tecnico\u2026", count: filteredIec.length, total: iecReports.length }),
+React.createElement(FilterDropdown, { filters: {
+norm: { label: "Norma", options: ["62353", "61010"], value: activeFilters.iec.norm },
+equipClass: { label: "Classe elettrica", options: ["I", "II", "III"], value: activeFilters.iec.equipClass },
+patientType: { label: "Tipo parte applicata", options: ["B", "BF", "CF"], value: activeFilters.iec.patientType },
+leakageMethod: { label: "Metodo misura", options: ["diretto", "differenziale", "alternativo"], value: activeFilters.iec.leakageMethod },
+verifyType: { label: "Tipo verifica", options: ["periodica", "dopo riparazione", "prima messa in servizio", "straordinaria"], value: activeFilters.iec.verifyType },
+assetBrand: { label: "Marca apparecchio", options: [...new Set(iecReports.map(r => { var _a; return (_a = assets.find(a => a.id === r.assetId)) === null || _a === void 0 ? void 0 : _a.brand; }).filter(Boolean))].sort(), value: activeFilters.iec.assetBrand },
+assetModel: { label: "Modello apparecchio", options: [...new Set(iecReports.map(r => { var _a; return (_a = assets.find(a => a.id === r.assetId)) === null || _a === void 0 ? void 0 : _a.model; }).filter(Boolean))].sort(), value: activeFilters.iec.assetModel },
+technician: { label: "Tecnico", options: [...new Set(iecReports.map(r => r.technician).filter(Boolean))].sort(), value: activeFilters.iec.technician },
+customer: { label: "Cliente", options: [...new Set(iecReports.map(r => { var _a; return (_a = customers.find(c => { var _a; return c.id === ((_a = assets.find(a => a.id === r.assetId)) === null || _a === void 0 ? void 0 : _a.customerId); })) === null || _a === void 0 ? void 0 : _a.name; }).filter(Boolean))].sort(), value: activeFilters.iec.customer },
+outcome: { label: "Esito", options: ["conforme", "non conforme", "non eseguita"], value: activeFilters.iec.outcome },
+}, onChange: (k, v) => setFilter("iec", k, v), onClearAll: () => clearFilters("iec") }),
+React.createElement("div", { style: { display: "flex", justifyContent: "flex-end", marginBottom: 8 } },
+React.createElement("button", { onClick: toggleCompact, style: { background: "#16161C", border: "1px solid #1e2a3a", borderRadius: 8, padding: "6px 12px", color: "#94a3b8", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 } }, compactView ? "▤ Vista estesa" : "≣ Vista compatta")),
+React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: compactView ? 0 : 10 } },
+filteredIec.length === 0 && (React.createElement("div", { style: { textAlign: "center", padding: "30px 20px", background: "#141418", borderRadius: 10, border: "1px dashed #2a3040", fontSize: 13, color: "#64748b" } }, "Nessuna verifica corrisponde ai filtri")),
+filteredIec.map(r => {
+const a = assets.find(x => x.id === r.assetId) || {};
+const c = customers.find(x => x.id === a.customerId) || {};
+const isNA = r.verifyStatus === "non_disponibile";
+const pass = r.overallPass === true || r.overallPass === "true";
+const borderC = isNA ? "#f59e0b" : (pass ? "#22c55e" : "#ef4444");
+const badgeC = isNA ? "#f59e0b" : (pass ? "#22c55e" : "#ef4444");
+const badgeLabel = isNA ? "⚠ N/E" : (pass ? "✓ OK" : "✗ FAIL");
+if (compactView) {
+return (React.createElement("div", { key: r.id, onClick: () => setModal({ type: "iec", data: r }), style: { display: "flex", alignItems: "center", gap: 10, padding: "10px 12px", borderBottom: "1px solid #1A1A24", cursor: "pointer", background: "#101014" } },
+React.createElement("span", { style: { width: 8, height: 8, borderRadius: "50%", background: borderC, flexShrink: 0 } }),
+React.createElement("div", { style: { flex: 1, minWidth: 0 } },
+React.createElement("div", { style: { color: "#e2e8f0", fontSize: 13, fontWeight: 600, fontFamily: "monospace", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, r.reportNumber || r.id),
+React.createElement("div", { style: { color: "#64748b", fontSize: 10.5, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, [a.name, r.date].filter(Boolean).join(" · ") || "—")),
+React.createElement("span", { style: { padding: "2px 7px", background: badgeC + "22", color: badgeC, borderRadius: 5, fontSize: 10, fontWeight: 700, flexShrink: 0 } }, badgeLabel)));
+}
+return (React.createElement(SwipeableCard, { key: r.id, onDelete: () => delIecReport(r.id) },
+React.createElement("div", { style: { background: "#141418", border: "1px solid #1e2a3a", borderRadius: 12, overflow: "hidden", borderLeft: "3px solid " + borderC } },
+React.createElement("div", { onClick: () => setModal({ type: "iec", data: r }), style: { padding: "12px 14px 10px", cursor: "pointer", touchAction: "manipulation", WebkitTapHighlightColor: "transparent", borderBottom: "1px solid #1e2a3a" } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 4 } },
+React.createElement("strong", { style: { color: "#e2e8f0", fontSize: 14, fontFamily: "monospace", flex: 1, minWidth: 0, wordBreak: "break-word" } }, r.reportNumber || r.id),
+React.createElement("span", { style: { padding: "2px 8px", background: badgeC + "22", color: badgeC, borderRadius: 5, fontSize: 11, fontWeight: 800, whiteSpace: "nowrap" } }, badgeLabel)),
+React.createElement("div", { style: { fontSize: 12, color: "#94a3b8", marginBottom: 3 } }, a.name || "(apparecchio eliminato)"),
+a.brand && React.createElement("div", { style: { fontSize: 11, color: "#64748b" } },
+a.brand,
+" ",
+a.model),
+c.name && React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", marginTop: 3 } },
+"\uD83C\uDFE2 ",
+c.name),
+React.createElement("div", { style: { display: "flex", gap: 6, marginTop: 8, flexWrap: "wrap", fontSize: 10 } },
+React.createElement("span", { style: { padding: "2px 6px", background: "#1E1E28", border: "1px solid #2a3040", borderRadius: 4, color: "#94a3b8" } },
+"IEC ",
+r.norm),
+r.equipClass && React.createElement("span", { style: { padding: "2px 6px", background: "#1E1E28", border: "1px solid #2a3040", borderRadius: 4, color: "#94a3b8" } },
+"Cl. ",
+r.equipClass),
+React.createElement("span", { style: { padding: "2px 6px", background: "#1E1E28", border: "1px solid #2a3040", borderRadius: 4, color: r.verifyType === "straordinaria" ? "#f59e0b" : "#64748b" } }, r.verifyType || "periodica"),
+React.createElement("span", { style: { padding: "2px 6px", color: "#64748b", fontFamily: "monospace" } }, r.date)),
+r.technician && React.createElement("div", { style: { fontSize: 11, color: "#94a3b8", marginTop: 6 } },
+" ",
+r.technician)),
+React.createElement("div", { style: { display: "grid", gridTemplateColumns: "40px 1fr 1fr 36px", gap: 0, background: "#0D0D12" } },
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); setModal({ type: "sticker", data: r, kind: "iec" }); }, title: "Sticker QR", style: { background: "transparent", color: "#c084fc", border: "none", borderRight: "1px solid #1e2a3a", padding: "10px 0", cursor: "pointer", fontSize: 14 } }, "\uD83C\uDFF7"),
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); generateIECPDF(r, a, c, company); }, style: { background: "transparent", color: "#94a3b8", border: "none", borderRight: "1px solid #1e2a3a", padding: "10px 4px", fontSize: 11, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\uD83D\uDCC4 PDF"),
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); setModal({ type: "iec", data: r }); }, style: { background: "transparent", color: "#94a3b8", border: "none", borderRight: "1px solid #1e2a3a", padding: "10px 4px", fontSize: 11, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\u270F Modifica"),
+React.createElement("button", { onClick: (e) => { e.stopPropagation(); delIecReport(r.id); }, title: "Elimina", style: { background: "transparent", color: "#ef4444", border: "none", padding: "10px 4px", fontSize: 14, fontWeight: 700, cursor: "pointer", touchAction: "manipulation" } }, "\u2715")))));
+}))));
+})())) : (React.createElement(ExcelTable, { exportName: "MedTrace_verifiche_sicurezza", defaultSort: "date", rowBg: row => row.overallPass === false || row.overallPass === "false" ? "#ef333308" : "", cols: [
+{ key: "reportNumber", label: "N. Rapporto", render: v => React.createElement("span", { style: { fontFamily: "monospace", fontWeight: 700 } }, v || "—") },
+{ key: "date", label: "Data" },
+{ key: "apparecchio", label: "Apparecchio", render: v => React.createElement("strong", { style: { color: "#e2e8f0" } }, v) },
+{ key: "serial", label: "N. Serie", render: v => React.createElement("span", { style: { fontFamily: "monospace", fontSize: 11 } }, v || "—") },
+{ key: "cliente", label: "Cliente", opts: [...new Set(iecReports.map(r => { var _a; const a = assets.find(x => x.id === r.assetId); return ((_a = customers.find(c => c.id === (a === null || a === void 0 ? void 0 : a.customerId))) === null || _a === void 0 ? void 0 : _a.name) || ""; }).filter(Boolean))] },
+{ key: "norm", label: "Norma", opts: ["62353", "61010"], render: v => React.createElement("span", { style: { fontSize: 11, color: "#64748b" } },
+"IEC ",
+v) },
+{ key: "equipClass", label: "Classe" },
+{ key: "verifyType", label: "Tipo", render: v => React.createElement("span", { style: { fontSize: 11, color: v === "straordinaria" ? "#f59e0b" : "#64748b" } }, v || "periodica") },
+{ key: "technician", label: "Tecnico" },
+{ key: "overallPass", label: "Esito", render: v => React.createElement("span", { style: { fontWeight: 800, color: v === true || v === "true" ? "#22c55e" : "#ef4444" } }, v === true || v === "true" ? "✓ OK" : "✗ NO") },
+{ key: "jobId", label: "Intervento", render: v => v ? React.createElement("span", { title: "Questa verifica \u00E8 registrata anche come intervento nello storico/agenda", style: { fontSize: 11, color: "#5EEAD4", background: "#2DD4BF15", border: "1px solid #2DD4BF33", borderRadius: 5, padding: "2px 8px", fontWeight: 700, whiteSpace: "nowrap" } }, "\u2713 in agenda") : React.createElement("span", { style: { color: "#475569" } }, "\u2014") },
+], rows: iecReports.map(r => { const a = assets.find(x => x.id === r.assetId) || {}; const c = customers.find(x => x.id === a.customerId) || {}; return Object.assign(Object.assign({}, r), { apparecchio: a.name || r.assetId || "—", serial: a.serial || "", cliente: c.name || "" }); }), onEdit: row => setModal({ type: "iec", data: iecReports.find(r => r.id === row.id), assetId: row.assetId }), onDelete: id => delIecReport(id), actions: row => {
+const rep = iecReports.find(r => r.id === row.id);
+const a = assets.find(x => x.id === (rep === null || rep === void 0 ? void 0 : rep.assetId)) || {};
+const c = customers.find(x => x.id === a.customerId) || {};
+return (React.createElement(React.Fragment, null,
+React.createElement("button", { onClick: () => setModal({ type: "sticker", data: rep, kind: "iec" }), title: "Sticker QR", style: { background: "#a855f715", border: "1px solid #a855f733", borderRadius: 5, color: "#c084fc", padding: "3px 7px", cursor: "pointer", fontSize: 11, marginRight: 2 } }, "\uD83C\uDFF7"),
+React.createElement("button", { onClick: () => generateIECPDF(rep, a, c, company), title: "PDF", style: { background: "#2DD4BF15", border: "1px solid #2563eb33", borderRadius: 5, color: "#5EEAD4", padding: "3px 8px", cursor: "pointer", fontSize: 11 } }, " PDF")));
+} })))),
+tab === "schedule" && (React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 } },
+React.createElement("div", null,
+React.createElement("h1", { style: { margin: 0, fontSize: 18, fontWeight: 900, display: isMobile ? "none" : "block" } }, "Pianificazione Annuale"),
+React.createElement("p", { style: { color: "#64748b", margin: "2px 0 0", fontSize: 12, fontFamily: "monospace" } }, "Attivit\u00E0 programmate per anno \u2014 basato su nextService degli apparecchi")),
+React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } },
+React.createElement("select", { value: scheduleYear, onChange: e => setScheduleYear(+e.target.value), style: { background: "#1E1E28", border: "1px solid #2a3040", borderRadius: 7, padding: "7px 11px", color: "#e2e8f0", fontSize: 13 } }, [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1, new Date().getFullYear() + 2].map(y => React.createElement("option", { key: y, value: y }, y))),
+React.createElement(Btn, { sm: true, variant: "ghost", onClick: () => {
+const rows = scheduleRows;
+downloadXLSX("pianificazione-" + scheduleYear + ".xlsx", rows, [{ key: "month", label: "Mese" }, { key: "assetName", label: "Apparecchio" }, { key: "brand", label: "Marca" }, { key: "serial", label: "N.Serie" }, { key: "location", label: "Ubicazione" }, { key: "customer", label: "Cliente" }, { key: "norm", label: "Norma IEC" }, { key: "lastService", label: "Ultima verifica" }, { key: "nextService", label: "Data pianificata" }, { key: "status", label: "Stato apparecchio" }]);
+} }, "\u2B07 Excel Pianificazione"))),
+scheduleMonths.every(m => m.items.length === 0) ? (React.createElement("div", { style: { textAlign: "center", padding: "40px 18px", background: "#141418", borderRadius: 12, border: "1px dashed #2a3040" } },
+React.createElement("div", { style: { fontSize: 40, marginBottom: 10, opacity: .5 } }, "\uD83D\uDCC5"),
+React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: "#94a3b8", marginBottom: 6 } },
+"Nessuna attivit\u00E0 pianificata per ",
+scheduleYear),
+React.createElement("div", { style: { fontSize: 12, color: "#475569" } }, "Le attivit\u00E0 compaiono automaticamente quando salvi una Verifica di Sicurezza Elettrica o imposti una data \"Prossimo Servizio\" negli apparecchi."))) : scheduleMonths.map(({ month, monthLabel, items }) => items.length === 0 ? null : (React.createElement("div", { key: month, style: { marginBottom: 20 } },
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8, padding: "8px 14px", background: "#141418", borderRadius: "8px 8px 0 0", border: "1px solid #2a3040", borderBottom: "none" } },
+React.createElement("span", { style: { fontWeight: 800, fontSize: 15, color: "#e2e8f0" } },
+monthLabel,
+" ",
+scheduleYear),
+React.createElement("span", { style: { fontSize: 11, color: "#64748b", fontFamily: "monospace" } },
+items.length,
+" apparecch",
+items.length === 1 ? "io" : "i")),
+React.createElement(ExcelTable, { exportName: "MedTrace_pianificazione", defaultSort: "nextService", rowBg: row => {
+const d = row._days;
+return d < 0 ? "#ef333308" : d <= 30 ? "#f59e0b08" : "";
+}, cols: [
+{ key: "assetName", label: "Apparecchio", render: v => React.createElement("strong", { style: { color: "#e2e8f0" } }, v) },
+{ key: "brand", label: "Marca" },
+{ key: "serial", label: "N. Serie", render: v => React.createElement("span", { style: { fontFamily: "monospace", fontSize: 11 } }, v || "—") },
+{ key: "location", label: "Ubicazione", opts: [...new Set(items.map(i => i.location).filter(Boolean))] },
+{ key: "customer", label: "Cliente", opts: [...new Set(items.map(i => i.customer).filter(Boolean))] },
+{ key: "norm", label: "Norma IEC", opts: ["IEC 62353", "IEC 61010-1", "—"], render: v => React.createElement("span", { style: { fontSize: 11, color: "#64748b" } }, v) },
+{ key: "lastService", label: "Ultima verifica", render: v => v || React.createElement("span", { style: { color: "#475569" } }, "mai") },
+{ key: "nextService", label: "Data pianificata", render: (v, row) => React.createElement(AlertChip, { days: row._days }) },
+{ key: "status", label: "Stato", opts: ["operativo", "in manutenzione", "fuori servizio"], render: v => React.createElement(Badge, { text: v, color: STATUS_COLOR[v] || "#64748b" }) },
+], rows: items, actions: row => (React.createElement("button", { onClick: () => setModal({ type: "iec", data: null, assetId: row.assetId }), style: { background: "#2DD4BF15", border: "1px solid #2563eb33", borderRadius: 5, color: "#5EEAD4", padding: "3px 8px", cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" } }, "Verifica")) })))))),
+tab === "richieste" && (React.createElement(RichiestePage, { richieste: richieste, assets: assets, customers: customers, onConvert: convertRichiesta, onRefresh: loadRichieste, online: !OFFLINE_MODE })),
+tab === "help" && React.createElement(HelpTab, { helpOpen: helpOpen, setHelpOpen: setHelpOpen }),
+tab === "instruments" && (React.createElement(InstrumentsPage, { instruments: instruments, setInstruments: setInstruments, showToast: showToast, checkLocked: checkLocked })),
+tab === "procedures" && (React.createElement(ProceduresPage, { procedures: procedures, setProcedures: setProcedures, assets: assets, showToast: showToast, moveToTrash: moveToTrash })),
+tab === "quotes" && (React.createElement(QuotesPage, { quotes: quotes, setQuotes: setQuotes, customers: customers, jobs: jobs, parts: parts, company: company, showToast: showToast, moveToTrash: moveToTrash })),
+tab === "scadenze" && (React.createElement(ScadenzePage, { scadenze: scadenzeVerifiche, company: company, onEmail: (sc) => setModal({ type: "scadenzaEmail", data: sc }), onOpenAsset: (id) => { const a = assets.find(x => x.id === id); if (a)
+setModal({ type: "assetDetail", data: a }); } })),
+tab === "agenda" && (React.createElement(AgendaPage, { assets: assets, jobs: jobs, instruments: instruments, iecReports: iecReports, funcReports: funcReports, customers: customers, setTab: setTab, setModal: setModal, showToast: showToast })),
+tab === "piano" && (React.createElement(PianoManuale, { assets: assets, setAssets: setAssets, customers: customers, year: scheduleYear || new Date().getFullYear(), setYear: (y) => { }, showToast: showToast, goTab: setTab })),
+tab === "orders" && (React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 } },
+React.createElement("div", null,
+React.createElement("h1", { style: { margin: 0, fontSize: 18, fontWeight: 900, display: isMobile ? "none" : "block" } }, "Ordini Fornitori"),
+React.createElement("p", { style: { color: "#64748b", margin: "2px 0 0", fontSize: 12, fontFamily: "monospace" } },
+stats.pendingOrders,
+" in corso \u00B7 ",
+orders.length,
+" totali")),
+React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } },
+React.createElement(Btn, { sm: true, variant: "ghost", onClick: exportOrders }, "\u2B07 Excel"),
+React.createElement(Btn, { sm: true, onClick: () => setModal({ type: "order", data: null }) }, "+ Nuovo"))),
+orders.length === 0 ? (React.createElement("div", { style: { textAlign: "center", padding: "40px 18px", background: "#141418", borderRadius: 12, border: "1px dashed #2a3040" } },
+React.createElement("div", { style: { fontSize: 40, marginBottom: 10, opacity: .5 } }, "\uD83D\uDCCB"),
+React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: "#94a3b8", marginBottom: 6 } }, "Nessun ordine"),
+React.createElement(Btn, { onClick: () => setModal({ type: "order", data: null }) }, "Nuovo ordine"))) : (React.createElement(ExcelTable, { exportName: "MedTrace_ordini", defaultSort: "orderDate", rowBg: row => row.status === "in attesa" ? "#f59e0b08" : "", cols: [
+{ key: "supplier", label: "Fornitore", render: v => React.createElement("strong", { style: { color: "#e2e8f0" } }, v) },
+{ key: "nomeParte", label: "Parte" },
+{ key: "qty", label: "Q.tà", render: v => React.createElement("span", { style: { fontFamily: "monospace" } }, v) },
+{ key: "unitPrice", label: "Prezzo Unit.", render: v => React.createElement("span", { style: { fontFamily: "monospace" } },
+"\u20AC",
+parseFloat(v).toFixed(2)) },
+{ key: "totale", label: "Totale", render: v => React.createElement("span", { style: { fontFamily: "monospace", fontWeight: 700, color: "#a855f7" } },
+"\u20AC",
+v) },
+{ key: "status", label: "Stato", opts: ["in attesa", "confermato", "spedito", "ricevuto", "annullato"], render: v => React.createElement(Badge, { text: v, color: STATUS_COLOR[v] || "#94a3b8" }) },
+{ key: "orderDate", label: "Data ordine" },
+{ key: "expectedDate", label: "Consegna", render: v => v || "—" },
+], rows: orders.map(o => { var _a; return (Object.assign(Object.assign({}, o), { nomeParte: ((_a = parts.find(p => p.id === o.partId)) === null || _a === void 0 ? void 0 : _a.name) || o.partId, totale: (o.qty * o.unitPrice).toFixed(2) })); }), onEdit: row => setModal({ type: "order", data: orders.find(o => o.id === row.id) }), onDelete: id => delOrder(id), actions: row => {
+const o = orders.find(x => x.id === row.id);
+return (o === null || o === void 0 ? void 0 : o.status) !== "ricevuto" && (o === null || o === void 0 ? void 0 : o.status) !== "annullato"
+? React.createElement("button", { onClick: () => quickReceive(o), style: { background: "#22c55e15", border: "1px solid #22c55e33", borderRadius: 5, color: "#22c55e", padding: "3px 8px", cursor: "pointer", fontSize: 11, whiteSpace: "nowrap" } }, "\u2713 Ricevuto")
+: null;
+} })))),
+tab === "withdrawals" && (React.createElement("div", null,
+React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 } },
+React.createElement("div", null,
+React.createElement("h1", { style: { margin: 0, fontSize: 18, fontWeight: 900, display: isMobile ? "none" : "block" } }, "Scarichi Magazzino"),
+React.createElement("p", { style: { color: "#64748b", margin: "2px 0 0", fontSize: 12, fontFamily: "monospace" } },
+"\u20AC",
+withdrawals.reduce((s, w) => s + w.total, 0).toFixed(2),
+" totali")),
+parts.length > 0 && assets.length > 0 && React.createElement(Btn, { sm: true, variant: "success", onClick: () => setModal({ type: "withdrawal" }) }, " Nuovo")),
+withdrawals.length === 0 ? (React.createElement("div", { style: { textAlign: "center", padding: "40px 18px", background: "#141418", borderRadius: 12, border: "1px dashed #2a3040" } },
+React.createElement("div", { style: { fontSize: 40, marginBottom: 10, opacity: .5 } }, "\u2193"),
+React.createElement("div", { style: { fontSize: 14, fontWeight: 700, color: "#94a3b8", marginBottom: 6 } }, "Nessuno scarico"),
+React.createElement("div", { style: { fontSize: 12, color: "#475569" } }, "Le uscite di magazzino verranno registrate qui."))) : (React.createElement(ExcelTable, { defaultSort: "date", cols: [
+{ key: "date", label: "Data" },
+{ key: "apparecchio", label: "Apparecchio", render: v => React.createElement("strong", { style: { color: "#e2e8f0" } }, v) },
+{ key: "tech", label: "Tecnico", render: v => v || "—" },
+{ key: "reason", label: "Motivo", render: v => React.createElement("span", { style: { color: "#94a3b8", fontSize: 11 } }, v || "—") },
+{ key: "partiDesc", label: "Parti", render: v => React.createElement("span", { style: { color: "#64748b", fontSize: 11 } }, v) },
+{ key: "total", label: "Totale", render: v => React.createElement("span", { style: { color: "#22c55e", fontWeight: 800, fontFamily: "monospace" } },
+"\u20AC",
+parseFloat(v).toFixed(2)) },
+], rows: withdrawals.map(w => { var _a; return (Object.assign(Object.assign({}, w), { apparecchio: ((_a = assets.find(a => a.id === w.assetId)) === null || _a === void 0 ? void 0 : _a.name) || w.assetId || "—", partiDesc: w.items.map(r => { const p = parts.find(x => x.id === r.partId); return ((p === null || p === void 0 ? void 0 : p.name) || r.partId) + " x" + r.qty; }).join(", ") })); }) })))),
+(modal === null || modal === void 0 ? void 0 : modal.type) === "asset" && React.createElement(Modal, { title: modal.data ? "Modifica Apparecchio" : "Nuovo Apparecchio", onClose: popModal },
+React.createElement(AssetForm, { initial: modal.data, customers: customers, assets: assets, onSave: saveAsset, onClose: popModal })),
+(modal === null || modal === void 0 ? void 0 : modal.type) === "part" && React.createElement(Modal, { title: modal.data ? "Modifica Parte" : "Nuova Parte", wide: true, onClose: popModal },
+React.createElement(PartForm, { initial: modal.data, assets: assets, onSave: savePart, onClose: popModal })),
+(modal === null || modal === void 0 ? void 0 : modal.type) === "job" && React.createElement(Modal, { title: ((_b = modal.data) === null || _b === void 0 ? void 0 : _b.id) ? "Modifica Job" : "Nuovo Job", wide: true, onClose: popModal },
+React.createElement(JobForm, { initial: ((_c = modal.data) === null || _c === void 0 ? void 0 : _c.id) ? modal.data : null, assets: assets, parts: parts, customers: customers, technicians: company.technicians || [], onSave: saveJob, onClose: popModal })),
+(modal === null || modal === void 0 ? void 0 : modal.type) === "jobDetail" && React.createElement(JobDetailModal, { job: modal.data, assets: assets, parts: parts, customers: customers, company: company, onEdit: () => setModal({ type: "job", data: modal.data }), onTimeline: () => setModal({ type: "timeline", data: modal.data }), onCreateQuote: () => quoteFromJob(modal.data), onClose: popModal }),
+(modal === null || modal === void 0 ? void 0 : modal.type) === "order" && React.createElement(Modal, { title: modal.data ? "Modifica Ordine" : "Nuovo Ordine", onClose: popModal },
+React.createElement(OrderForm, { initial: modal.data, parts: parts, onSave: saveOrder, onClose: popModal })),
+(modal === null || modal === void 0 ? void 0 : modal.type) === "customer" && React.createElement(Modal, { title: modal.data ? "Modifica Cliente" : "Nuovo Cliente", onClose: popModal },
+React.createElement(CustomerForm, { initial: modal.data, onSave: saveCustomer, onClose: popModal })),
+(modal === null || modal === void 0 ? void 0 : modal.type) === "invoice" && React.createElement(Modal, { title: modal.data ? "Modifica Preventivo" : "Nuovo Preventivo", wide: true, onClose: popModal },
+React.createElement(InvoiceForm, { initial: modal.prefillFromJob || modal.data, customers: customers, jobs: jobs, assets: assets, parts: parts, generateNumber: generateInvoiceNumber, onSave: saveInvoice, onClose: popModal })),
+(modal === null || modal === void 0 ? void 0 : modal.type) === "withdrawal" && React.createElement(WithdrawalModal, { parts: parts, assets: assets, preselectPartId: modal.partId, onWithdraw: handleWithdraw, onClose: popModal }),
+(modal === null || modal === void 0 ? void 0 : modal.type) === "assetDetail" && false,
+(modal === null || modal === void 0 ? void 0 : modal.type) === "timeline" && React.createElement(TimelineModal, { job: modal.data, parts: parts, onSave: (data) => saveTimeline(modal.data.id, data), onClose: popModal }),
+(modal === null || modal === void 0 ? void 0 : modal.type) === "settings" && React.createElement(SettingsModal, { isAdmin: isAdmin, isSuperuser: isSuperuser, data: { assets, parts, jobs, orders, withdrawals, customers, invoices, quotes, instruments, procedures, iecReports, funcReports, company, customTemplates, cestino, _meta: { version: "3.6", exportedAt: new Date().toISOString(), app: "MedTrace" } }, company: company, onUpdateCompany: setCompany, onImport: handleImport, onMerge: handleMerge, onReset: handleReset, onCloudPull: handleCloudPull, onClose: popModal, onOpenCestino: () => pushModal({ type: "cestino" }) }),
+(modal === null || modal === void 0 ? void 0 : modal.type) === "cestino" && React.createElement(CestinoModal, { cestino: cestino, onRestore: restoreFromTrash, onPurge: purgeFromTrash, onClose: popModal }),
+(modal === null || modal === void 0 ? void 0 : modal.type) === "templateManager" && (React.createElement(Modal, { title: "Gestione template verifiche", wide: true, onClose: popModal },
+React.createElement(TemplateManagerModal, { allTemplates: allTemplates, customTemplates: customTemplates, onNew: () => setModal({ type: "templateEditor", data: null }), onEdit: (t) => setModal({ type: "templateEditor", data: t }), onDelete: deleteCustomTemplate, onClose: popModal }))),
+(modal === null || modal === void 0 ? void 0 : modal.type) === "templateEditor" && (React.createElement(Modal, { title: modal.data ? "Modifica template" : "Nuovo template", wide: true, onClose: () => setModal({ type: "templateManager" }) },
+React.createElement(TemplateEditor, { initial: modal.data, existingTemplates: allTemplates, onSave: saveCustomTemplate, onClose: () => setModal({ type: "templateManager" }) }))),
+(modal === null || modal === void 0 ? void 0 : modal.type) === "sticker" && (() => {
+const stickerAsset = assets.find(a => { var _a; return a.id === (((_a = modal.data) === null || _a === void 0 ? void 0 : _a.assetId) || modal.assetId); });
+const stickerCustomer = customers.find(c => { var _a; return c.id === (((_a = modal.data) === null || _a === void 0 ? void 0 : _a.customerId) || (stickerAsset === null || stickerAsset === void 0 ? void 0 : stickerAsset.customerId)); });
+return (React.createElement(Modal, { title: modal.kind === "asset" ? "🏷 Sticker apparecchio" : "Sticker QR verifica", onClose: popModal },
+React.createElement(StickerModal, { report: modal.data || {}, asset: stickerAsset, customer: stickerCustomer, company: company, kind: modal.kind, onClose: popModal })));
+})(),
+(modal === null || modal === void 0 ? void 0 : modal.type) === "scadenzaEmail" && (React.createElement(Modal, { title: "\u2709 Promemoria scadenza", onClose: popModal },
+React.createElement(ScadenzaEmailModal, { sc: modal.data, company: company, onClose: popModal }))),
+(modal === null || modal === void 0 ? void 0 : modal.type) === "clientReport" && (React.createElement(Modal, { title: "Report parco macchine", wide: true, onClose: popModal },
+React.createElement(ClientReportModal, { customer: modal.data, assets: assets, iecReports: iecReports, funcReports: funcReports, jobs: jobs, company: company, onClose: popModal }))),
+csvModal && (React.createElement("div", { style: { position: "fixed", inset: 0, background: "#000d", zIndex: 1001, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 } },
+React.createElement("div", { style: { background: "#18181F", border: "1px solid #2a3040", borderRadius: 14, width: "min(640px,97vw)", maxHeight: "90vh", display: "flex", flexDirection: "column", overflow: "hidden" } },
+React.createElement("div", { style: { padding: "16px 20px", borderBottom: "1px solid #2a3040", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 } },
+React.createElement("div", null,
+React.createElement("div", { style: { fontWeight: 800, fontSize: 15, color: "#e2e8f0" } }, csvModal.isJson ? " Backup JSON" : " Esporta dati"),
+React.createElement("div", { style: { fontSize: 11, color: "#64748b", marginTop: 2, fontFamily: "monospace" } }, csvModal.filename)),
+React.createElement("button", { onClick: () => setCsvModal(null), style: { background: "none", border: "none", color: "#64748b", fontSize: 22, cursor: "pointer", lineHeight: 1 } }, "\u00D7")),
+React.createElement("div", { style: { padding: "14px 20px", flex: 1, overflow: "auto", display: "flex", flexDirection: "column", gap: 12 } },
+React.createElement("div", { style: { background: "#0D0D12", borderRadius: 8, padding: "10px 14px", border: "1px solid #1e2a3a", fontSize: 11, color: "#64748b", lineHeight: 1.5 } }, csvModal.isJson
+? React.createElement(React.Fragment, null,
+React.createElement("strong", { style: { color: "#e2e8f0" } },
+"Backup completo (",
+csvModal.filename,
+"):"),
+" Clicca \"Copia tutto\", poi apri Blocco Note, incolla e salva come ",
+React.createElement("strong", { style: { color: "#22c55e" } }, ".json"),
+". Per ripristinare: Impostazioni \u2192 Importa backup.")
+: React.createElement(React.Fragment, null,
+React.createElement("strong", { style: { color: "#e2e8f0" } }, "Esporta dati:"),
+" il download diretto di Excel non \u00E8 disponibile su questo dispositivo, quindi clicca \"Copia tutto\" e incolla i dati direttamente in Excel o Google Sheets (oppure salvali come file di testo .csv, che Excel apre).")),
+React.createElement("textarea", { readOnly: true, value: csvModal.isJson ? csvModal.data : ("\uFEFF" + csvModal.data), id: "csv-textarea", style: { flex: 1, minHeight: 280, background: "#141418", border: "1px solid #2a3040", borderRadius: 8, padding: "10px 12px", color: "#e2e8f0", fontSize: 11, fontFamily: "monospace", resize: "none", outline: "none" }, onClick: e => { e.target.select(); e.target.setSelectionRange(0, 999999); } })),
+React.createElement("div", { style: { padding: "12px 20px", borderTop: "1px solid #2a3040", display: "flex", gap: 8, justifyContent: "space-between", alignItems: "center", flexShrink: 0 } },
+React.createElement("button", { onClick: () => {
+const text = csvModal.isJson ? csvModal.data : ("\uFEFF" + csvModal.data);
+if (navigator.clipboard) {
+navigator.clipboard.writeText(text).then(() => showToast("Copiato!")).catch(() => { });
+}
+}, style: { background: "#2DD4BF", color: "#fff", border: "none", borderRadius: 7, padding: "8px 16px", cursor: "pointer", fontSize: 13, fontWeight: 700 } }, "Copia negli appunti"),
+React.createElement("button", { onClick: () => {
+const text = csvModal.isJson ? csvModal.data : ("\uFEFF" + csvModal.data);
+const ta = document.querySelector("#csv-textarea");
+if (ta) {
+ta.select();
+ta.setSelectionRange(0, 999999);
+}
+if (navigator.clipboard) {
+navigator.clipboard.writeText(text).then(() => showToast("✓ Copiato! Incolla in Notepad e salva come ." + (csvModal.isJson ? "json" : "csv"))).catch(() => showToast("Seleziona il testo e copia con Ctrl+C", "#f59e0b"));
+}
+else {
+showToast("Seleziona il testo e copia con Ctrl+C", "#f59e0b");
+}
+}, style: { background: "#22c55e", color: "#fff", border: "none", borderRadius: 7, padding: "8px 18px", cursor: "pointer", fontSize: 13, fontWeight: 700 } }, "Copia tutto"),
+React.createElement("button", { onClick: () => setCsvModal(null), style: { background: "#1E1E28", color: "#94a3b8", border: "1px solid #2a3040", borderRadius: 7, padding: "8px 16px", cursor: "pointer", fontSize: 13, fontWeight: 700 } }, "Chiudi"))))),
+pdfHtml && (React.createElement("div", { style: { position: "fixed", inset: 0, background: "#000e", zIndex: 1000, display: "flex", flexDirection: "column" } },
+React.createElement("div", { style: { background: "#0D0D12", borderBottom: "1px solid #2a3040", padding: "10px 16px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, flexShrink: 0, flexWrap: "wrap" } },
+React.createElement("span", { style: { color: "#e2e8f0", fontWeight: 700, fontSize: 14 } }, " Anteprima documento"),
+React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } },
+React.createElement("button", { onClick: () => {
+const iframe = document.getElementById('pdf-print-iframe');
+if (!iframe || !iframe.contentWindow) {
+alert('Anteprima non pronta. Riprova fra un secondo.');
+return;
+}
+try {
+iframe.contentWindow.focus();
+iframe.contentWindow.print();
+}
+catch (err) {
+alert('Stampa non disponibile su questo dispositivo: ' + ((err === null || err === void 0 ? void 0 : err.message) || 'errore sconosciuto'));
+}
+}, style: { background: "#2DD4BF", color: "#000", border: "none", borderRadius: 7, padding: "8px 16px", cursor: "pointer", fontSize: 13, fontWeight: 800, display: "inline-flex", alignItems: "center", gap: 6, touchAction: "manipulation" } }, "\uD83D\uDDA8 Salva PDF"),
+React.createElement("button", { onClick: () => setPdfHtml(null), style: { background: "#1E1E28", color: "#94a3b8", border: "1px solid #2a3040", borderRadius: 7, padding: "7px 14px", cursor: "pointer", fontSize: 12, fontWeight: 700, touchAction: "manipulation" } }, "\u2715 Chiudi"))),
+React.createElement("div", { style: { flex: 1, overflow: "auto", background: "#f0f0f0", display: "flex", justifyContent: "center" } },
+React.createElement("iframe", { id: "pdf-print-iframe", srcDoc: pdfHtml, style: { background: "#fff", width: "100%", maxWidth: "210mm", height: "100%", border: "none", boxShadow: "0 4px 24px #0004" }, title: "Anteprima documento" })),
+React.createElement("div", { style: { background: "#0D0D12", borderTop: "1px solid #2a3040", padding: "8px 16px", fontSize: 11, color: "#64748b", flexShrink: 0, textAlign: "center" } },
+"Clicca \"Salva PDF\" \u2192 nel dialogo di stampa scegli ",
+React.createElement("strong", { style: { color: "#94a3b8" } }, "\"Salva come PDF\""),
+" come destinazione (su Android: \"Salva come PDF\" / su iOS: \"Salva su File\")"))),
+(modal === null || modal === void 0 ? void 0 : modal.type) === "iec" && (React.createElement(Modal, { title: modal.data ? "Modifica Verifica di Sicurezza Elettrica" : "Nuova Verifica di Sicurezza Elettrica", wide: true, onClose: popModal },
+React.createElement(IECReportForm, { initial: modal.data || null, assetId: ((_d = modal.data) === null || _d === void 0 ? void 0 : _d.assetId) || modal.assetId || null, assets: assets, customers: customers, existingReports: iecReports, instruments: instruments, technicians: company.technicians || [], onSave: saveIecReport, onClose: popModal }))),
+(modal === null || modal === void 0 ? void 0 : modal.type) === "assetDetail" && modal.data && (React.createElement(Modal, { title: modal.data.name || "Apparecchio", wide: true, onClose: popModal },
+React.createElement(AssetDetailModal, { asset: modal.data, jobs: jobs, parts: parts, iecReports: iecReports, funcReports: funcReports, customers: customers, company: company, templates: allTemplates, generateIECPDF: generateIECPDF, generateFuncPDF: generateFuncPDF, onClose: popModal, onEditAsset: () => pushModal({ type: "asset", data: modal.data }), onNewJob: () => pushModal({ type: "job", data: { assetId: modal.data.id, type: "correttiva", priority: "normale", status: "aperto", description: "", openDate: new Date().toISOString().slice(0, 10), parts: [], laborHours: 0, laborRate: 55, notes: "", timeline: [], photos: [] } }), onNewIec: () => pushModal({ type: "iec", assetId: modal.data.id, data: null }), onNewFunc: () => pushModal({ type: "func", assetId: modal.data.id, data: null }), onAssetSticker: () => pushModal({ type: "sticker", data: {}, kind: "asset", assetId: modal.data.id }), onOpenJob: j => pushModal({ type: "job", data: j }), onQuickLocation: (loc) => { const rec = withUpdateMeta(Object.assign(Object.assign({}, modal.data), { location: loc, lastSeenAt: new Date().toISOString() })); setAssets(a => upsertInList(a, rec)); setModal(m => m ? Object.assign(Object.assign({}, m), { data: rec }) : m); showToast("📍 Posizione aggiornata", "#2DD4BF"); } }))),
+(modal === null || modal === void 0 ? void 0 : modal.type) === "func" && (React.createElement(Modal, { title: modal.data ? "Modifica Verifica Funzionale" : "Nuova Verifica Funzionale", wide: true, onClose: popModal },
+React.createElement(FuncVerifyForm, { initial: modal.data || null, assetId: ((_e = modal.data) === null || _e === void 0 ? void 0 : _e.assetId) || modal.assetId || null, assets: assets, customers: customers, existingReports: funcReports, templates: allTemplates, instruments: instruments, technicians: company.technicians || [], onSave: saveFuncReport, onClose: popModal }))),
+React.createElement(ConfirmDialog, null),
+React.createElement(PromptDialog, null))));
+}
+var _confirmCallback = null;
+var _setConfirmState = null;
+var _setPromptState = null;
+function appConfirm(msg, onYes, kind) {
+_confirmCallback = onYes;
+if (_setConfirmState)
+_setConfirmState({ open: true, msg: msg, kind: kind || 'danger' });
+}
+function appPromptCb(msg, onOk) {
+if (_setPromptState)
+_setPromptState({ open: true, msg: msg, value: '', cb: onOk });
+}
+function ConfirmDialog() {
+const [state, setState] = React.useState({ open: false, msg: '', kind: 'danger' });
+React.useEffect(() => { _setConfirmState = setState; }, []);
+if (!state.open)
+return null;
+const isPositive = state.kind === 'positive';
+const confirmBg = isPositive ? 'linear-gradient(135deg,#2DD4BF,#0D9488)' : 'linear-gradient(135deg,#ef4444,#dc2626)';
+const confirmFg = isPositive ? '#04201C' : '#fff';
+const answer = ok => {
+setState({ open: false, msg: '', kind: 'danger' });
+if (ok && _confirmCallback)
+_confirmCallback();
+_confirmCallback = null;
+};
+return (React.createElement("div", { style: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999,
+display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }, onClick: () => answer(false) },
+React.createElement("div", { style: { background: '#1E1E28', border: '1px solid #2A2A38', borderRadius: 14,
+padding: '24px 22px', maxWidth: 340, width: '100%', boxShadow: '0 8px 32px rgba(0,0,0,.7)' }, onClick: e => e.stopPropagation() },
+React.createElement("div", { style: { fontSize: 14, color: '#E2E8F0', lineHeight: 1.6, marginBottom: 20,
+whiteSpace: 'pre-line' } }, state.msg),
+React.createElement("div", { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
+React.createElement("button", { onClick: () => answer(false), style: { background: '#2A2A38',
+border: '1px solid #3A3A4A', borderRadius: 8, color: '#94a3b8', padding: '9px 18px',
+cursor: 'pointer', fontSize: 13, fontWeight: 600, touchAction: 'manipulation',
+WebkitTapHighlightColor: 'transparent' } }, "Annulla"),
+React.createElement("button", { onClick: () => answer(true), style: { background: confirmBg,
+border: 'none', borderRadius: 8, color: confirmFg, padding: '9px 18px', cursor: 'pointer',
+fontSize: 13, fontWeight: 700, touchAction: 'manipulation',
+WebkitTapHighlightColor: 'transparent' } }, "Conferma")))));
+}
+function PromptDialog() {
+const [state, setState] = React.useState({ open: false, msg: '', value: '', cb: null });
+React.useEffect(() => { _setPromptState = setState; }, []);
+if (!state.open)
+return null;
+const answer = ok => {
+const val = ok ? state.value : null;
+const cb = state.cb;
+setState({ open: false, msg: '', value: '', cb: null });
+if (cb)
+cb(val);
+};
+return (React.createElement("div", { style: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999,
+display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }, onClick: () => answer(false) },
+React.createElement("div", { style: { background: '#1E1E28', border: '1px solid #2A2A38', borderRadius: 14,
+padding: '24px 22px', maxWidth: 340, width: '100%' }, onClick: e => e.stopPropagation() },
+React.createElement("div", { style: { fontSize: 14, color: '#E2E8F0', lineHeight: 1.6, marginBottom: 14,
+whiteSpace: 'pre-line' } }, state.msg),
+React.createElement("input", { autoFocus: true, value: state.value, onChange: e => setState(s => (Object.assign(Object.assign({}, s), { value: e.target.value }))), onKeyDown: e => { if (e.key === 'Enter')
+answer(true); }, style: { width: '100%', background: '#0D0D12', border: '1px solid #2A2A38',
+borderRadius: 8, color: '#F0F0F5', padding: '9px 12px', fontSize: 14,
+marginBottom: 16, boxSizing: 'border-box' } }),
+React.createElement("div", { style: { display: 'flex', gap: 10, justifyContent: 'flex-end' } },
+React.createElement("button", { onClick: () => answer(false), style: { background: '#2A2A38',
+border: '1px solid #3A3A4A', borderRadius: 8, color: '#94a3b8', padding: '9px 18px',
+cursor: 'pointer', fontSize: 13, fontWeight: 600, touchAction: 'manipulation' } }, "Annulla"),
+React.createElement("button", { onClick: () => answer(true), style: { background: 'linear-gradient(135deg,#2DD4BF,#0D9488)',
+border: 'none', borderRadius: 8, color: '#000', padding: '9px 18px', cursor: 'pointer',
+fontSize: 13, fontWeight: 700, touchAction: 'manipulation' } }, "OK")))));
+}
+function App() {
+const [currentUser, setCurrentUser] = React.useState(undefined);
+const [authReady, setAuthReady] = React.useState(false);
+const [libError, setLibError] = React.useState(false);
+const isDemo = (typeof DEMO_LOCKED !== "undefined" && DEMO_LOCKED);
+const isOffline = (typeof OFFLINE_MODE !== "undefined" && OFFLINE_MODE);
+React.useEffect(() => {
+if (isDemo || isOffline) {
+setCurrentUser({ id: 'local-user', email: 'locale' });
+setAuthReady(true);
+return;
+}
+let tries = 0;
+const init = () => {
+const supa = (typeof getSupa === "function") ? getSupa() : null;
+if (!supa) {
+tries++;
+if (tries < 20) {
+setTimeout(init, 150);
+return;
+}
+setLibError(true);
+setAuthReady(true);
+return;
+}
+supa.auth.getUser().then(({ data }) => { setCurrentUser(data.user || null); setAuthReady(true); });
+supa.auth.onAuthStateChange((_, session) => { setCurrentUser((session === null || session === void 0 ? void 0 : session.user) || null); });
+};
+init();
+}, []);
+if (!authReady)
+return (React.createElement("div", { style: { minHeight: '100vh', background: '#0D0D12', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+React.createElement("div", { style: { width: 32, height: 32, border: '3px solid #2A2A38', borderTopColor: '#2DD4BF', borderRadius: '50%', animation: 'spin 1s linear infinite' } }),
+React.createElement("style", null, "@keyframes spin{to{transform:rotate(360deg)}}")));
+if (libError)
+return (React.createElement("div", { style: { minHeight: '100vh', background: '#0a0a0f', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 } },
+React.createElement("div", { style: { maxWidth: 360, textAlign: 'center' } },
+React.createElement("div", { style: { fontSize: 30, fontWeight: 900, color: '#2DD4BF', marginBottom: 8 } }, "MedTrace"),
+React.createElement("div", { style: { fontSize: 14, color: '#e2e8f0', fontWeight: 700, marginBottom: 10 } }, "Connessione richiesta per il primo accesso"),
+React.createElement("div", { style: { fontSize: 12.5, color: '#94a3b8', lineHeight: 1.6, marginBottom: 18 } }, "Non e stato possibile contattare il servizio di autenticazione. Per accedere la prima volta serve una connessione a internet. Una volta effettuato l'accesso, potrai lavorare anche offline."),
+React.createElement("button", { onClick: () => window.location.reload(), style: { background: 'linear-gradient(135deg,#2DD4BF,#0D9488)', color: '#06251f', border: 'none', borderRadius: 9, padding: '11px 22px', fontWeight: 800, fontSize: 14, cursor: 'pointer' } }, "Riprova"))));
+if (!currentUser)
+return React.createElement(LoginScreen, { onLogin: setCurrentUser });
+return React.createElement(AppMain, null);
+}
+ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
